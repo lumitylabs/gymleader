@@ -26,7 +26,8 @@ async function aggregateCards({ flow_address, solana_address }) {
 
     if (flowResult.status === 'fulfilled') {
         const formattedFlowCards = flowResult.value.map(nft => ({
-            nome: nft.token_name,
+            token_name: nft.token_name,
+            nome: nft.clean_name,
             imagem: nft.token_image,
             serie: extractAttribute(nft.attributes, 'Set Name'),
             ano: extractAttribute(nft.attributes, 'Year'),
@@ -42,7 +43,8 @@ async function aggregateCards({ flow_address, solana_address }) {
 
     if (solanaResult.status === 'fulfilled') {
         const formattedSolanaCards = solanaResult.value.map(nft => ({
-            nome: nft.token_name,
+            token_name: nft.token_name,
+            nome: nft.clean_name,
             imagem: nft.token_image,
             serie: "N/A",
             ano: extractAttribute(nft.attributes, 'Year'),

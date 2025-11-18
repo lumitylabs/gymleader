@@ -1,5 +1,9 @@
-import React, { useState } from 'react';
+// pages/Wallets.jsx
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/ui/general/Sidebar';
+
+// --- IMPORTAR O CONTEXTO DE AUTH (CORREÇÃO) ---
+import { useAuth } from '../contexts/AuthContext';
 
 // --- HOOKS PARA A SESSÃO EVM (VIA REOWN) ---
 import { useAppKit } from '@reown/appkit/react';
@@ -12,15 +16,50 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 function Wallets() {
   const [isNavbarOpen, setIsNavbarOpen] = useState(true);
 
-  // --- SESSÃO 1: EVM (Beezie / Flow) controlada pelo Reown AppKit ---
+  // 1. PEGAR O USUÁRIO ATUAL DO FIREBASE
+  const { currentUser } = useAuth();
+
+  // --- SESSÃO 1: EVM (Beezie / Flow) ---
   const { open: openReownModal } = useAppKit();
   const { address: evmWalletAddress, isConnected: isEvmConnected } = useAccount();
   const { disconnect: disconnectEvm } = useDisconnect();
 
-  // --- SESSÃO 2: SOLANA (Collectorcrypt) controlada pelo Solana Wallet Adapter ---
+  // --- SESSÃO 2: SOLANA (Collectorcrypt) ---
   const { publicKey, connected: isSolanaConnected, disconnect: disconnectSolana } = useWallet();
   const { setVisible: setSolanaModalVisible } = useWalletModal();
   const solanaWalletAddress = publicKey ? publicKey.toBase58() : null;
+
+  // 2. USE EFFECT PARA SINCRONIZAR CARTEIRAS E CARTAS
+  useEffect(() => {
+    const syncWallet = async () => {
+      // Só executa se tiver usuário logado e pelo menos uma carteira conectada
+      if (currentUser && (evmWalletAddress || solanaWalletAddress)) {
+        try {
+          console.log("Sincronizando carteiras com o Firebase...");
+          
+          // Chama a API que criamos no passo anterior (api/sync-collection.js)
+          await fetch(import.meta.env.VITE_SERVER_URL+'/api/sync-collection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: currentUser.uid,
+              flow_address: evmWalletAddress || null,
+              solana_address: solanaWalletAddress || null
+            })
+          });
+          
+          console.log("Sincronização iniciada com sucesso.");
+        } catch (error) {
+          console.error("Erro ao sincronizar carteira:", error);
+        }
+      }
+    };
+
+    // Executa quando o usuário muda ou quando conecta/desconecta uma carteira
+    if (isEvmConnected || isSolanaConnected) {
+      syncWallet();
+    }
+  }, [currentUser, evmWalletAddress, solanaWalletAddress, isEvmConnected, isSolanaConnected]);
 
   return (
     <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
@@ -40,7 +79,7 @@ function Wallets() {
           </div>
 
           <div className="flex flex-col gap-6">
-            {/* Seção Beezie (Flow EVM) - Usa o modal do Reown */}
+            {/* Seção Beezie (Flow EVM) */}
             <div className="flex justify-between items-center">
               <span className="font-semibold text-white text-lg">Beezie (Flow EVM)</span>
               <div className="flex items-center gap-4 w-full max-w-md">
@@ -54,7 +93,7 @@ function Wallets() {
               </div>
             </div>
 
-            {/* Seção Collectorcrypt (Solana) - Usa o modal do Solana Wallet Adapter (agora estilizado) */}
+            {/* Seção Collectorcrypt (Solana) */}
             <div className="flex justify-between items-center">
               <span className="font-semibold text-white text-lg">Collectorcrypt (Solana)</span>
               <div className="flex items-center gap-4 w-full max-w-md">

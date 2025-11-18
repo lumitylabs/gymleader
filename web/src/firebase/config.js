@@ -1,6 +1,7 @@
 // src/firebase/config.js
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database"
 
 // As credenciais do Firebase são lidas do .env de forma segura
 const firebaseConfig = {
@@ -15,3 +16,4 @@ const firebaseConfig = {
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getDatabase(app);

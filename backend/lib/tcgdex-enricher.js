@@ -161,6 +161,7 @@ async function fetchCardDetails(card, setCache) { // Aceita o cache como argumen
         const details = await detailsResponse.json();
         console.log(`--- [DEBUG] DETALHES FINAIS ENCONTRADOS PARA ${bestMatch.id} ---`);
         return {
+            card_name: details.name || null,
             abilities: details.abilities || [],
             attacks: details.attacks || [],
             weaknesses: details.weaknesses || [],

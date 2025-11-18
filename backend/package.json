@@ -5,6 +5,8 @@
     "@onflow/fcl": "^1.20.4",
     "@onflow/types": "^1.5.0",
     "@solana/web3.js": "^1.98.4",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "firebase-admin": "^13.6.0",
+    "papaparse": "^5.5.3"
   }
 }
