@@ -32,6 +32,7 @@ async function aggregateCards({ flow_address, solana_address }) {
             ano: extractAttribute(nft.attributes, 'Year'),
             numeracao: extractAttribute(nft.attributes, 'Card Number').replace(/[^0-9a-zA-Z]/g, '') || "N/A",
             token_address: nft.token_address,
+            grader: nft.grader,
             chain: 'flow'
         }));
         allCards.push(...formattedFlowCards);
@@ -47,6 +48,7 @@ async function aggregateCards({ flow_address, solana_address }) {
             ano: extractAttribute(nft.attributes, 'Year'),
             numeracao: extractAttribute(nft.attributes, 'Serial Number').replace(/[^0-9a-zA-Z]/g, '') || "N/A",
             token_address: nft.token_address,
+            grader: nft.grader,
             chain: 'solana'
         }));
         allCards.push(...formattedSolanaCards);

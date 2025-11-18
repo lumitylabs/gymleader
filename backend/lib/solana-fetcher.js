@@ -32,6 +32,7 @@ async function fetchSolanaNfts(address) {
         const pokemonCards = nftsWithJson.reduce((acc, nft) => {
             const tokenSymbol = nft.symbol || "";
             const isCollector = tokenSymbol === 'COLLECTOR';
+            const graderValue = nft.json?.attributes?.find(a => a.trait_type === "Grading Company")?.value ?? null;
 
             if (isCollector) {
                 acc.push({
@@ -39,6 +40,7 @@ async function fetchSolanaNfts(address) {
                     token_image: nft.json?.image || '',
                     attributes: nft.json?.attributes || [],
                     token_address: nft.address.toBase58(),
+                    grader: graderValue
                 });
             }
             return acc;

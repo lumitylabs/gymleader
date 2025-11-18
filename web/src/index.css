@@ -1,1 +1,39 @@
 @import "tailwindcss";
+/* src/index.css */
+/* src/index.css */
+
+/* --- Estilos para fazer o Modal da Solana parecer com o do RainbowKit --- */
+.rainbow-like-modal .wallet-adapter-modal-wrapper {
+  background: #1A1B1F;
+  border-radius: 18px;
+  max-width: 360px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rainbow-like-modal .wallet-adapter-modal-title {
+  color: white;
+  font-weight: 700;
+}
+.rainbow-like-modal .wallet-adapter-modal-button-close {
+  background-color: #2C2D30;
+  color: #9B9B9B;
+}
+.rainbow-like-modal .wallet-adapter-modal-button-close:hover {
+  background-color: #3c3d40;
+}
+.rainbow-like-modal .wallet-adapter-modal-list {
+  margin: 0; padding: 0;
+}
+.rainbow-like-modal .wallet-adapter-button {
+  background-color: transparent;
+  color: white;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.rainbow-like-modal .wallet-adapter-button:hover {
+  background-color: #252525;
+}
+.rainbow-like-modal .wallet-adapter-button-start-icon img {
+  width: 28px; height: 28px;
+}

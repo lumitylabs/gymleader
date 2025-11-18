@@ -10,10 +10,30 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.9",
+    "@reown/appkit": "^1.8.14",
+    "@reown/appkit-adapter-solana": "^1.8.14",
+    "@reown/appkit-adapter-wagmi": "^1.8.14",
+    "@solana/wallet-adapter-base": "^0.9.27",
+    "@solana/wallet-adapter-react": "^0.15.39",
+    "@solana/wallet-adapter-react-ui": "^0.9.39",
+    "@solana/wallet-adapter-wallets": "^0.19.37",
+    "@solana/web3.js": "^1.98.4",
     "@tailwindcss/vite": "^4.1.17",
+    "@tanstack/react-query": "^5.90.10",
+    "buffer": "^6.0.3",
+    "ethers": "^6.15.0",
+    "firebase": "^12.6.0",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.553.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.17"
+    "react-router-dom": "^7.9.6",
+    "simplebar-react": "^3.3.2",
+    "tailwindcss": "^4.1.17",
+    "viem": "^2.39.2",
+    "vite-plugin-node-polyfills": "^0.24.0",
+    "wagmi": "^2.19.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

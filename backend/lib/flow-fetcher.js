@@ -40,16 +40,19 @@ async function fetchFlowNfts(address) {
 
             if (data.result && data.result.length > 0) {
                 const pokemonCardsOnPage = data.result.reduce((acc, nft) => {
+                    
                     const normMeta = nft.normalized_metadata || {};
                     const attributes = normMeta.attributes || [];
                     const isPokemon = attributes.some(attr => attr.trait_type === 'Category' && attr.value === 'Pokemon');
-
+                    const graderValue = attributes.find(a => a.trait_type === "Grader")?.value ?? null;
+                    
                     if (isPokemon) {
                         acc.push({
                             token_name: normMeta.name || nft.name || "N/A",
                             token_image: normMeta.image || '',
                             attributes: attributes,
                             token_address: nft.token_address,
+                            grader: graderValue
                         });
                     }
                     return acc;
