@@ -23,6 +23,7 @@ import { clusterApiUrl } from '@solana/web3.js';
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login.jsx";
 import Home from "./pages/Home.jsx";
+import Gym from "./pages/Gym.jsx";
 import Wallets from "./pages/Wallets.jsx";
 
 // --- Estilos ---
@@ -83,6 +84,7 @@ const App = () => {
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                    <Route path="/gym" element={<ProtectedRoute><Gym /></ProtectedRoute>} />
                     <Route path="/wallets" element={<ProtectedRoute><Wallets /></ProtectedRoute>} />
                   </Routes>
                 </BrowserRouter>

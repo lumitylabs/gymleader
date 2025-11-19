@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import SimpleBar from "simplebar-react";
@@ -272,7 +272,7 @@ function CardPreview({ card, topPos }) {
 }
 
 // --- COMPONENTE: Item da Lista ---
-function CollectionItem({ card, onHover, onLeave }) {
+function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd }) {
   const mainType = card.types && card.types.length > 0 ? card.types[0] : 'Unknown';
   const bgGradient = getTypeColor(mainType); // Agora usa o gradiente
   const typeImageSrc = TYPE_IMAGES[mainType] || TYPE_IMAGES.default;
@@ -315,6 +315,15 @@ function CollectionItem({ card, onHover, onLeave }) {
 
   return (
     <div 
+      draggable="true"
+      onDragStart={(e) => {
+        if (onDragStart) onDragStart();
+        e.dataTransfer.setData("application/json", JSON.stringify(card));
+        e.dataTransfer.effectAllowed = "copy";
+      }}
+      onDragEnd={(e) => {
+        if (onDragEnd) onDragEnd();
+      }}
       onMouseEnter={(e) => onHover(card, e)}
       onMouseLeave={() => onLeave(card)}
       className={`group relative w-full h-[90px] rounded-2xl overflow-hidden mb-2 select-none transition-transform active:scale-[0.98] cursor-pointer shadow-lg ${bgGradient} hover:scale-[0.98]`}
@@ -397,13 +406,16 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Estados para o Preview Flutuante
   const [previewCard, setPreviewCard] = useState(null);
   const [mouseY, setMouseY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Handlers de Hover
   const handleCardHover = (card, event) => {
+    if (isDragging) return;
     setPreviewCard(card);
     setMouseY(event.clientY);
   };
@@ -418,6 +430,15 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
       }
       return currentCard;
     });
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+    setPreviewCard(null);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
   };
 
   // Listener do Firebase
@@ -480,9 +501,9 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
         transition={{ type: "spring", stiffness: 400, damping: 40 }}
         className="fixed top-0 left-0 w-[340px] h-screen bg-[#131316] border-r border-[#26272B] font-inter flex flex-col z-40 select-none shadow-2xl"
       >
-        {/* --- PREVIEW FLUTUANTE (Renderizado fora da lista para não ser cortado) --- */}
+        {/* --- PREVIEW FLUTUANTE --- */}
         <AnimatePresence>
-          {previewCard && <CardPreview key={previewCard.token_address + previewCard.cardId} card={previewCard} topPos={mouseY} />}
+          {previewCard && !isDragging && <CardPreview key={previewCard.token_address + previewCard.cardId} card={previewCard} topPos={mouseY} />}
         </AnimatePresence>
 
         {/* Header */}
@@ -500,13 +521,17 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
 
         {/* Menu Principal */}
         <div className="px-3 py-4 space-y-1">
-            <button onClick={() => navigate('/')} className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-[#26272B] rounded-lg transition-colors">
+            <button onClick={() => navigate('/gym')} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${location.pathname === '/gym' ? 'bg-[#26272B] text-white' : 'text-gray-400 hover:text-white hover:bg-[#26272B]'}`}>
                 <div className="w-5 h-5 border-2 border-current rounded-md" />
                 <span className="font-medium text-sm">Gym</span>
             </button>
             <button className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-[#26272B] rounded-lg transition-colors">
                 <div className="w-5 h-5 border-2 border-current rounded-md rotate-45" />
                 <span className="font-medium text-sm">Battle</span>
+            </button>
+            <button className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-[#26272B] rounded-lg transition-colors">
+                <div className="w-5 h-5 border-2 border-current rounded-full" />
+                <span className="font-medium text-sm">Badges</span>
             </button>
             <button onClick={() => navigate('/wallets')} className="w-full flex items-center gap-3 px-3 py-2 text-gray-400 hover:text-white hover:bg-[#26272B] rounded-lg transition-colors">
                 <Wallet size={20} />
@@ -543,7 +568,6 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
 
         {/* Lista de Cartas (Scrollable) */}
         <div className="flex-1 overflow-hidden px-4">
-            {/* ADICIONE autoHide={false} AQUI EMBAIXO */}
             <SimpleBar 
                 style={{ height: '100%' }} 
                 className="pr-2" 
@@ -564,6 +588,8 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
                               card={card} 
                               onHover={handleCardHover}
                               onLeave={handleCardLeave}
+                              onDragStart={handleDragStart}
+                              onDragEnd={handleDragEnd}
                             />
                         ))
                     )}

@@ -78,7 +78,7 @@ async function fetchFlowNfts(address) {
                         const pokemonName = getAttr('Pokemon Name');
                         const grader = getAttr('Grader');
                         const grade = getAttr('Grade');
-                        console.log(pokemonName)
+                    
                         
                         // Constrói um nome limpo se disponível, senão usa o nome do NFT
                         // Ex: "Raichu" ao invés de "1999 Game Raichu #14..."
@@ -90,7 +90,7 @@ async function fetchFlowNfts(address) {
                             clean_name: pokemonName, 
                             token_image: metadata.image || '', // URL direta do IPFS
                             attributes: attributes, // Passamos os atributos estruturados para o aggregator usar
-                            token_address: nft.token_address,
+                            token_address: nft.token_hash,
                             grader: grader,
                             grade: grade
                         });
