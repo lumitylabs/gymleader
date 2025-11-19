@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, Wallet, ChevronsLeft, Search } from 'lucide-react';
+
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 
@@ -30,6 +30,33 @@ import CgcLogo from "../../../assets/graders/cgc.png";
 import SgcLogo from "../../../assets/graders/sgc.png";
 import TagLogo from "../../../assets/graders/tag.png";
 
+// Adicione LogOut, Settings, ChevronDown aos imports do lucide-react
+import { RefreshCw, Wallet, ChevronsLeft, Search, LogOut, Settings, ChevronDown } from 'lucide-react';
+
+// Adicione os hooks do Wagmi/Reown se quiser mostrar o endereço (opcional, mas recomendado)
+import { useAccount } from 'wagmi';
+import { useWallet } from '@solana/wallet-adapter-react';
+// import { useAppKitAccount } from '@reown/appkit/react'; // Opcional se quiser mostrar Solana aqui
+
+// Importe o Avatar padrão (ajuste o caminho se necessário)
+import Avatar from "../../../assets/avatar.png";
+
+const TAG_COLORS = {
+  Water: "bg-[#3B99D6]",
+  Fire: "bg-[#FF9D55]",
+  Grass: "bg-[#63BC5A]",
+  Lightning: "bg-[#F3D23B]",
+  Psychic: "bg-[#FA7552]",
+  Fighting: "bg-[#C03028]",
+  Darkness: "bg-[#547E86]", // Tom azulado/teal da imagem
+  Metal: "bg-[#9FA6B3]",
+  Fairy: "bg-[#EE90E6]",
+  Colorless: "bg-[#E1E1E1]", // Quase branco/cinza claro
+  Dragon: "bg-[#C2A12B]",
+  default: "bg-[#363639]"
+};
+
+
 // Mapas de Imagens
 const TYPE_IMAGES = {
   Water: WaterType, Fire: FireType, Grass: GrassType, Lightning: LightningType,
@@ -42,25 +69,162 @@ const GRADER_IMAGES = {
   psa: PsaLogo, cgc: CgcLogo, sgc: SgcLogo, tag: TagLogo
 };
 
+function UserAccount() {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
+  
+  // 1. Hook EVM (Beezie/Flow)
+  const { address: evmAddress, isConnected: isEvmConnected } = useAccount();
+
+  // 2. Hook Solana (Collector)
+  const { publicKey, connected: isSolanaConnected } = useWallet();
+  const solanaAddress = publicKey ? publicKey.toBase58() : null;
+
+  // Helper para formatar endereço
+  const formatAddress = (addr) => addr ? `${addr.slice(0, 5)}...${addr.slice(-4)}` : "Not Connected";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Failed to log out:", error);
+    }
+  };
+
+  return (
+    <div className="px-4 py-2 border-t border-[#26272B] bg-[#131316] relative mx-6 ">
+      {/* Menu Dropdown (Abre para CIMA) */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: -10, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute bottom-full left-4 right-4 mb-2 bg-[#18181B] border border-[#26272B] rounded-xl shadow-2xl overflow-hidden z-50"
+          >
+            {/* Info das Carteiras */}
+            <div className="px-4 py-3 bg-[#18181B] border-b border-[#26272B]">
+              <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Active Wallets</p>
+              
+              <div className="flex flex-col gap-2">
+                {/* Beezie (EVM) */}
+                <div className="flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isEvmConnected ? 'bg-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'bg-gray-600'}`}></div>
+                    <span>Beezie</span>
+                  </div>
+                  <span className="font-mono text-gray-500 text-[10px]">
+                    {isEvmConnected ? formatAddress(evmAddress) : "Not Connected"}
+                  </span>
+                </div>
+
+                {/* Collector (Solana) */}
+                <div className="flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-2 text-gray-300">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isSolanaConnected ? 'bg-purple-500 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-gray-600'}`}></div>
+                    <span>Collector</span>
+                  </div>
+                  <span className="font-mono text-gray-500 text-[10px]">
+                    {isSolanaConnected ? formatAddress(solanaAddress) : "Not Connected"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Ações */}
+            <div className="p-1">
+              <button
+                onClick={() => navigate('/wallets')}
+                className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors"
+              >
+                <Wallet size={16} />
+                <span>Manage Wallets</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-red-400 rounded-lg hover:bg-[#26272B] transition-colors"
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Botão do Usuário */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-[#202024] transition-colors group"
+      >
+        <div className="relative">
+            <img 
+                className="w-10 h-10 rounded-full object-cover border border-[#26272B] group-hover:border-gray-500 transition-colors" 
+                src={ Avatar} 
+                alt="User" 
+            />
+            {/* Indicador Online (Verde se alguma carteira estiver conectada) */}
+            <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-[#131316] rounded-full ${isEvmConnected || isSolanaConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+        </div>
+        
+        <div className="flex flex-col items-start flex-grow min-w-0">
+          <span className="font-inter font-medium text-sm text-white truncate w-full text-left">
+            {currentUser?.displayName || "Trainer"}
+          </span>
+          <span className="font-inter text-xs text-gray-500 truncate w-full text-left">
+            {currentUser?.email}
+          </span>
+        </div>
+
+        <ChevronDown size={16} className={`text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+    </div>
+  );
+}
 // Cores de Fundo
 const getTypeColor = (type) => {
-  const colors = {
-    Water: "bg-[#719FCB]", Fire: "bg-[#CB7171]", Grass: "bg-[#80CB71]",
-    Lightning: "bg-[#CBC071]", Psychic: "bg-[#C371CB]", Fighting: "bg-[#CB9B71]",
-    Darkness: "bg-[#272727]", Metal: "bg-[#949494]", Fairy: "bg-[#CB719C]",
-    Colorless: "bg-[#D6D6D6]", Dragon: "bg-[#CBA171]", default: "bg-[#363639]"
+  const gradients = {
+    Water: "bg-gradient-to-r from-[#4DB9DA] to-[#2F80ED]", // Azul Claro -> Azul Escuro
+    Fire: "bg-gradient-to-r from-[#F2994A] to-[#F2C94C]", // Laranja -> Amarelo
+    Grass: "bg-gradient-to-r from-[#A8E063] to-[#56AB2F]",
+    Lightning: "bg-gradient-to-r from-[#FDC830] to-[#F37335]",
+    Psychic: "bg-gradient-to-r from-[#BD85ED] to-[#A66BD9]",
+    Fighting: "bg-gradient-to-r from-[#C94B4B] to-[#4B134F]",
+    Darkness: "bg-gradient-to-r from-[#434343] to-[#000000]",
+    Metal: "bg-gradient-to-r from-[#E0EAFC] to-[#CFDEF3]",
+    Fairy: "bg-gradient-to-r from-[#EF629F] to-[#EECDA3]",
+    Colorless: "bg-gradient-to-r from-[#D3CCE3] to-[#E9E4F0]",
+    Dragon: "bg-gradient-to-r from-[#C2A12B] to-[#3D2E08]",
+    default: "bg-gradient-to-r from-[#434343] to-[#000000]"
   };
-  return colors[type] || colors.default;
+  return gradients[type] || gradients.default;
 };
 
 // --- COMPONENTE: Card Preview (Janela Flutuante) ---
 function CardPreview({ card, topPos }) {
   if (!card) return null;
 
-  // Ajuste para garantir que o preview não saia da tela (viewport)
-  // Se estiver muito embaixo, empurra para cima
-  const adjustedTop = Math.min(topPos - 100, window.innerHeight - 450); 
-  const finalTop = Math.max(20, adjustedTop); // Não deixa passar do topo também
+  // 1. Definição da Altura Estimada
+  // Largura 400px * Aspect Ratio da imagem (~1.33) + Espaço para textos/padding
+  // 400 * 1.33 = 532px + ~70px de infos = ~600px total
+  const PREVIEW_HEIGHT = 720; 
+  const SCREEN_MARGIN = 20; // Margem mínima das bordas da tela
+
+  // 2. Calcular o limite máximo que o 'top' pode ter
+  // (Altura da Tela - Altura do Card - Margem)
+  // Se o 'top' for maior que isso, a carta sai da tela embaixo.
+  const maxTopAllowed = window.innerHeight - PREVIEW_HEIGHT - SCREEN_MARGIN;
+
+  // 3. Posição desejada (alinhada com o mouse, mas subindo um pouco -100px)
+  let targetTop = topPos - 100;
+
+  // 4. Aplicar limites (Clamp)
+  // Math.min: Garante que não desça mais que o permitido (corta embaixo)
+  // Math.max: Garante que não suba mais que a margem superior (corta em cima)
+  const finalTop = Math.max(SCREEN_MARGIN, Math.min(targetTop, maxTopAllowed));
 
   const graderKey = card.grader ? card.grader.toLowerCase() : "";
   const GraderLogoSrc = GRADER_IMAGES[graderKey];
@@ -72,7 +236,7 @@ function CardPreview({ card, topPos }) {
       exit={{ opacity: 0, x: -10, scale: 0.95 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
       style={{ top: finalTop }}
-      className="fixed left-[360px] z-50 w-[280px] pointer-events-none"
+      className="fixed left-[360px] z-50 w-[500px] pointer-events-none"
     >
       <div className="relative bg-[#18181B] p-2 rounded-2xl shadow-2xl border border-[#26272B]">
         {/* Imagem do Scan */}
@@ -93,12 +257,12 @@ function CardPreview({ card, topPos }) {
         {/* Info Rápida Abaixo do Scan */}
         <div className="mt-3 px-1 pb-1 flex justify-between items-center">
           <div>
-            <p className="text-white font-bold text-sm leading-tight">{card.name}</p>
-            <p className="text-gray-500 text-xs">{card.fullName.split('#')[0]}</p>
+            <p className="text-white font-bold text-lg leading-tight">{card.name}</p>
+            <p className="text-gray-500 text-sm">{card.fullName.split('#')[0]}</p>
           </div>
           {GraderLogoSrc && (
              <div className="bg-white/10 p-1.5 rounded-md">
-                <img src={GraderLogoSrc} alt="Grader" className="h-4 w-auto" />
+                <img src={GraderLogoSrc} alt="Grader" className="h-5 w-auto" />
              </div>
           )}
         </div>
@@ -110,17 +274,19 @@ function CardPreview({ card, topPos }) {
 // --- COMPONENTE: Item da Lista ---
 function CollectionItem({ card, onHover, onLeave }) {
   const mainType = card.types && card.types.length > 0 ? card.types[0] : 'Unknown';
-  const bgColor = getTypeColor(mainType);
+  const bgGradient = getTypeColor(mainType); // Agora usa o gradiente
   const typeImageSrc = TYPE_IMAGES[mainType] || TYPE_IMAGES.default;
+  const tagColor = TAG_COLORS[mainType] || TAG_COLORS.default;
+  
   const cardNumber = card.cardId;
   const graderKey = card.grader ? card.grader.toLowerCase() : "";
   const GraderLogoSrc = GRADER_IMAGES[graderKey];
 
-  // Badges de Plataforma
+  // Badges de Plataforma (Mantive igual, só ajustei margens se necessário)
   let PlatformBadge;
   if (card.chain === 'flow') {
     PlatformBadge = (
-      <div className="flex items-center gap-1.5 bg-black rounded-full px-2 py-1 h-6 border border-white/10">
+      <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
         <div className="text-yellow-400 font-bold text-[10px] flex items-center gap-1">
            <div className="w-2 h-2 bg-yellow-400 rotate-45"></div>
            beezie
@@ -129,7 +295,7 @@ function CollectionItem({ card, onHover, onLeave }) {
     );
   } else if (card.chain === 'solana') {
     PlatformBadge = (
-      <div className="flex items-center gap-1.5 bg-black rounded-full px-2 py-1 h-6 border border-white/10">
+      <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
         <div className="text-white font-bold text-[10px] flex items-center gap-1">
            <div className="w-2 h-2 bg-gradient-to-tr from-orange-500 to-blue-500 rounded-sm"></div>
            COLLECTOR
@@ -138,7 +304,7 @@ function CollectionItem({ card, onHover, onLeave }) {
     );
   } else {
     PlatformBadge = (
-      <div className="flex items-center gap-1.5 bg-black rounded-full px-2 py-1 h-6 border border-white/10">
+      <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
         <div className="text-white font-bold text-[10px] flex items-center gap-1">
            <div className="w-2 h-2 bg-red-500 rounded-full border border-white"></div>
            OAK GIFT
@@ -150,47 +316,76 @@ function CollectionItem({ card, onHover, onLeave }) {
   return (
     <div 
       onMouseEnter={(e) => onHover(card, e)}
-      onMouseLeave={onLeave}
-      className={`group relative w-full h-[90px] rounded-2xl overflow-hidden mb-3 select-none transition-transform active:scale-[0.98] cursor-pointer shadow-lg ${bgColor}`}
+      onMouseLeave={() => onLeave(card)}
+      className={`group relative w-full h-[90px] rounded-2xl overflow-hidden mb-2 select-none transition-transform active:scale-[0.98] cursor-pointer shadow-lg ${bgGradient} hover:scale-[0.98]`}
     >
       {/* Conteúdo Principal */}
-      <div className="relative z-10 flex justify-between h-full px-4 py-3">
+      <div className="relative z-10 flex justify-between h-full px-4 py-2 items-center">
         
-        {/* Lado Esquerdo */}
-        <div className="flex flex-col justify-between h-full max-w-[55%] z-20">
+        {/* Lado Esquerdo: Aumentei max-w para 65% para caber o nome */}
+        <div className="flex flex-col justify-center h-full max-w-[55%] z-20 gap-2">
+          
+          {/* Nome e Número */}
           <div className="flex items-center gap-2">
-            <h3 className="font-black text-white text-xl uppercase leading-none tracking-tight drop-shadow-sm truncate">
+            {/* Nome Maior e Italico */}
+            <h3 className="font-bold text-white text-md uppercase leading-none tracking-tight drop-shadow-md truncate">
               {card.name}
             </h3>
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 backdrop-blur-sm text-white text-[10px] font-bold flex-shrink-0">
+            
+            {/* Círculo do Número Maior e Translúcido */}
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20 backdrop-blur-md text-white text-[10px] font-bold flex-shrink-0 shadow-inner">
               {cardNumber}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 mt-1">
+          {/* Badges Inferiores */}
+          <div className="flex items-center gap-2">
             {PlatformBadge}
             {GraderLogoSrc && (
-              <img src={GraderLogoSrc} alt={card.grader} className="h-4 w-auto object-contain drop-shadow-sm" />
+              <img src={GraderLogoSrc} alt={card.grader} className="h-2.5 w-auto object-contain drop-shadow-md" />
             )}
           </div>
         </div>
 
         {/* Lado Direito */}
-        <div className="absolute right-0 top-0 h-full w-[50%] pointer-events-none">
-          <div className="absolute right-[90px] bottom-[28px] z-20">
-             <img src={typeImageSrc} alt={mainType} className="h-6 w-auto object-contain drop-shadow-md"/>
+        <div className="absolute right-0 top-0 h-full w-[45%] pointer-events-none">
+          
+          {/* --- TAG DE TIPO --- */}
+          {/* Ajustei o posicionamento para ficar alinhado com o meio/baixo */}
+          <div className="absolute right-[60px] top-[50%] translate-y-[-50%] z-20 flex items-center rounded-[4px] overflow-hidden shadow-lg ">
+             {/* Ícone */}
+             <div className={`w-4 h-5 flex items-center justify-center ${tagColor}`}>
+                <img 
+                  src={typeImageSrc} 
+                  alt={mainType} 
+                  className="w-3 h-3 object-contain drop-shadow-sm"
+                />
+             </div>
+             {/* Texto (Fundo azulado escuro para combinar com Water, ou neutro) */}
+             <div className="bg-[#283845] px-1 h-5 flex items-center min-w-[40px] justify-center">
+                <span className="text-white text-[8px] font-bold uppercase tracking-wider">
+                  {mainType}
+                </span>
+             </div>
           </div>
-          <div className="absolute right-1 bottom-2 w-15 h-15 z-10">
-             <img src={card.officialArt} alt={card.name} className="w-full h-full object-contain drop-shadow-2xl" loading="lazy"/>
+
+          {/* Sprite do Pokemon */}
+          <div className="absolute right-2 bottom-3 w-13 h-13 z-10">
+             <img 
+               src={card.officialArt} 
+               alt={card.name} 
+               className="w-full h-full object-contain drop-shadow-2xl filter contrast-110" 
+               loading="lazy"
+             />
           </div>
         </div>
       </div>
 
-      {/* Efeito de brilho sutil */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-black/10 pointer-events-none group-hover:opacity-0 transition-opacity"></div>
+      {/* Overlay de Brilho/Ruído sutil para textura */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-white/5 pointer-events-none mix-blend-overlay"></div>
       
-      {/* Highlight de Hover (Borda interna ou brilho) */}
-      <div className="absolute inset-0 border-2 border-white/0 group-hover:border-white/20 rounded-2xl transition-colors pointer-events-none"></div>
+      {/* Highlight de Hover */}
+      <div className="absolute inset-0 rounded-2xl transition-colors pointer-events-none"></div>
     </div>
   );
 }
@@ -213,8 +408,16 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
     setMouseY(event.clientY);
   };
 
-  const handleCardLeave = () => {
-    setPreviewCard(null);
+    const handleCardLeave = (cardLeft) => {
+    setPreviewCard((currentCard) => {
+      // Só limpa o preview se o card que o mouse saiu for o mesmo que está ativo.
+      // Se o usuário já passou para o próximo card, 'currentCard' já será o novo,
+      // então não fazemos nada (evita apagar o novo card).
+      if (currentCard === cardLeft) {
+        return null;
+      }
+      return currentCard;
+    });
   };
 
   // Listener do Firebase
@@ -279,7 +482,7 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
       >
         {/* --- PREVIEW FLUTUANTE (Renderizado fora da lista para não ser cortado) --- */}
         <AnimatePresence>
-          {previewCard && <CardPreview card={previewCard} topPos={mouseY} />}
+          {previewCard && <CardPreview key={previewCard.token_address + previewCard.cardId} card={previewCard} topPos={mouseY} />}
         </AnimatePresence>
 
         {/* Header */}
@@ -317,7 +520,7 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
                 <Search size={14} className="text-gray-500 mr-2"/>
                 <input 
                     type="text" 
-                    placeholder="Search collection..." 
+                    placeholder="Search" 
                     className="bg-transparent border-none outline-none text-sm text-white w-full placeholder-gray-600"
                 />
             </div>
@@ -340,7 +543,13 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
 
         {/* Lista de Cartas (Scrollable) */}
         <div className="flex-1 overflow-hidden px-4">
-            <SimpleBar style={{ height: '100%' }} className="pr-2">
+            {/* ADICIONE autoHide={false} AQUI EMBAIXO */}
+            <SimpleBar 
+                style={{ height: '100%' }} 
+                className="pr-2" 
+                id="scrollbar" 
+                autoHide={false} 
+            >
                 <div className="flex flex-col pb-4 pt-2">
                     {loading ? (
                         <div className="text-center py-10 text-gray-600 text-sm">Loading...</div>
@@ -361,6 +570,7 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
                 </div>
             </SimpleBar>
         </div>
+         <UserAccount />
       </motion.nav>
     </>
   );

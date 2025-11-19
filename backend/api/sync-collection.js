@@ -79,7 +79,7 @@ const handler = async (req, res) => {
                 pokedexId: pokedexId,
                 cardId: card.numeracao,
                 image: card.imagem,
-                officialArt: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${pokedexId}.gif`,
+                officialArt: `https://sweet-cendol-f4d090.netlify.app/${pokedexId}.gif`,
                 chain: card.chain,
                 grader: card.grader || "Raw",
                 grade: card.grader ? (card.nome.match(/(\d+(\.\d+)?)$/)?.[0] || "N/A") : null,
