@@ -24,6 +24,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login.jsx";
 import Home from "./pages/Home.jsx";
 import Gym from "./pages/Gym.jsx";
+import Battle from "./pages/Battle.jsx";
 import Wallets from "./pages/Wallets.jsx";
 
 // --- Estilos ---
@@ -67,6 +68,10 @@ createAppKit({
   },
 });
 
+import { Toaster } from 'sonner';
+
+// ... imports ...
+
 const App = () => {
   const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
@@ -81,10 +86,12 @@ const App = () => {
             <WalletModalProvider className="reown-like-modal">
               <AuthProvider>
                 <BrowserRouter>
+                  <Toaster position="top-center" richColors theme="dark" />
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                     <Route path="/gym" element={<ProtectedRoute><Gym /></ProtectedRoute>} />
+                    <Route path="/battle" element={<ProtectedRoute><Battle /></ProtectedRoute>} />
                     <Route path="/wallets" element={<ProtectedRoute><Wallets /></ProtectedRoute>} />
                   </Routes>
                 </BrowserRouter>

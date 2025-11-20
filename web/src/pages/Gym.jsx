@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Edit2, Save, Upload, Wand2, ArrowLeft, Menu as MenuIcon, ImagePlus, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
 import { ref, onValue } from "firebase/database";
@@ -89,7 +90,8 @@ function Gym() {
       };
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload image: " + error.message);
+      console.error("Upload error:", error);
+      toast.error("Failed to upload image: " + error.message);
       setUploading(false);
     }
   };
@@ -98,13 +100,17 @@ function Gym() {
     if (!currentUser) return;
 
     if (!formData.gymName?.trim() || !formData.description?.trim()) {
-      alert("Please enter a Gym Name and Description before generating images.");
+    if (!formData.gymName?.trim() || !formData.description?.trim()) {
+      toast.error("Please enter a Gym Name and Description before generating images.");
       return;
+    }
     }
 
     if (type === 'leader' && !formData.leaderName?.trim()) {
-      alert("Please enter a Leader Name before generating a leader image.");
+    if (type === 'leader' && !formData.leaderName?.trim()) {
+      toast.error("Please enter a Leader Name before generating a leader image.");
       return;
+    }
     }
 
     setGenerating(prev => ({ ...prev, [type]: true }));
@@ -150,7 +156,8 @@ function Gym() {
 
     } catch (error) {
       console.error("Generation error:", error);
-      alert("Failed to generate image: " + error.message);
+      console.error("Generation error:", error);
+      toast.error("Failed to generate image: " + error.message);
     } finally {
       setGenerating(prev => ({ ...prev, [type]: false }));
     }
@@ -202,10 +209,11 @@ function Gym() {
         throw new Error(result.error || 'Failed to save gym data');
       }
 
-      // Success feedback (could be a toast)
-      // alert("Gym saved successfully!"); 
+      // Success feedback
+      toast.success("Gym saved successfully!"); 
     } catch (err) {
       console.error(err);
+      toast.error(err.message);
       setError(err.message);
     } finally {
       setSaving(false);
@@ -250,7 +258,7 @@ function Gym() {
 
       <button
           onClick={() => setIsNavbarOpen(true)}
-          className={`fixed top-5 left-2 z-20 p-2 rounded-full cursor-pointer hover:bg-[#1F1F22] transition-opacity ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] hover:rounded-full transition-all ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
           aria-label="Open navigation menu"
         >
           <MenuIcon color="#A2A2AB" size={23} />
@@ -475,7 +483,7 @@ function Gym() {
                                     );
 
                                     if (isDuplicate) {
-                                        alert("This Pokémon is already in your team.");
+                                        toast.error("This Pokémon is already in your team.");
                                         return;
                                     }
 

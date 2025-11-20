@@ -63,9 +63,9 @@ const handler = async (req, res) => {
         
         const enrichedCards = await enrichAllCards(aggregatedCards);
 
-        // ... (O resto do código continua igual) ...
         const collectionData = {};
         let cardCount = 0;
+        const cardUpdates = {}; // Updates for the global cards node
 
         enrichedCards.forEach(card => {
             const pokedexId = findPokemonId(card.nome);
@@ -73,13 +73,14 @@ const handler = async (req, res) => {
 
             const uniqueKey = `${card.chain}_${card.token_address}_${card.numeracao}`.replace(/[.#$/[\]]/g, '_');
 
+            // 1. Save optimized data to User Collection
             collectionData[uniqueKey] = {
                 name: card.nome,
                 fullName: card.nome,
                 pokedexId: pokedexId,
                 cardId: card.numeracao,
                 image: card.imagem,
-                officialArt: `https://sweet-cendol-f4d090.netlify.app/${pokedexId}.gif`,
+                // officialArt removed to save space
                 chain: card.chain,
                 grader: card.grader || "Raw",
                 grade: card.grader ? (card.nome.match(/(\d+(\.\d+)?)$/)?.[0] || "N/A") : null,
@@ -89,7 +90,22 @@ const handler = async (req, res) => {
                 lastUpdated: Date.now()
             };
             cardCount++;
+
+            // 2. Replicate FULL data to global cards collection
+            // We use the token_address as the key.
+            if (card.token_address) {
+                cardUpdates[`cards/${card.token_address}`] = {
+                    ...card,
+                    pokedexId: pokedexId,
+                    lastUpdated: Date.now()
+                };
+            }
         });
+
+        // Batch update for global cards
+        if (Object.keys(cardUpdates).length > 0) {
+            await db.ref().update(cardUpdates);
+        }
 
         await db.ref(`users/${userId}/collection`).set(collectionData);
         await db.ref(`users/${userId}/metadata`).update({

@@ -56,8 +56,14 @@ const handler = async (req, res) => {
         // Limit team size to 3
         safeUpdate.team = safeUpdate.team.slice(0, 3);
 
-        // Write to Firebase
+        // Write to Firebase (User Profile)
         await db.ref(`users/${userId}/gym`).set(safeUpdate);
+
+        // Replicate to public gyms list for Battle page
+        await db.ref(`gyms/${userId}`).set({
+            ...safeUpdate,
+            userId: userId // Add userId to the record for reference
+        });
 
         return res.status(200).json({ success: true, data: safeUpdate });
 
