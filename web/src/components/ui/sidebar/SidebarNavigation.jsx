@@ -1,30 +1,37 @@
 import React from "react";
-import { Wallet } from 'lucide-react';
+import { House, Swords, Gem } from 'lucide-react';
 
 export function SidebarNavigation({ navigate, location }) {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    { label: "Gym", path: "/gym", icon: <div className="w-5 h-5 border-2 border-current rounded-md" /> },
-    { label: "Battle", path: "/battle", icon: <div className="w-5 h-5 border-2 border-current rounded-md rotate-45" /> },
-    { label: "Badges", path: "/badges", icon: <div className="w-5 h-5 border-2 border-current rounded-full" /> },
-    { label: "Wallets", path: "/wallets", icon: <Wallet size={20} /> },
+    { label: "Battle", path: "/battle", icon: <Swords size={20} /> },
+    { label: "Badges", path: "/badges", icon: <Gem size={20} /> },
   ];
 
   return (
-    <div className="px-3 py-4 space-y-1">
+    <div className="px-5 py-4 flex flex-col gap-2 font-semibold text-[#817676]">
+      {/* Gym Button - Special Style */}
+      <button
+        onClick={() => navigate('/gym')}
+        className={`flex p-1.5 px-3 gap-1 bg-[#202024] w-32 items-center rounded-full text-[#FAFAFA] text-[0.84em] border-[1px] border-[#26272B] cursor-pointer hover:bg-[#3B3B41] transition-all active:scale-95 duration-200 ${isActive('/gym') ? 'border-gray-500' : ''}`}
+      >
+        <House color="#94949C" height={18} width={18} strokeWidth={1.5} />
+        Gym
+      </button>
+
+      {/* Other Items */}
       {navItems.map((item) => (
         <button
           key={item.label}
           onClick={() => navigate(item.path)}
-          className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-            isActive(item.path) 
-              ? 'bg-[#26272B] text-white' 
-              : 'text-gray-400 hover:text-white hover:bg-[#26272B]'
-          }`}
+          className={`flex items-center gap-3 p-2 text-[0.84em] rounded-lg transition-all duration-200 active:scale-95 cursor-pointer w-full ${isActive(item.path)
+              ? 'bg-[#26272B] text-white font-semibold'
+              : 'text-white hover:bg-[#1F1F22] font-normal'
+            }`}
         >
           {item.icon}
-          <span className="font-medium text-sm">{item.label}</span>
+          <span>{item.label}</span>
         </button>
       ))}
     </div>

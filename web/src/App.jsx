@@ -6,7 +6,6 @@ function App() {
   return (
     <>
       <div className="h-screen w-screen">
-        <h1 class="text-3xl font-bold underline text-black">Hello world!</h1>
       </div>
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, LogOut, ChevronDown } from 'lucide-react';
@@ -11,7 +11,8 @@ export function UserAccount() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
-  
+  const menuRef = useRef(null);
+
   const { address: evmAddress, isConnected: isEvmConnected } = useAccount();
   const { publicKey, connected: isSolanaConnected } = useWallet();
   const solanaAddress = publicKey ? publicKey.toBase58() : null;
@@ -27,8 +28,20 @@ export function UserAccount() {
     }
   };
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuRef]);
+
   return (
-    <div className="px-4 py-2 border-t border-[#26272B] bg-[#131316] relative mx-6 ">
+    <div className="px-5 py-2 border-t border-[#26272B] bg-[#131316] relative" ref={menuRef}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -40,7 +53,7 @@ export function UserAccount() {
           >
             <div className="px-4 py-3 bg-[#18181B] border-b border-[#26272B]">
               <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Active Wallets</p>
-              
+
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-2 text-gray-300">
@@ -67,17 +80,17 @@ export function UserAccount() {
             <div className="p-1">
               <button
                 onClick={() => navigate('/wallets')}
-                className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors"
+                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors"
               >
-                <Wallet size={16} />
                 <span>Manage Wallets</span>
+                <Wallet size={16} />
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 w-full text-left px-3 py-2.5 text-sm text-red-400 rounded-lg hover:bg-[#26272B] transition-colors"
+                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors"
               >
-                <LogOut size={16} />
                 <span>Logout</span>
+                <LogOut size={16} />
               </button>
             </div>
           </motion.div>
@@ -89,14 +102,14 @@ export function UserAccount() {
         className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-[#202024] transition-colors group"
       >
         <div className="relative">
-            <img 
-                className="w-10 h-10 rounded-full object-cover border border-[#26272B] group-hover:border-gray-500 transition-colors" 
-                src={Avatar} 
-                alt="User" 
-            />
-            <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-[#131316] rounded-full ${isEvmConnected || isSolanaConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+          <img
+            className="w-10 h-10 rounded-full object-cover border border-[#26272B] group-hover:border-gray-500 transition-colors"
+            src={Avatar}
+            alt="User"
+          />
+          <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-[#131316] rounded-full ${isEvmConnected || isSolanaConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
         </div>
-        
+
         <div className="flex flex-col items-start flex-grow min-w-0">
           <span className="font-inter font-medium text-sm text-white truncate w-full text-left">
             {currentUser?.displayName || "Trainer"}
