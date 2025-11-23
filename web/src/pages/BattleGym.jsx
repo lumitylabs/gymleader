@@ -9,6 +9,7 @@ import Sidebar from "../components/ui/general/Sidebar";
 import { motion, AnimatePresence } from "framer-motion";
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
+import BattlePokeball from "../assets/battle-pokeball.png";
 
 function BattleGym() {
   const { gymId } = useParams();
@@ -23,6 +24,7 @@ function BattleGym() {
   const [playerInput, setPlayerInput] = useState("");
   const [sendingTurn, setSendingTurn] = useState(false);
   const [battleContext, setBattleContext] = useState(null);
+  const [hoveredCard, setHoveredCard] = useState(null);
   // Removed activePokemon state
 
   const scrollRef = useRef(null);
@@ -304,7 +306,7 @@ function BattleGym() {
                     {/* Battle Content */}
                     <div className="relative z-10 flex-1 flex flex-col p-6">
                         <div className="flex items-center gap-2 mb-4">
-                            <img src="/assets/battle-pokeball.png" className="w-6 h-6" alt="Battle" />
+                            <img src={BattlePokeball} className="w-10 h-10" alt="Battle" />
                             <h2 className="font-bold text-xl">Battle Log</h2>
                         </div>
 
@@ -477,38 +479,61 @@ function BattleGym() {
                     {/* Opponent Team */}
                     <div className="bg-[#202024] border border-[#26272B] rounded-2xl p-6">
                         <h3 className="font-bold text-lg mb-4">Opponent's Team</h3>
-                        <div className="flex gap-4 justify-center">
+                        <div className="flex gap-4 justify-center relative">
                             {gymData?.team?.map((card, i) => card ? (
-                                <div key={i} className="group relative w-20 aspect-[3/4] cursor-pointer">
+                                <div 
+                                    key={i} 
+                                    className="group relative w-20 aspect-[3/4] cursor-pointer"
+                                    onMouseEnter={() => setHoveredCard(card)}
+                                    onMouseLeave={() => setHoveredCard(null)}
+                                >
                                     <img 
-                                        src={card.original ? `${card.original}/low.png` : card.image} 
+                                        src={card.original ? `${card.original}/high.png` : card.image} 
                                         alt={card.name}
                                         className="w-full h-full object-cover rounded-lg border border-[#26272B] transition-transform group-hover:scale-105"
+                                        style={{ imageRendering: 'auto' }} // Ensure smooth scaling
                                         onError={(e) => {
-                                            // Fallback to NFT image if original fails
                                             if (e.target.src !== card.image) {
                                                 e.target.src = card.image;
                                             } else {
-                                                // Fallback to pixel sprite if NFT image also fails
                                                 e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`;
                                             }
                                         }}
                                     />
-                                    {/* Hover Zoom Effect - Shows NFT Card */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 hidden group-hover:block z-50">
-                                        <img 
-                                            src={card.image} 
-                                            alt={card.name}
-                                            className="w-full rounded-xl shadow-2xl border-2 border-yellow-500 bg-[#202024]"
-                                            onError={(e) => e.target.src = card.original ? `${card.original}/high.png` : `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`}
-                                        />
-                                    </div>
                                 </div>
                             ) : (
                                 <div key={i} className="w-20 aspect-[3/4] bg-[#18181B] rounded-lg border border-[#26272B] flex items-center justify-center">
                                     <img src="/assets/battle-cardback.png" className="w-10 opacity-20" />
                                 </div>
                             ))}
+
+                            {/* Large Card Preview - Centralized Position */}
+                            <AnimatePresence>
+                                {hoveredCard && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-[100] pointer-events-none origin-bottom"
+                                        style={{ width: '400px', maxWidth: '90vw' }} // Responsive width
+                                    >
+                                        <div className="relative w-full rounded-2xl shadow-2xl bg-[#18181B] p-2 border border-[#26272B]">
+                                            <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#131316]">
+                                                <img 
+                                                    src={hoveredCard.image} 
+                                                    alt={hoveredCard.name}
+                                                    className="w-full h-full object-contain"
+                                                    onError={(e) => e.target.src = hoveredCard.original ? `${hoveredCard.original}/high.png` : `http://steady-gaufre-1267b2.netlify.app/${hoveredCard.pokedexId}.png`}
+                                                />
+                                            </div>
+                                            <div className="mt-3 px-1 pb-1">
+                                                <p className="text-white font-bold text-lg leading-tight">{hoveredCard.name}</p>
+                                                <p className="text-gray-500 text-sm">{hoveredCard.fullName?.split('#')[0] || hoveredCard.name}</p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </div>
