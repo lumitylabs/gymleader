@@ -4,18 +4,22 @@ import { useNavigate } from "react-router-dom";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../firebase/config";
 import LoginBg from "../assets/login_bg.png";
-import Icon1 from "../assets/login_app_icon_1.svg";
-import Icon2 from "../assets/login_app_icon_2.svg";
-import Icon3 from "../assets/login_app_icon_3.svg";
-import Icon4 from "../assets/login_app_icon_4.svg";
-import Icon5 from "../assets/login_app_icon_5.svg";
-import Icon6 from "../assets/login_app_icon_6.svg";
-import Icon7 from "../assets/login_app_icon_7.svg";
 import GoogleIcon from "../assets/google_icon.svg"; // Adicione um ícone do Google
 import LumityFooter from "../assets/login_powered_by_lumity.svg";
 import Navbar from "../components/ui/general/Navbar";
 import "simplebar-react/dist/simplebar.min.css";
 import SimpleBar from "simplebar-react";
+
+const POKEMON_GRID = [
+  { id: 700, name: "Sylveon" },
+  { id: 658, name: "Greninja" },
+  { id: 25, name: "Pikachu" },
+  { id: 6, name: "Charizard" },
+  { id: 778, name: "Mimikyu" },
+  { id: 448, name: "Lucario" },
+  { id: 197, name: "Umbreon" },
+];
+
 
 function LoginModal() {
   const [isLoading, setIsLoading] = useState(false);
@@ -49,26 +53,26 @@ md:w-[380px] lg:w-[400px]
       >
         <div className="flex flex-col items-center text-center justify-between py-1 space-y-6">
           <div className="space-y-2">
-            <div className="font-inter font-bold text-3xl leading-[1.2]">
-              <h1>Get access to create</h1>
-              <h1>and use your Chaplins</h1>
+            <div className="font-bold text-[#FAFAFA] text-4xl leading-[1.1]">
+              <h1>Create your Gym</h1>
+              <h1>Become a Master</h1>
             </div>
-            <div className="text-base text-gray-400 tracking-tight">
-              <p>Personas for games, projects,</p>
-              <p>assistants and challenging tasks</p>
+            <div className="text-base font-medium text-[#DBDBDC] leading-[1.3] tracking-tight">
+              <p>Bring your Pokémon cards to life</p>
+              <p>and battle in your gym</p>
             </div>
           </div>
-          <IconGrid />
+          <PokemonGrid />
           <Separator />
           <div className="w-full flex flex-col items-center gap-4">
             <button
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="w-full h-12 bg-white text-black rounded-xl hover:bg-[#E3E3E4] transition-all active:scale-95 duration-200 flex items-center justify-center gap-3 text-[0.92em] tracking-tight cursor-pointer disabled:opacity-50"
+              className="relative w-full h-13 bg-white text-[#131316] font-regular rounded-xl hover:bg-[#E3E3E4] transition-all active:scale-95 duration-200 flex items-center justify-center text-[0.92em] tracking-tight cursor-pointer disabled:opacity-50"
             >
-              <img src={GoogleIcon} className="w-6 h-6" alt="Google Icon" />
+              <img src={GoogleIcon} className="absolute left-4 w-5 h-5" alt="Google Icon" />
               <span>
-                {isLoading ? "Conecting..." : "Continue with Google"}
+                {isLoading ? "Connecting..." : "Continue with Google"}
               </span>
             </button>
 
@@ -77,47 +81,44 @@ md:w-[380px] lg:w-[400px]
                 {lastError}
               </div>
             )}
-            <div className="text-xs text-gray-500 text-center max-w-[18rem] pt-2">
-          By continuing, you agree with the{" "}
-          <a href="#" className="font-medium text-gray-400 hover:text-white transition-colors">
-            Terms
-          </a>{" "}
-          and{" "}
-          <a href="#" className="font-medium text-gray-400 hover:text-white transition-colors">
-            Privacy Policy
-          </a>
+            <div className="text-xs text-gray-500 text-center max-w-[13rem] pt-2">
+              By continuing, you agree with the{" "}
+              <a href="#" className="font-medium text-gray-400 hover:text-white transition-colors">
+                Terms
+              </a>{" "}
+              and{" "}
+              <a href="#" className="font-medium text-gray-400 hover:text-white transition-colors">
+                Privacy Policy
+              </a>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
     </>
-  );
-}
-
-// ----- UI helpers -----
-function IconButton({ icon }) {
-  return (
-    <div className="flex p-1 bg-[#363639] rounded-xl w-10 h-10 justify-center items-center">
-      <img src={icon} alt="App Icon" />
-    </div>
   );
 }
 
 function Separator() {
   return (
     <div className="flex items-center w-full max-w-xs mt-5 md:mt-5 md:mb-5">
-      <div className="flex-grow border-t border-neutral-700"></div>
-      <span className="mx-4 text-sm font-medium text-gray-400">Sign In</span>
-      <div className="flex-grow border-t border-neutral-700"></div>
+      <div className="flex-grow border-t border-[#37383B]"></div>
+      <span className="mx-4 text-sm text-[#616168]">Sign In</span>
+      <div className="flex-grow border-t border-[#37383B]"></div>
     </div>
   );
 }
 
-function IconGrid() {
+function PokemonGrid() {
   return (
-    <div className="flex justify-center gap-2">
-      {[Icon1, Icon2, Icon3, Icon4, Icon5, Icon6, Icon7].map((icon, i) => (
-        <IconButton key={i} icon={icon} />
+    <div className="flex items-center justify-center md:justify-start gap-1.5">
+      {POKEMON_GRID.map((pokemon) => (
+        <img
+          key={pokemon.id}
+          src={`https://steady-gaufre-1267b2.netlify.app/${pokemon.id}.png`}
+          alt={pokemon.name}
+          className="w-10.5 h-10.5 object-contain"
+          title={pokemon.name}
+        />
       ))}
     </div>
   );
@@ -157,7 +158,7 @@ function Footer() {
           Discord
         </a>
         <a
-          href="https://github.com/lumitylabs/chaplin"
+          href="https://github.com/lumitylabs/gymleader"
           className="hover:text-white transition-colors"
           target="_blank"
           rel="noopener noreferrer"
