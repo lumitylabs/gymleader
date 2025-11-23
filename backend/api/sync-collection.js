@@ -80,6 +80,7 @@ const handler = async (req, res) => {
                 pokedexId: pokedexId,
                 cardId: card.numeracao,
                 image: card.imagem,
+                original: card.details?.image || null, // Save original artwork
                 // officialArt removed to save space
                 chain: card.chain,
                 grader: card.grader || "Raw",
@@ -97,6 +98,7 @@ const handler = async (req, res) => {
                 cardUpdates[`cards/${card.token_address}`] = {
                     ...card,
                     pokedexId: pokedexId,
+                    original: card.details?.image || null, // Save original artwork
                     lastUpdated: Date.now()
                 };
             }

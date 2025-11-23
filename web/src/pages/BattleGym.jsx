@@ -481,18 +481,26 @@ function BattleGym() {
                             {gymData?.team?.map((card, i) => card ? (
                                 <div key={i} className="group relative w-20 aspect-[3/4] cursor-pointer">
                                     <img 
-                                        src={card.image} 
+                                        src={card.original ? `${card.original}/low.png` : card.image} 
                                         alt={card.name}
                                         className="w-full h-full object-cover rounded-lg border border-[#26272B] transition-transform group-hover:scale-105"
-                                        onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`}
+                                        onError={(e) => {
+                                            // Fallback to NFT image if original fails
+                                            if (e.target.src !== card.image) {
+                                                e.target.src = card.image;
+                                            } else {
+                                                // Fallback to pixel sprite if NFT image also fails
+                                                e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`;
+                                            }
+                                        }}
                                     />
-                                    {/* Hover Zoom Effect */}
+                                    {/* Hover Zoom Effect - Shows NFT Card */}
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 hidden group-hover:block z-50">
                                         <img 
-                                            src={card.image + '/high.png'} 
+                                            src={card.image} 
                                             alt={card.name}
                                             className="w-full rounded-xl shadow-2xl border-2 border-yellow-500 bg-[#202024]"
-                                            onError={(e) => e.target.src = card.image} // Fallback
+                                            onError={(e) => e.target.src = card.original ? `${card.original}/high.png` : `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`}
                                         />
                                     </div>
                                 </div>
