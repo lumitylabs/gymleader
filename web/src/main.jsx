@@ -24,6 +24,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login.jsx";
 import Gym from "./pages/Gym.jsx";
 import Battle from "./pages/Battle.jsx";
+import BattleGym from "./pages/BattleGym.jsx";
 import Wallets from "./pages/Wallets.jsx";
 
 // --- Estilos ---
@@ -91,6 +92,7 @@ const App = () => {
                     <Route path="/" element={<ProtectedRoute><Battle /></ProtectedRoute>} />
                     <Route path="/gym" element={<ProtectedRoute><Gym /></ProtectedRoute>} />
                     <Route path="/battle" element={<ProtectedRoute><Battle /></ProtectedRoute>} />
+                    <Route path="/battle/:gymId" element={<ProtectedRoute><BattleGym /></ProtectedRoute>} />
                     <Route path="/wallets" element={<ProtectedRoute><Wallets /></ProtectedRoute>} />
                   </Routes>
                 </BrowserRouter>

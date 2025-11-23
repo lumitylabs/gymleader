@@ -43,7 +43,10 @@ const handler = async (req, res) => {
             leaderName: gymData.leaderName || '',
             leaderImage: gymData.leaderImage || '', // URL or base64? Assuming URL for now
             gymImage: gymData.gymImage || '',
-            team: gymData.team || [], // Array of pokemon IDs or objects
+            team: (gymData.team || []).map(p => ({
+                ...p,
+                original: p.original || null // Explicitly preserve original artwork
+            })),
             strategy: gymData.strategy || '',
             twitter: gymData.twitter || '',
             lastUpdated: Date.now()
