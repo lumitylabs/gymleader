@@ -267,8 +267,8 @@ function BattleGym() {
                             {gymData?.team?.map((poke, i) => poke && (
                                 <div key={i} className="w-12 h-12">
                                     <img 
-                                        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${poke.pokedexId || 1}.gif`} 
-                                        onError={(e) => e.target.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.pokedexId || 1}.png`}
+                                        src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId || 1}.gif`} 
+                                        onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId || 1}.png`}
                                         alt="poke" 
                                         className="w-full h-full object-contain" 
                                     />
@@ -326,7 +326,7 @@ function BattleGym() {
                                         {userTeam.length > 0 ? userTeam.map((poke, i) => (
                                             <div key={i} className="w-12 h-12">
                                                 <img 
-                                                    src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.pokedexId}.png`} 
+                                                    src={`http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} 
                                                     className="w-full h-full object-contain pixelated drop-shadow-md"
                                                     alt={poke.name || 'Pokemon'}
                                                 />
@@ -364,7 +364,7 @@ function BattleGym() {
                                                                         <div key={i} className="w-12 h-12">
                                                                             <img 
                                                                                 src={`https://img.pokemondb.net/sprites/black-white/anim/normal/${(poke.name || 'pikachu').toLowerCase().split(' ')[0]}.gif`}
-                                                                                onError={(e) => e.target.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.pokedexId}.png`}
+                                                                                onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`}
                                                                                 className="w-full h-full object-contain" 
                                                                                 alt={poke.name} 
                                                                             />
@@ -428,7 +428,7 @@ function BattleGym() {
                                                             <div key={i} className="w-12 h-12">
                                                                 <img 
                                                                     src={`https://img.pokemondb.net/sprites/black-white/anim/normal/${(poke.name || 'pikachu').toLowerCase().split(' ')[0]}.gif`}
-                                                                    onError={(e) => e.target.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${poke.pokedexId}.png`}
+                                                                    onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`}
                                                                     className="w-full h-full object-contain" 
                                                                     alt={poke.name} 
                                                                 />
@@ -484,7 +484,7 @@ function BattleGym() {
                                         src={card.image} 
                                         alt={card.name}
                                         className="w-full h-full object-cover rounded-lg border border-[#26272B] transition-transform group-hover:scale-105"
-                                        onError={(e) => e.target.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${card.pokedexId}.png`}
+                                        onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`}
                                     />
                                     {/* Hover Zoom Effect */}
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 hidden group-hover:block z-50">

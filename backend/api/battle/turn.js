@@ -55,7 +55,7 @@ const handler = async (req, res) => {
         } else {
             // OPTION B: Free text (Turn 1)
             const playerMovePrompt = `
-                You are the Referee.
+                You are the Judge.
                 Gym: ${gymDesc}
                 Challenger Team: ${battle.challengerTeam || 'Unknown'}
                 Player Action: "${action}"
@@ -82,7 +82,18 @@ const handler = async (req, res) => {
         // Check Win Conditions (Player Win)
         if (currentScore <= -7 || (battle.turn >= 5 && currentScore < 0)) {
              console.log(`[Battle ${battleId}] Player Win | Score: ${currentScore}`);
-             const endPrompt = `Battle Ended. Challenger Wins! Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION). Last Action: ${playerNarrative}. Narrate conclusion (Max 1 sentence). Return JSON: { "narrative": "string" }`;
+             const endPrompt = `
+                Battle Ended. Challenger Wins! 
+                Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION).
+                Last Action: ${playerNarrative}.
+                
+                Task: Narrate the conclusion of the battle.
+                - Summarize the Challenger's victory and team dominance.
+                - Do NOT focus only on the last move. Describe the overall triumph.
+                - Max 2 sentences.
+                
+                Return JSON: { "narrative": "string" }
+             `;
              const endResult = await generateJSON(endPrompt);
              
              await battleRef.update({
@@ -115,7 +126,7 @@ const handler = async (req, res) => {
             Leader: ${leaderName} (Strategy: ${gym.strategy || 'Win'})
             Leader Team: ${battle.leaderTeam || 'Unknown'}
             Challenger Team: ${battle.challengerTeam || 'Unknown'}
-            Current Score: ${currentScore} (Positive=Leader, Negative=Challenger)
+            Current Score: ${currentScore} (Positive=Leader Advantage, Negative=Challenger Advantage)
             Player Just Did: ${playerNarrative}
             
             Task:
@@ -147,7 +158,18 @@ const handler = async (req, res) => {
         // Check Win Conditions (Leader Win)
         if (currentScore >= 7 || (battle.turn >= 5 && currentScore >= 0)) {
              console.log(`[Battle ${battleId}] Leader Win | Score: ${currentScore}`);
-             const endPrompt = `Battle Ended. Leader Wins! Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION). Last Action: ${turnResult.leaderNarrative}. Narrate conclusion (Max 1 sentence). Return JSON: { "narrative": "string" }`;
+             const endPrompt = `
+                Battle Ended. Leader Wins! 
+                Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION).
+                Last Action: ${turnResult.leaderNarrative}.
+                
+                Task: Narrate the conclusion of the battle.
+                - Summarize the Leader's victory and team dominance.
+                - Do NOT focus only on the last move. Describe the overall triumph.
+                - Max 2 sentences.
+                
+                Return JSON: { "narrative": "string" }
+             `;
              const endResult = await generateJSON(endPrompt);
              
              await battleRef.update({

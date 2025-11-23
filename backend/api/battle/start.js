@@ -41,9 +41,9 @@ const handler = async (req, res) => {
         const userGymTeam = userGymTeamSnapshot.val();
         const challengerTeam = parseTeam(userGymTeam);
         
-        // 3. Referee: Intro
+        // 3. Judge: Intro
         const introPrompt = `
-            You are the Referee of a Pokemon Gym Battle.
+            You are the Judge of a Pokemon Gym Battle.
             Gym: ${gymName} - ${gymDesc}
             Leader: ${leaderName} (Team: ${leaderTeam})
             Challenger: Challenger (Team: ${challengerTeam})
@@ -59,9 +59,9 @@ const handler = async (req, res) => {
         `;
         const introData = await generateJSON(introPrompt);
 
-        // 4. Referee: Generate Options for Leader
+        // 4. Judge: Generate Options for Leader
         const optionsPrompt = `
-            Context: Battle just started. ${introData.narrative}
+            Context: Battle just started (Score: 0). ${introData.narrative}
             Gym Environment: ${gymDesc}
             Leader: ${leaderName}
             Leader Team: ${leaderTeam}
@@ -92,7 +92,7 @@ const handler = async (req, res) => {
         const leaderChoiceData = await generateJSON(leaderPrompt);
         const selectedOption = optionsData.options.find(o => o.id === leaderChoiceData.choiceId) || optionsData.options[0];
 
-        // 6. Referee: Narrate Leader Move & Generate Player Options
+        // 6. Judge: Narrate Leader Move & Generate Player Options
         const turnPrompt = `
             Context: ${introData.narrative}
             Leader Choice: ${selectedOption.text}
