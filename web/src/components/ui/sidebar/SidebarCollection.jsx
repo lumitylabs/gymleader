@@ -16,17 +16,17 @@ export function SidebarCollection({
 }) {
     return (
         <>
-            <div className="px-5 py-2 flex items-center justify-between mt-2">
-                <span className="text-[0.80em] text-[#9898A0] font-semibold uppercase tracking-wider">
+            <div className="px-5 py-2 flex items-center justify-between">
+                <span className="text-xs text-[#9898A0] font-semibold">
                     Collection ({cards.length})
                 </span>
                 <button
                     onClick={handleRefresh}
                     disabled={syncing}
-                    className={`p-1.5 rounded-full border border-[#26272B] text-gray-400 hover:bg-[#26272B] hover:text-white transition-all ${syncing ? 'animate-spin text-blue-500' : ''}`}
+                    className={`flex items-center justify-center w-9 h-9 rounded-full border border-[#2D2E34] hover:bg-[#1F1F23] hover:[#94949D] transition-all cursor-pointer ${syncing ? 'animate-spin' : ''}`}
                     title="Sync with Blockchain"
                 >
-                    <RefreshCw size={12} />
+                    <RefreshCw color="#94949C" size={13} />
                 </button>
             </div>
 

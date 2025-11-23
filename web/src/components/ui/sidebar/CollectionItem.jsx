@@ -20,6 +20,10 @@ import CgcLogo from "../../../assets/graders/cgc.png";
 import SgcLogo from "../../../assets/graders/sgc.png";
 import TagLogo from "../../../assets/graders/tag.png";
 
+// --- IMPORTAÇÃO DE LOGOS ---
+import BeezieLogo from "../../../assets/beezie_logo.svg";
+import CollectorLogo from "../../../assets/collector_logo.svg";
+
 const TAG_COLORS = {
   Water: "bg-[#3B99D6]",
   Fire: "bg-[#FF9D55]",
@@ -39,7 +43,7 @@ const TYPE_IMAGES = {
   Water: WaterType, Fire: FireType, Grass: GrassType, Lightning: LightningType,
   Psychic: PsychicType, Fighting: FightingType, Darkness: DarknessType,
   Metal: MetalType, Fairy: FairyType, Colorless: ColorlessType, Dragon: DragonType,
-  default: UnknownType 
+  default: UnknownType
 };
 
 const GRADER_IMAGES = {
@@ -69,7 +73,7 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
   const bgGradient = getTypeColor(mainType);
   const typeImageSrc = TYPE_IMAGES[mainType] || TYPE_IMAGES.default;
   const tagColor = TAG_COLORS[mainType] || TAG_COLORS.default;
-  
+
   const cardNumber = card.cardId;
   const graderKey = card.grader ? card.grader.toLowerCase() : "";
   const GraderLogoSrc = GRADER_IMAGES[graderKey];
@@ -77,19 +81,19 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
   let PlatformBadge;
   if (card.chain === 'flow') {
     PlatformBadge = (
-      <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
-        <div className="text-yellow-400 font-bold text-[10px] flex items-center gap-1">
-           <div className="w-2 h-2 bg-yellow-400 rotate-45"></div>
-           beezie
+      <div className="flex items-center gap-[2px] bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+        <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
+        <div className="text-white font-bold text-[10px] flex items-center gap-1">
+          beezie
         </div>
       </div>
     );
   } else if (card.chain === 'solana') {
     PlatformBadge = (
-      <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+      <div className="flex items-center bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+        <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
         <div className="text-white font-bold text-[10px] flex items-center gap-1">
-           <div className="w-2 h-2 bg-gradient-to-tr from-orange-500 to-blue-500 rounded-sm"></div>
-           COLLECTOR
+          COLLECTOR
         </div>
       </div>
     );
@@ -97,15 +101,15 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
     PlatformBadge = (
       <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
         <div className="text-white font-bold text-[10px] flex items-center gap-1">
-           <div className="w-2 h-2 bg-red-500 rounded-full border border-white"></div>
-           OAK GIFT
+          <div className="w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+          OAK GIFT
         </div>
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       draggable="true"
       onDragStart={(e) => {
         if (onDragStart) onDragStart();
@@ -120,7 +124,7 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
       className={`group relative w-full h-[90px] rounded-2xl overflow-hidden mb-2 select-none transition-transform active:scale-[0.98] cursor-pointer shadow-lg ${bgGradient} hover:scale-[0.98]`}
     >
       <div className="relative z-10 flex justify-between h-full px-4 py-2 items-center">
-        
+
         <div className="flex flex-col justify-center h-full max-w-[55%] z-20 gap-2">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-white text-md uppercase leading-none tracking-tight drop-shadow-md truncate">
@@ -141,27 +145,27 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
 
         <div className="absolute right-0 top-0 h-full w-[45%] pointer-events-none">
           <div className="absolute right-[60px] top-[50%] translate-y-[-50%] z-20 flex items-center rounded-[4px] overflow-hidden shadow-lg ">
-             <div className={`w-4 h-5 flex items-center justify-center ${tagColor}`}>
-                <img 
-                  src={typeImageSrc} 
-                  alt={mainType} 
-                  className="w-3 h-3 object-contain drop-shadow-sm"
-                />
-             </div>
-             <div className="bg-[#283845] px-1 h-5 flex items-center min-w-[40px] justify-center">
-                <span className="text-white text-[8px] font-bold uppercase tracking-wider">
-                  {mainType}
-                </span>
-             </div>
+            <div className={`w-4 h-5 flex items-center justify-center ${tagColor}`}>
+              <img
+                src={typeImageSrc}
+                alt={mainType}
+                className="w-3 h-3 object-contain drop-shadow-sm"
+              />
+            </div>
+            <div className="bg-[#283845] px-1 h-5 flex items-center min-w-[40px] justify-center">
+              <span className="text-white text-[8px] font-bold uppercase tracking-wider">
+                {mainType}
+              </span>
+            </div>
           </div>
 
           <div className="absolute right-2 bottom-3 w-13 h-13 z-10">
-             <img 
-               src={`https://sweet-cendol-f4d090.netlify.app/${card.pokedexId}.gif`} 
-               alt={card.name} 
-               className="w-full h-full object-contain drop-shadow-2xl filter contrast-110" 
-               loading="lazy"
-             />
+            <img
+              src={`https://sweet-cendol-f4d090.netlify.app/${card.pokedexId}.gif`}
+              alt={card.name}
+              className="w-full h-full object-contain drop-shadow-2xl filter contrast-110"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
