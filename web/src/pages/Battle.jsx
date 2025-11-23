@@ -134,7 +134,11 @@ function Battle() {
                 </>
             ) : filteredGyms.length > 0 ? (
                 filteredGyms.map((gym, index) => (
-                    <div key={index} className="bg-[#202024] hover:bg-[#232326]  rounded-2xl p-6 flex flex-col md:flex-row gap-6 transition-colors cursor-pointer group min-h-[200px]">
+                    <div 
+                        key={index} 
+                        onClick={() => navigate(`/battle/${gym.userId}`)}
+                        className="bg-[#202024] hover:bg-[#232326]  rounded-2xl p-6 flex flex-col md:flex-row gap-6 transition-colors cursor-pointer group min-h-[200px]"
+                    >
                         {/* Badge Image */}
                         <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0">
                             {gym.badgeImage ? (
