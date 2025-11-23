@@ -4,7 +4,7 @@ import { ChevronsLeft } from 'lucide-react';
 
 export function SidebarHeader({ setIsOpen, navigate }) {
   return (
-    <div className="p-5 pb-2 flex items-center justify-between">
+    <div className="p-5 pb-1 flex items-center justify-between">
 
       <div className="flex items-center gap-[1px] cursor-pointer" onClick={() => navigate("/")}>
         <img src={logo} className="w-10 h-10" />
@@ -15,7 +15,7 @@ export function SidebarHeader({ setIsOpen, navigate }) {
       </div>
       <button
         onClick={() => setIsOpen(false)}
-        className="text-gray-500 hover:text-white transition-colors p-1 rounded-full hover:bg-[#26272B]"
+        className="flex items-center justify-center w-9 h-9 rounded-full hover:bg-[#1F1F22] transition duration-200 cursor-pointer"
       >
         <ChevronsLeft color="#86868E" size={17} />
       </button>

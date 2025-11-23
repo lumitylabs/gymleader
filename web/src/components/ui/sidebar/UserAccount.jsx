@@ -41,7 +41,7 @@ export function UserAccount() {
   }, [menuRef]);
 
   return (
-    <div className="px-5 py-2 border-t border-[#26272B] bg-[#131316] relative" ref={menuRef}>
+    <div className="pl-4 pr-6 py-2 border-t border-[#26272B] bg-[#131316] relative" ref={menuRef}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -49,7 +49,7 @@ export function UserAccount() {
             animate={{ opacity: 1, y: -10, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-full left-4 right-4 mb-2 bg-[#18181B] border border-[#26272B] rounded-xl shadow-2xl overflow-hidden z-50"
+            className="absolute bottom-[60px] left-4 right-6 bg-[#18181B] rounded-xl shadow-2xl overflow-hidden z-50"
           >
             <div className="px-4 py-3 bg-[#18181B] border-b border-[#26272B]">
               <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Active Wallets</p>
@@ -80,14 +80,14 @@ export function UserAccount() {
             <div className="p-1">
               <button
                 onClick={() => navigate('/wallets')}
-                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors"
+                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors cursor-pointer"
               >
-                <span>Manage Wallets</span>
+                <span>Add Wallets</span>
                 <Wallet size={16} />
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors"
+                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors cursor-pointer"
               >
                 <span>Logout</span>
                 <LogOut size={16} />
@@ -99,7 +99,7 @@ export function UserAccount() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 w-full p-2 rounded-xl hover:bg-[#202024] transition-colors group"
+        className="flex items-center gap-3 w-full p-2 px-3 rounded-xl hover:bg-[#202024] transition-colors group cursor-pointer"
       >
         <div className="relative">
           <img
