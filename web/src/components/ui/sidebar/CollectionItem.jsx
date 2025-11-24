@@ -24,6 +24,8 @@ import TagLogo from "../../../assets/graders/tag.png";
 import BeezieLogo from "../../../assets/beezie_logo.svg";
 import CollectorLogo from "../../../assets/collector_logo.svg";
 
+import OakLogo from "../../../assets/oak_logo.svg";
+
 const TAG_COLORS = {
   Water: "bg-[#3B99D6]",
   Fire: "bg-[#FF9D55]",
@@ -79,7 +81,17 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
   const GraderLogoSrc = GRADER_IMAGES[graderKey];
 
   let PlatformBadge;
-  if (card.chain === 'flow') {
+  
+  if (card.tag === 'OAK GIFT') {
+    PlatformBadge = (
+      <div className="flex items-center gap-[2px] bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+        <img src={OakLogo} alt="Oak" className="w-4 h-4" />
+        <div className="text-white font-bold text-[10px] flex items-center gap-1">
+          OAK GIFT
+        </div>
+      </div>
+    );
+  } else if (card.chain === 'flow') {
     PlatformBadge = (
       <div className="flex items-center gap-[2px] bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
         <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
@@ -102,7 +114,7 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
       <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
         <div className="text-white font-bold text-[10px] flex items-center gap-1">
           <div className="w-2 h-2 bg-red-500 rounded-full border border-white"></div>
-          OAK GIFT
+          UNKNOWN
         </div>
       </div>
     );

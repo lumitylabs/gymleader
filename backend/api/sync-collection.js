@@ -109,6 +109,18 @@ const handler = async (req, res) => {
             await db.ref().update(cardUpdates);
         }
 
+        // 4. Preserve Gifted Cards
+        const currentCollectionSnapshot = await db.ref(`users/${userId}/collection`).once('value');
+        const currentCollection = currentCollectionSnapshot.val() || {};
+        const giftedCards = Object.entries(currentCollection).filter(([_, card]) => card.source === 'gift');
+
+        giftedCards.forEach(([key, card]) => {
+            if (!collectionData[key]) {
+                collectionData[key] = card;
+                cardCount++;
+            }
+        });
+
         await db.ref(`users/${userId}/collection`).set(collectionData);
         await db.ref(`users/${userId}/metadata`).update({
             lastSync: Date.now(),

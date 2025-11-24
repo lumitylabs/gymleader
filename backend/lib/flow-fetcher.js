@@ -78,6 +78,7 @@ async function fetchFlowNfts(address) {
                         const pokemonName = getAttr('Pokemon Name');
                         const grader = getAttr('Grader');
                         const grade = getAttr('Grade');
+                        console.log(nft)
                     
                         
                         // Constrói um nome limpo se disponível, senão usa o nome do NFT

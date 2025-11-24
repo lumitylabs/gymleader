@@ -123,4 +123,70 @@ async function fetchSolanaNfts(address) {
     }
 }
 
-module.exports = { fetchSolanaNfts };
+/**
+ * Busca NFTs específicos por Mint Address.
+ * @param {Array<string>} mintAddresses - Lista de endereços de mint.
+ * @returns {Promise<Array>} - Array de NFTs formatados.
+ */
+async function fetchSolanaNftsByMints(mintAddresses) {
+    if (!mintAddresses || mintAddresses.length === 0) return [];
+
+    try {
+        const metaplex = new Metaplex(connection).use(guestIdentity());
+        
+        // Fetch all mints in parallel
+        const nfts = await Promise.all(
+            mintAddresses.map(async (mint) => {
+                try {
+                    const mintPublicKey = new PublicKey(mint);
+                    const nft = await metaplex.nfts().findByMint({ mintAddress: mintPublicKey });
+                    return nft;
+                } catch (e) {
+                    console.error(`Erro ao buscar mint ${mint}:`, e.message);
+                    return null;
+                }
+            })
+        );
+
+        const validNfts = nfts.filter(n => n !== null);
+
+        const pokemonCards = validNfts.map(nft => {
+             // 1. Faz o parse do nome
+             const parsed = parseSolanaName(nft.name);
+                
+             // 2. Tenta pegar atributos existentes ou usa os parseados
+             const existingAttributes = nft.json?.attributes || [];
+             const existingGrader = existingAttributes.find(a => a.trait_type === "Grading Company")?.value;
+
+             // 3. Cria atributos artificiais para o Aggregator funcionar
+             const artificialAttributes = [
+                 { trait_type: "Year", value: parsed.year },
+                 { trait_type: "Serial Number", value: parsed.number }, 
+                 { trait_type: "Pokemon Name", value: parsed.cleanName },
+                 { trait_type: "Grader", value: parsed.grader || existingGrader },
+                 { trait_type: "Grade", value: parsed.grade }
+             ];
+
+             // Mescla atributos
+             const finalAttributes = [...existingAttributes, ...artificialAttributes];
+
+             return {
+                 token_name: nft.name || "N/A",
+                 clean_name: parsed.cleanName,
+                 token_image: nft.json?.image || '',
+                 attributes: finalAttributes,
+                 token_address: nft.address.toBase58(),
+                 grader: parsed.grader || existingGrader,
+                 grade: parsed.grade
+             };
+        });
+
+        return pokemonCards;
+
+    } catch (error) {
+        console.error('Erro ao buscar NFTs por Mint:', error);
+        return [];
+    }
+}
+
+module.exports = { fetchSolanaNfts, fetchSolanaNftsByMints };
