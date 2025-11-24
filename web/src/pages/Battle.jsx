@@ -77,7 +77,7 @@ function Battle() {
   });
 
   return (
-    <div className="bg-[#09090B] min-h-screen font-inter text-white flex">
+    <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
 
       <button
@@ -94,15 +94,14 @@ function Battle() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h1 className="text-2xl font-bold text-white">Battle</h1>
-
             <div className="relative w-full md:w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2" color="#FAFAFA" size={16} />
               <input
                 type="text"
                 placeholder="Search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#18181B] border border-[#26272B] rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-[#202024] rounded-full pl-12 pr-4 py-[15.5px] text-sm placeholder:text-[#999DA5] focus:outline-none"
               />
             </div>
           </div>
@@ -133,8 +132,8 @@ function Battle() {
               </>
             ) : filteredGyms.length > 0 ? (
               filteredGyms.map((gym, index) => (
-                <div key={index} 
-                        onClick={() => navigate(`/battle/${gym.userId}`)} className="bg-[#202024] hover:bg-[#232326]  rounded-2xl p-6 flex flex-col md:flex-row gap-6 transition-colors cursor-pointer group min-h-[200px]">
+                <div key={index}
+                  onClick={() => navigate(`/battle/${gym.userId}`)} className="bg-[#202024] hover:bg-[#232326]  rounded-2xl p-6 flex flex-col md:flex-row gap-6 transition-colors cursor-pointer group min-h-[200px]">
                   {/* Badge Image */}
                   <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0">
                     {gym.badgeImage ? (
