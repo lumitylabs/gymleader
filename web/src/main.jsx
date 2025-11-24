@@ -26,10 +26,13 @@ import Gym from "./pages/Gym.jsx";
 import Battle from "./pages/Battle.jsx";
 import BattleGym from "./pages/BattleGym.jsx";
 import Wallets from "./pages/Wallets.jsx";
+import Badges from "./pages/Badges.jsx";
 
 // --- Estilos ---
 import "./index.css";
 import '@solana/wallet-adapter-react-ui/styles.css'; // CSS base para o modal da Solana
+
+import { Toaster } from 'sonner';
 
 // --- CONFIGURAÇÃO DO REOWN APPKIT ---
 const queryClient = new QueryClient();
@@ -68,10 +71,6 @@ createAppKit({
   },
 });
 
-import { Toaster } from 'sonner';
-
-// ... imports ...
-
 const App = () => {
   const network = WalletAdapterNetwork.Devnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
@@ -93,6 +92,7 @@ const App = () => {
                     <Route path="/gym" element={<ProtectedRoute><Gym /></ProtectedRoute>} />
                     <Route path="/battle" element={<ProtectedRoute><Battle /></ProtectedRoute>} />
                     <Route path="/battle/:gymId" element={<ProtectedRoute><BattleGym /></ProtectedRoute>} />
+                    <Route path="/badges" element={<ProtectedRoute><Badges /></ProtectedRoute>} />
                     <Route path="/wallets" element={<ProtectedRoute><Wallets /></ProtectedRoute>} />
                   </Routes>
                 </BrowserRouter>
