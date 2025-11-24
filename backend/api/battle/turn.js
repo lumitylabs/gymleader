@@ -107,7 +107,10 @@ const handler = async (req, res) => {
             await db.ref(`users/${playerId}/badges/${battle.gymId}`).set({
                 earnedAt: Date.now(),
                 gymName: gym.gymName || 'Unknown Gym',
-                badgeImage: gym.badgeImage || ''
+                badgeImage: gym.badgeImage || '',
+                leaderName: gym.leaderName || 'Unknown Leader',
+                twitter: gym.twitter || '',
+                location: gym.location || 'Kanto' // Default to Kanto if not set
             });
 
             return res.status(200).json({
