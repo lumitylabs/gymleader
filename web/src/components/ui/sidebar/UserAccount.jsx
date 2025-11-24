@@ -41,7 +41,8 @@ export function UserAccount() {
   }, [menuRef]);
 
   return (
-    <div className="pl-4 pr-6 py-2 border-t border-[#26272B] bg-[#131316] relative" ref={menuRef}>
+    <div className="pl-4 pr-6 py-2 relative" ref={menuRef}>
+      <div className="border-t border-[#26272B] mb-2"></div>
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -52,7 +53,7 @@ export function UserAccount() {
             className="absolute bottom-[60px] left-4 right-6 bg-[#18181B] rounded-xl shadow-2xl overflow-hidden z-50"
           >
             <div className="px-4 py-3 bg-[#18181B] border-b border-[#26272B]">
-              <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-2">Active Wallets</p>
+              <p className="text-[10px] text-gray-500 font-bold mb-2">Active Wallets</p>
 
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs">
@@ -82,7 +83,7 @@ export function UserAccount() {
                 onClick={() => navigate('/wallets')}
                 className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors cursor-pointer"
               >
-                <span>Add Wallets</span>
+                <span>Wallets</span>
                 <Wallet size={16} />
               </button>
               <button
@@ -110,8 +111,8 @@ export function UserAccount() {
           <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-[#131316] rounded-full ${isEvmConnected || isSolanaConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
         </div>
 
-        <div className="flex flex-col items-start flex-grow min-w-0">
-          <span className="font-inter font-medium text-sm text-white truncate w-full text-left">
+        <div className="flex flex-col items-start items-center justify-center flex-grow min-w-0">
+          <span className="font-inter font-medium text-sm text-white truncate w-full text-left leading-none">
             {currentUser?.displayName || "Trainer"}
           </span>
           <span className="font-inter text-xs text-gray-500 truncate w-full text-left">
