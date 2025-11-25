@@ -19,6 +19,7 @@ import { ref, onValue } from "firebase/database";
 import Oak from '../assets/oak.png';
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
+import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 
 // Modal Component
 const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
@@ -264,6 +265,14 @@ function Wallets() {
   return (
     <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} />
+      <button
+              onClick={() => setIsNavbarOpen(true)}
+              className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] hover:rounded-full cursor-pointer transition-all ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+              aria-label="Open navigation menu"
+            >
+              <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
+            </button>
+
       <main className={`flex-grow transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'}`}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <h1 className="text-2xl font-bold text-white mb-8">Wallets</h1>
