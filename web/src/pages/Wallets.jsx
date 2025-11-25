@@ -17,6 +17,8 @@ import { X, Check } from 'lucide-react';
 import { db } from "../firebase/config";
 import { ref, onValue } from "firebase/database";
 import Oak from '../assets/oak.png';
+import SimpleBar from "simplebar-react";
+import "simplebar-react/dist/simplebar.min.css";
 
 // Modal Component
 const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
@@ -24,6 +26,7 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
   const [selectedCards, setSelectedCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState(false);
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -37,6 +40,7 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
       const data = await response.json();
       if (data.cards) {
         setCards(data.cards);
+        // Removed setting initial hovered card to match "only on hover" requirement
       }
     } catch (error) {
       console.error("Error fetching gift options:", error);
@@ -95,79 +99,96 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#18181B] w-full max-w-5xl rounded-2xl border border-[#26272B] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="flex items-start gap-6 h-[800px] max-h-[90vh] w-full max-w-7xl justify-center">
         
-        {/* Header */}
-        <div className="p-6 border-b border-[#26272B] flex justify-between items-start">
-          <div>
-            <h2 className="text-xl font-bold text-white mb-2">Select your Pokémons</h2>
-            <div className="flex items-center gap-3 bg-[#202024] p-3 rounded-lg border border-[#26272B]">
-              <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
-                 {/* Placeholder for Oak Image */}
-                 <img src={Oak} alt="Professor Oak" className="w-full h-full object-cover" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">Professor OAK</p>
-                <p className="text-xs text-gray-400">Select three Pokémon gift cards to start your journey.</p>
+        {/* Main Modal Content */}
+        <div className="bg-[#18181B] flex-1 max-w-4xl rounded-2xl border border-[#26272B] shadow-2xl overflow-hidden flex flex-col h-full">
+          {/* Header */}
+          <div className="p-6 border-b border-[#26272B] flex justify-between items-start shrink-0">
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">Select your Pokémons</h2>
+              <div className="flex items-center gap-3 bg-[#202024] p-3 rounded-lg border border-[#26272B]">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                   <img src={Oak} alt="Professor Oak" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">Professor OAK</p>
+                  <p className="text-xs text-gray-400">Select three Pokémon gift cards to start your journey.</p>
+                </div>
               </div>
             </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+              <X size={24} />
+            </button>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
-            <X size={24} />
-          </button>
+
+          {/* Content Area (Grid Only) */}
+          <div className="flex-1 overflow-hidden">
+              <SimpleBar style={{ height: '100%' }} className="p-6">
+                  {loading ? (
+                      <div className="flex justify-center items-center h-40 text-gray-400">Loading cards...</div>
+                  ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {cards.map((card) => {
+                          const isSelected = selectedCards.includes(card.token_address);
+                          return (
+                          <div key={card.token_address} className="flex flex-col gap-3">
+                              <div 
+                              className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 ${isSelected ? 'border-yellow-500 ring-2 ring-yellow-500/20' : 'border-transparent hover:border-gray-600'}`}
+                              onClick={() => toggleCardSelection(card.token_address)}
+                              onMouseEnter={() => setHoveredCard(card)}
+                              onMouseLeave={() => setHoveredCard(null)}
+                              >
+                              <img src={card.imagem} alt={card.nome} className="w-full h-full object-contain bg-[#131316]" />
+                              {isSelected && (
+                                  <div className="absolute top-2 right-2 bg-yellow-500 text-black rounded-full p-1">
+                                  <Check size={12} strokeWidth={3} />
+                                  </div>
+                              )}
+                              </div>
+                              <button
+                              onClick={() => toggleCardSelection(card.token_address)}
+                              className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  isSelected 
+                                  ? 'bg-[#202024] text-white border border-[#26272B] flex items-center justify-center gap-2' 
+                                  : 'bg-[#202024] text-gray-400 border border-[#26272B] hover:bg-[#2A2A2E] hover:text-white'
+                              }`}
+                              >
+                              {isSelected ? <><Check size={14} /> Selected</> : 'Select'}
+                              </button>
+                          </div>
+                          );
+                      })}
+                      </div>
+                  )}
+              </SimpleBar>
+          </div>
+
+          {/* Footer */}
+          <div className="p-6 border-t border-[#26272B] flex justify-end shrink-0 bg-[#18181B]">
+            <button
+              onClick={handleRedeem}
+              disabled={redeeming || selectedCards.length === 0}
+              className={`px-8 py-3 rounded-full font-bold text-black transition-all ${
+                redeeming || selectedCards.length === 0
+                  ? 'bg-gray-600 cursor-not-allowed opacity-50'
+                  : 'bg-white hover:bg-gray-200 active:scale-95'
+              }`}
+            >
+              {redeeming ? 'Redeeming...' : 'Redeem'}
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {loading ? (
-            <div className="flex justify-center items-center h-40 text-gray-400">Loading cards...</div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-              {cards.map((card) => {
-                const isSelected = selectedCards.includes(card.token_address);
-                return (
-                  <div key={card.token_address} className="flex flex-col gap-3">
-                    <div 
-                      className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 ${isSelected ? 'border-yellow-500 ring-2 ring-yellow-500/20' : 'border-transparent hover:border-gray-600'}`}
-                      onClick={() => toggleCardSelection(card.token_address)}
-                    >
-                      <img src={card.imagem} alt={card.nome} className="w-full h-full object-contain bg-[#131316]" />
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 bg-yellow-500 text-black rounded-full p-1">
-                          <Check size={12} strokeWidth={3} />
-                        </div>
-                      )}
+        {/* Right: Preview Panel (Outside) */}
+        <div className={`w-[350px] transition-opacity duration-200 ${hoveredCard ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-[#18181B] rounded-2xl border border-[#26272B] shadow-2xl p-6 flex flex-col items-center justify-center h-full shrink-0`}>
+            {hoveredCard && (
+                <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300 w-full h-full justify-center">
+                    <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border border-[#26272B]">
+                          <img src={hoveredCard.imagem} alt={hoveredCard.nome} className="w-full h-full object-contain bg-[#09090B]" />
                     </div>
-                    <button
-                      onClick={() => toggleCardSelection(card.token_address)}
-                      className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isSelected 
-                          ? 'bg-[#202024] text-white border border-[#26272B] flex items-center justify-center gap-2' 
-                          : 'bg-[#202024] text-gray-400 border border-[#26272B] hover:bg-[#2A2A2E] hover:text-white'
-                      }`}
-                    >
-                      {isSelected ? <><Check size={14} /> Selected</> : 'Select'}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-[#26272B] flex justify-end">
-          <button
-            onClick={handleRedeem}
-            disabled={redeeming || selectedCards.length === 0}
-            className={`px-8 py-3 rounded-full font-bold text-black transition-all ${
-              redeeming || selectedCards.length === 0
-                ? 'bg-gray-600 cursor-not-allowed opacity-50'
-                : 'bg-white hover:bg-gray-200 active:scale-95'
-            }`}
-          >
-            {redeeming ? 'Redeeming...' : 'Redeem'}
-          </button>
+                </div>
+            )}
         </div>
 
       </div>
