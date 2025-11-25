@@ -96,12 +96,68 @@ function BattleGym() {
 
     const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
+    const LoadingLog = ({ messages }) => {
+        const [index, setIndex] = useState(0);
+
+        useEffect(() => {
+            const interval = setInterval(() => {
+                setIndex(prev => (prev + 1) % messages.length);
+            }, 5000);
+            return () => clearInterval(interval);
+        }, [messages]);
+
+        return (
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-xl backdrop-blur-md border bg-gray-800/40 border-gray-700 flex items-center gap-3"
+            >
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <p className="text-sm md:text-base text-gray-300">{messages[index]}</p>
+            </motion.div>
+        );
+    };
+
+    const [messageQueue, setMessageQueue] = useState([]);
+    const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+    const [gameOverState, setGameOverState] = useState(null); // { winner: string, type: 'win' | 'loss' }
+
+    // Process Message Queue
+    useEffect(() => {
+        if (messageQueue.length > 0 && !isProcessingQueue) {
+            setIsProcessingQueue(true);
+            const nextMessage = messageQueue[0];
+
+            // Add to battle log
+            setBattleLog(prev => [...prev, nextMessage]);
+
+            // Remove from queue after delay
+            setTimeout(() => {
+                setMessageQueue(prev => prev.slice(1));
+                setIsProcessingQueue(false);
+            }, 1500); // 1.5s delay between messages
+        }
+    }, [messageQueue, isProcessingQueue]);
+
+    // Helper to add messages to queue
+    const queueMessages = (messages) => {
+        setMessageQueue(prev => [...prev, ...messages]);
+    };
+
     const startBattle = async () => {
         if (!currentUser) return toast.error("You must be logged in to battle");
 
         setBattleStatus('starting');
         // Initial loading state
-        setBattleLog([{ type: 'system', message: 'The judge is connecting to the match...' }]);
+        setBattleLog([{
+            type: 'loading',
+            messages: [
+                'Connecting to Gym...',
+                'Judge is entering the arena...',
+                'Initializing battle protocol...',
+                'Waiting for Gym Leader...'
+            ]
+        }]);
 
         try {
             const response = await fetch(import.meta.env.VITE_SERVER_URL + '/api/battle/start', {
@@ -118,15 +174,26 @@ function BattleGym() {
 
             setBattleContext(data.battleId);
             setBattleStatus('active');
-            // Removed setActivePokemon
 
-            // Update log with sequence
-            setBattleLog(prev => [
+            // Clear loading log
+            setBattleLog([]);
+
+            // Queue sequence
+            queueMessages([
                 { type: 'referee', message: 'The judge has connected to the match...' },
                 { type: 'system', message: 'The battle has begun!' },
                 { type: 'narrative', message: data.introNarrative },
                 { type: 'narrative', message: data.leaderMoveNarrative }
             ]);
+
+            // Add options immediately after the last narrative (or queue them too if we want delay)
+            // For options, it's better to show them after the narrative is done.
+            // But since our queue logic adds to battleLog one by one, we can just queue the options too?
+            // The current UI renders options only if it's the last item. 
+            // So we should queue options as a special log type.
+            if (data.playerOptions) {
+                queueMessages([{ type: 'options', options: data.playerOptions }]);
+            }
 
         } catch (error) {
             console.error(error);
@@ -142,26 +209,26 @@ function BattleGym() {
         setPlayerInput("");
         setSendingTurn(true);
 
-        // Optimistic update
+        // Optimistic update (Immediate feedback)
         if (choiceId) {
-            // Find the selected option to get its pre-generated narrative
             const lastOptionsLog = battleLog.slice().reverse().find(l => l.type === 'options');
             const selectedOption = lastOptionsLog?.options?.find(o => o.id === choiceId);
-
-            if (selectedOption && selectedOption.narrative) {
-                setBattleLog(prev => [...prev, { type: 'player', message: selectedOption.narrative }]);
-            } else {
-                setBattleLog(prev => [...prev, { type: 'player', message: selectedOption?.text || "Player Action" }]);
-            }
+            setBattleLog(prev => [...prev, { type: 'player', message: selectedOption?.narrative || selectedOption?.text || "Player Action" }]);
         } else {
-            // Turn 1 text input - we don't have a narrative yet, so just show the input
-            // actually, for turn 1, we might want to wait for the server to narrate it properly
-            // but showing the input is good feedback.
             setBattleLog(prev => [...prev, { type: 'player', message: instruction }]);
         }
 
-        // Show "Leader is thinking..." immediately after player move
-        setBattleLog(prev => [...prev, { type: 'system', message: 'Leader is thinking...' }]);
+        // Show dynamic loading message
+        setBattleLog(prev => [...prev, {
+            type: 'loading',
+            messages: [
+                'Leader is thinking...',
+                'Analyzing strategy...',
+                'Predicting your move...',
+                'Consulting Pokedex...',
+                'Formulating counter-attack...'
+            ]
+        }]);
 
         try {
             const response = await fetch(import.meta.env.VITE_SERVER_URL + '/api/battle/turn', {
@@ -178,45 +245,49 @@ function BattleGym() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to process turn');
 
-            // Remove the "Leader is thinking..." message (it's the last one)
-            setBattleLog(prev => {
-                const filtered = prev.filter(l => l.message !== 'Leader is thinking...');
-                const newLogs = [];
+            // Remove the loading message immediately
+            setBattleLog(prev => prev.filter(l => l.type !== 'loading'));
 
-                // 1. Add Player Narrative (Referee's interpretation of text input)
-                if (!choiceId && data.playerNarrative) {
-                    newLogs.push({ type: 'narrative', message: data.playerNarrative });
-                }
+            const newMessages = [];
 
-                // 2. Add Leader Narrative
-                if (data.leaderNarrative) {
-                    newLogs.push({ type: 'narrative', message: data.leaderNarrative });
-                }
-
-                return [...filtered, ...newLogs];
-            });
-
-            // Removed setActivePokemon
-
-            // 3. Add Player Options for NEXT turn
-            if (data.playerOptions) {
-                setBattleLog(prev => [...prev, { type: 'options', options: data.playerOptions }]);
+            // 1. Add Player Narrative
+            if (!choiceId && data.playerNarrative) {
+                newMessages.push({ type: 'narrative', message: data.playerNarrative });
             }
 
+            // 2. Add Leader Narrative
+            if (data.leaderNarrative) {
+                newMessages.push({ type: 'narrative', message: data.leaderNarrative });
+            }
+
+            // 3. Queue messages
+            queueMessages(newMessages);
+
+            // 4. Handle Game Over or Next Options
             if (data.gameOver) {
                 setBattleStatus('ended');
-                if (data.winner === currentUser.uid) {
+                const isWin = data.winner === currentUser.uid;
+                setGameOverState({
+                    type: isWin ? 'win' : 'loss',
+                    winner: data.winner
+                });
+
+                // Queue end message
+                queueMessages([{ type: 'system', message: isWin ? 'Victory! You defeated the Gym Leader!' : 'Defeat! You were overwhelmed.' }]);
+
+                if (isWin) {
                     toast.success("You won the badge!");
                 } else {
                     toast.error("You were defeated!");
                 }
+            } else if (data.playerOptions) {
+                queueMessages([{ type: 'options', options: data.playerOptions }]);
             }
 
         } catch (error) {
             console.error(error);
             toast.error(error.message);
-            // Remove thinking message on error
-            setBattleLog(prev => prev.filter(l => l.message !== 'Leader is thinking...'));
+            setBattleLog(prev => prev.filter(l => l.type !== 'loading'));
         } finally {
             setSendingTurn(false);
         }
@@ -405,6 +476,10 @@ function BattleGym() {
                                                         return null;
                                                     }
 
+                                                    if (log.type === 'loading') {
+                                                        return <LoadingLog key={index} messages={log.messages} />;
+                                                    }
+
                                                     return (
                                                         <motion.div
                                                             key={index}
@@ -418,11 +493,12 @@ function BattleGym() {
                                                             <p className="text-sm md:text-base">{log.message}</p>
                                                         </motion.div>
                                                     );
-                                                })}
+                                                })
+                                                }
 
                                                 {/* Turn 1 Input (Text) */}
-                                                {/* Show only if no options are present (meaning it's turn 1 or we are waiting for options) AND not sending */}
-                                                {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && (
+                                                {/* Show only if no options are present (meaning it's turn 1 or we are waiting for options) AND not sending AND not processing queue */}
+                                                {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && (
                                                     <motion.div
                                                         initial={{ opacity: 0, y: 20 }}
                                                         animate={{ opacity: 1, y: 0 }}
@@ -472,6 +548,57 @@ function BattleGym() {
                                         </SimpleBar>
                                     </div>
                                 )}
+
+                                {/* Game Over Overlay */}
+                                <AnimatePresence>
+                                    {gameOverState && (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+                                        >
+                                            <motion.div
+                                                initial={{ scale: 0.8, y: 20 }}
+                                                animate={{ scale: 1, y: 0 }}
+                                                className={`bg-[#202024] border-2 ${gameOverState.type === 'win' ? 'border-yellow-500' : 'border-red-500'} rounded-2xl p-8 max-w-md w-full text-center shadow-2xl`}
+                                            >
+                                                <div className="flex justify-center mb-6">
+                                                    {gameOverState.type === 'win' ? (
+                                                        <Trophy size={64} className="text-yellow-500" />
+                                                    ) : (
+                                                        <Shield size={64} className="text-red-500" />
+                                                    )}
+                                                </div>
+
+                                                <h2 className={`text-3xl font-black mb-2 ${gameOverState.type === 'win' ? 'text-yellow-500' : 'text-red-500'}`}>
+                                                    {gameOverState.type === 'win' ? 'VICTORY!' : 'DEFEAT'}
+                                                </h2>
+
+                                                <p className="text-gray-300 mb-8">
+                                                    {gameOverState.type === 'win'
+                                                        ? "You have defeated the Gym Leader and earned the Badge!"
+                                                        : "Your team was overwhelmed. Train harder and try again!"}
+                                                </p>
+
+                                                <div className="flex gap-4 justify-center">
+                                                    <button
+                                                        onClick={() => navigate('/gyms')}
+                                                        className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
+                                                    >
+                                                        Back to Gyms
+                                                    </button>
+                                                    <button
+                                                        onClick={() => window.location.reload()}
+                                                        className={`px-6 py-3 rounded-xl font-bold text-black transition-colors ${gameOverState.type === 'win' ? 'bg-yellow-500 hover:bg-yellow-400' : 'bg-red-500 hover:bg-red-400'}`}
+                                                    >
+                                                        Rematch
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
                             </div>
                         </div>
 

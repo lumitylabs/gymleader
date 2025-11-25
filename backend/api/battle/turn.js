@@ -123,6 +123,9 @@ const handler = async (req, res) => {
 
         // --- PHASE 2: LEADER TURN (Combined AI Call) ---
         
+        // Format recent history for context
+        const historyText = battle.history ? battle.history.slice(-4).map(h => `${h.role}: ${h.text}`).join('\n') : "No history";
+
         const combinedTurnPrompt = `
             You are the Game Engine for a Pokemon Battle.
             Gym: ${gymDesc}
@@ -130,10 +133,16 @@ const handler = async (req, res) => {
             Leader Team: ${battle.leaderTeam || 'Unknown'}
             Challenger Team: ${battle.challengerTeam || 'Unknown'}
             Current Score: ${currentScore} (Positive=Leader Advantage, Negative=Challenger Advantage)
+            
+            Recent Battle History:
+            ${historyText}
+            
             Player Just Did: ${playerNarrative}
             
             Task:
             1. Determine the Leader's counter-move based on strategy.
+               - VARIETY RULE: Do not repeat the same move as the last turn. Be dynamic.
+               - NO SWITCHING: The Leader fights with the active Pokemon or the whole team as a unit. Do not suggest switching out.
             2. Narrate the Leader's move (VERY CONCISE, max 1 sentence).
             3. Calculate the score impact of this move (-2 to +2, Positive helps Leader).
             4. Generate 3 strategic options for the Challenger (Player) to respond.
@@ -141,6 +150,7 @@ const handler = async (req, res) => {
                - "text": A short, action-oriented phrase describing the INTENT (e.g., "Dodge and counter with Water Gun", "Hide behind rocks", "Order Pikachu to use Thunderbolt"). NOT just the move name.
                - "narrative": What happens if chosen (Max 1 sentence).
                - "score": 1-3 (Higher = Better for Player).
+               - NO SWITCHING: Do not offer "Switch Pokemon" as an option.
             
             IMPORTANT: 
             - Use ONLY the Pokemon listed in the teams above. Do not invent Pokemon.

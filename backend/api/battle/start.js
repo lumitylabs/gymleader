@@ -41,7 +41,9 @@ const handler = async (req, res) => {
         const userGymTeam = userGymTeamSnapshot.val();
         const challengerTeam = parseTeam(userGymTeam);
         
-        // 3. Judge: Intro
+        // --- PARALLEL EXECUTION START ---
+        
+        // Task A: Intro Narrative
         const introPrompt = `
             You are the Judge of a Pokemon Gym Battle.
             Gym: ${gymName} - ${gymDesc}
@@ -57,79 +59,54 @@ const handler = async (req, res) => {
             Return JSON: { "narrative": "string" }
             IMPORTANT: Ensure all keys are double-quoted. Return ONLY the JSON object.
         `;
-        const introData = await generateJSON(introPrompt);
 
-        // 4. Judge: Generate Options for Leader
-        const optionsPrompt = `
-            Context: Battle just started (Score: 0). ${introData.narrative}
+        // Task B: Combined Game Logic (Options -> Choice -> Turn)
+        const logicPrompt = `
+            You are the Game Engine for a Pokemon Battle.
+            Context: Battle Start. Score: 0.
             Gym Environment: ${gymDesc}
-            Leader: ${leaderName}
+            Leader: ${leaderName} (Strategy: ${gym.strategy || 'Win at all costs'})
             Leader Team: ${leaderTeam}
             Challenger Team: ${challengerTeam}
             
-            Task: Generate 3 strategic options for the Gym Leader to take as their first move.
-            Options should use the environment or their pokemon's strengths.
-            Assign a hidden score (-2 to +2) for each option representing its effectiveness/advantage.
+            Task: Simulate the first turn of the battle internally and return the result.
             
-            IMPORTANT: Generate options using ONLY the Pokemon in the Leader's Team: ${leaderTeam}.
-            
-            Return JSON: { "options": [{ "id": 1, "text": "string", "score": number }] }
-            IMPORTANT: Ensure all keys are double-quoted. Return ONLY the JSON object.
-        `;
-        const optionsData = await generateJSON(optionsPrompt);
-
-        // 5. AI Leader: Choose Option
-        const leaderPrompt = `
-            You are Gym Leader ${leaderName}.
-            Strategy: ${gym.strategy || 'Win at all costs.'}
-            Options: ${JSON.stringify(optionsData.options)}
-            
-            Task: Choose the best option based on your strategy.
-            
-            Return JSON: { "choiceId": number }
-            IMPORTANT: Ensure all keys are double-quoted. Return ONLY the JSON object.
-        `;
-        const leaderChoiceData = await generateJSON(leaderPrompt);
-        const selectedOption = optionsData.options.find(o => o.id === leaderChoiceData.choiceId) || optionsData.options[0];
-
-        // 6. Judge: Narrate Leader Move & Generate Player Options
-        const turnPrompt = `
-            Context: ${introData.narrative}
-            Leader Choice: ${selectedOption.text}
-            Leader Team: ${leaderTeam}
-            Challenger Team: ${challengerTeam}
-            Gym Environment: ${gymDesc}
-            
-            Task: 
-            1. Narrate the Leader's action based on the choice (VERY CONCISE, max 1 sentence).
-               - USE ONLY POKEMON FROM: ${leaderTeam}.
-            2. Generate 3 strategic options for the Challenger (Player) to respond.
-               - The player can use ANY of their pokemon or combine them.
-               - "text": A short, action-oriented phrase describing the INTENT (e.g., "Dodge and counter with Water Gun", "Hide behind rocks", "Order Pikachu to use Thunderbolt"). NOT just the move name.
-               - "narrative": What happens if chosen (Max 1 sentence).
-               - Assign a score (1 to 3) for each option (Higher = Better).
+            Steps (INTERNAL THINKING):
+            1. Generate 3 strategic options for the Gym Leader using their team (${leaderTeam}).
+               - VARIETY RULE: Do not always start with the strongest move. Use status moves, environment, or setup moves.
+               - NO SWITCHING: The Leader fights with the active Pokemon or the whole team as a unit. Do not suggest switching out.
+            2. Select the BEST option based on the Leader's strategy.
+            3. Narrate the Leader's move based on that choice (VERY CONCISE, max 1 sentence).
             
             Return JSON: { 
-                "narrative": "string", 
-                "playerOptions": [{ "id": 1, "text": "string", "narrative": "string", "score": number }]
+                "leaderMoveNarrative": "string", 
+                "leaderMoveScore": number // -2 to +2 (Positive = Good for Leader)
             }
             IMPORTANT: Ensure all keys are double-quoted. Return ONLY the JSON object.
         `;
-        const turnData = await generateJSON(turnPrompt);
+
+        // Execute both in parallel
+        const [introData, logicData] = await Promise.all([
+            generateJSON(introPrompt),
+            generateJSON(logicPrompt)
+        ]);
+
+        // --- PARALLEL EXECUTION END ---
 
         // 7. Save Battle State
         const battleId = db.ref('battles').push().key;
         console.log(`[Battle Start] ID: ${battleId} | Gym: ${gymName} | Leader: ${leaderName} | Challenger: ${challengerId}`);
+        
         const battleState = {
             gymId,
             challengerId,
-            score: selectedOption.score || 0, // Initial score from Leader's move
+            score: logicData.leaderMoveScore || 0,
             turn: 1,
             history: [
                 { role: 'intro', text: introData.narrative },
-                { role: 'leader_move', text: turnData.narrative, option: selectedOption }
+                { role: 'leader_move', text: logicData.leaderMoveNarrative }
             ],
-            playerOptions: turnData.playerOptions,
+            playerOptions: logicData.playerOptions || null,
             status: 'active',
             lastUpdated: Date.now(),
             leaderTeam,
@@ -142,8 +119,8 @@ const handler = async (req, res) => {
         return res.status(200).json({
             battleId,
             introNarrative: introData.narrative,
-            leaderMoveNarrative: turnData.narrative,
-            playerOptions: turnData.playerOptions,
+            leaderMoveNarrative: logicData.leaderMoveNarrative,
+            playerOptions: logicData.playerOptions || null,
             status: 'active'
         });
 
