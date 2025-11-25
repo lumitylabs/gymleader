@@ -557,50 +557,72 @@ function BattleGym() {
                                         <motion.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6"
+                                            exit={{ opacity: 0 }}
+                                            className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-6"
                                         >
                                             <motion.div
-                                                initial={{ scale: 0.8, y: 20 }}
-                                                animate={{ scale: 1, y: 0 }}
-                                                className={`bg-[#202024] border-2 ${gameOverState.type === 'win' ? 'border-yellow-500' : 'border-red-500'} rounded-2xl p-8 max-w-md w-full text-center shadow-2xl`}
+                                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                                className="relative bg-[#18181B] border border-[#27272A] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl overflow-hidden"
                                             >
-                                                <div className="flex justify-center mb-6">
-                                                    {gameOverState.type === 'win' ? (
-                                                        <div className="w-24 h-24 relative">
-                                                            <img
-                                                                src={gymData?.badgeImage || '/placeholder-badge.png'}
-                                                                alt="Badge"
-                                                                className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]"
-                                                            />
-                                                        </div>
-                                                    ) : (
-                                                        <Shield size={64} className="text-red-500" />
-                                                    )}
-                                                </div>
+                                                {/* Background Glow */}
+                                                <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b ${gameOverState.type === 'win' ? 'from-yellow-500/20' : 'from-red-500/20'} to-transparent opacity-50 blur-3xl pointer-events-none`} />
 
-                                                <h2 className={`text-3xl font-black mb-2 ${gameOverState.type === 'win' ? 'text-yellow-500' : 'text-red-500'}`}>
-                                                    {gameOverState.type === 'win' ? 'VICTORY!' : 'DEFEAT'}
-                                                </h2>
+                                                <div className="relative z-10 flex flex-col items-center">
+                                                    {/* Icon / Badge */}
+                                                    <div className="mb-6 relative">
+                                                        {gameOverState.type === 'win' ? (
+                                                            <>
+                                                                <div className="absolute inset-0 bg-yellow-500/30 blur-2xl rounded-full" />
+                                                                <motion.div
+                                                                    className="w-32 h-32 relative z-10"
+                                                                >
+                                                                    <img
+                                                                        src={gymData?.badgeImage || '/placeholder-badge.png'}
+                                                                        alt="Badge"
+                                                                        className="w-full h-full object-contain drop-shadow-2xl"
+                                                                    />
+                                                                </motion.div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="absolute inset-0 bg-red-500/20 blur-2xl rounded-full" />
+                                                                <Shield size={80} className="text-red-500 relative z-10 drop-shadow-lg" />
+                                                            </>
+                                                        )}
+                                                    </div>
 
-                                                <p className="text-gray-300 mb-8">
-                                                    {gameOverState.type === 'win'
-                                                        ? "You have defeated the Gym Leader and earned the Badge!"
-                                                        : "Your team was overwhelmed. Train harder and try again!"}
-                                                </p>
+                                                    {/* Title */}
+                                                    <h2 className={`text-4xl font-black tracking-tight mb-3 ${gameOverState.type === 'win' ? 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600' : 'text-transparent bg-clip-text bg-gradient-to-b from-red-400 to-red-700'}`}>
+                                                        {gameOverState.type === 'win' ? 'VICTORY!' : 'DEFEAT'}
+                                                    </h2>
 
-                                                <div className="flex gap-4 justify-center">
-                                                    <button
-                                                        onClick={() => navigate('/battle')}
-                                                        className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
-                                                    >
-                                                        Back to Gyms
-                                                    </button>
-                                                    <button
-                                                        onClick={() => window.location.reload()}
-                                                        className={`px-6 py-3 rounded-xl font-bold text-black transition-colors ${gameOverState.type === 'win' ? 'bg-yellow-500 hover:bg-yellow-400' : 'bg-red-500 hover:bg-red-400'}`}
-                                                    >
-                                                        Rematch
-                                                    </button>
+                                                    {/* Description */}
+                                                    <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-[260px]">
+                                                        {gameOverState.type === 'win'
+                                                            ? "Incredible! You've defeated the Gym Leader and claimed the Badge."
+                                                            : "Your team was overwhelmed. Analyze the strategy and challenge again."}
+                                                    </p>
+
+                                                    {/* Buttons */}
+                                                    <div className="flex flex-col gap-3 w-full">
+                                                        <button
+                                                            onClick={() => window.location.reload()}
+                                                            className={`w-full py-3.5 rounded-xl font-bold text-black transition-all transform active:scale-95 shadow-lg ${gameOverState.type === 'win'
+                                                                ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 shadow-yellow-900/20'
+                                                                : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 shadow-red-900/20'
+                                                                }`}
+                                                        >
+                                                            Rematch
+                                                        </button>
+                                                        <button
+                                                            onClick={() => navigate('/battle')}
+                                                            className="w-full py-3.5 rounded-xl bg-[#27272A] hover:bg-[#3F3F46] text-white font-medium transition-colors border border-[#3F3F46]"
+                                                        >
+                                                            Back to Gyms
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </motion.div>
                                         </motion.div>
