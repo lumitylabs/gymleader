@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 import BattlePokeball from "../assets/battle-pokeball.png";
+import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 
 function BattleGym() {
   const { gymId } = useParams();
@@ -227,7 +228,13 @@ function BattleGym() {
   return (
     <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
-      
+      <button
+                    onClick={() => setIsNavbarOpen(true)}
+                    className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] hover:rounded-full cursor-pointer transition-all ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                    aria-label="Open navigation menu"
+                  >
+                    <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
+                  </button>
       <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[340px]' : 'lg:ml-0'} p-4 sm:p-8 flex flex-col items-center`}>
         <div className="max-w-6xl w-full space-y-6">
             
