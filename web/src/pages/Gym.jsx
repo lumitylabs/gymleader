@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wand2, Menu as MenuIcon, ImagePlus, Image as ImageIcon, Loader2, PenLine, ImageUp, X } from 'lucide-react';
+import { Wand2, ImagePlus, Loader2, PenLine, ImageUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
@@ -23,12 +23,12 @@ function Gym() {
   const [formData, setFormData] = useState({
     gymName: "",
     description: "",
-    badgeId: "boulder", // Placeholder ID
+    badgeId: "boulder",
     badgeImage: "",
     leaderName: "",
     leaderImage: "",
     gymImage: "",
-    team: [null, null, null], // 3 slots
+    team: [null, null, null],
     strategy: "",
     twitter: ""
   });
@@ -39,7 +39,7 @@ function Gym() {
     badge: false
   });
 
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
   const [uploadType, setUploadType] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -50,7 +50,6 @@ function Gym() {
     if (!formData.description.trim()) missing.push("Description");
     if (!formData.leaderName.trim()) missing.push("Leader Name");
     if (!formData.strategy.trim()) missing.push("Strategy");
-    // Add other required fields if necessary, e.g., images
     return missing;
   };
 
@@ -68,7 +67,6 @@ function Gym() {
     </div>
   );
 
-  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (activeMenu && !event.target.closest('.edit-menu-container')) {
@@ -113,7 +111,7 @@ function Gym() {
 
         setUploading(false);
         setUploadType(null);
-        if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
+        if (fileInputRef.current) fileInputRef.current.value = '';
       };
     } catch (error) {
       console.error("Upload error:", error);
@@ -171,7 +169,6 @@ function Gym() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Generation failed');
 
-      // Update state with new image URL
       if (type === 'gym') setFormData(prev => ({ ...prev, gymImage: data.imageUrl }));
       if (type === 'leader') setFormData(prev => ({ ...prev, leaderImage: data.imageUrl }));
       if (type === 'badge') setFormData(prev => ({ ...prev, badgeImage: data.imageUrl }));
@@ -184,7 +181,6 @@ function Gym() {
     }
   };
 
-  // Load data from Firebase Realtime Database
   useEffect(() => {
     if (!currentUser) return;
 
@@ -234,7 +230,6 @@ function Gym() {
         throw new Error(result.error || 'Failed to save gym data');
       }
 
-      // Success feedback
       toast.success("Gym saved successfully!");
     } catch (err) {
       console.error(err);
@@ -269,6 +264,9 @@ function Gym() {
 
   const isImageLoading = (type) => generating[type] || (uploading && uploadType === type);
 
+  // Botão de edição padronizado para posicionamento consistente
+  const editButtonStyle = "absolute bottom-2 right-2 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer";
+
   return (
     <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
@@ -290,94 +288,87 @@ function Gym() {
       </button>
 
       <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[340px]' : 'lg:ml-0'} p-4 sm:p-8`}>
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-6">
 
-          {/* Header */}
-          <div className="flex items-center justify-between pl-10 lg:pl-0">
-            <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-white">My Gym</h1>
-            </div>
+          {/* Header - Alinhado com o botão mobile */}
+          <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
+            <h1 className="text-2xl font-bold text-white">My Gym</h1>
             {error && <span className="text-red-400 text-sm">{error}</span>}
           </div>
 
           {/* Gym Info Section */}
-          <section className="space-y-4">
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Left Column: Inputs */}
-              <div className="md:col-span-2 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#FAFAFA]">Gym Name</label>
-                  <div>
-                    <input
-                      type="text"
-                      name="gymName"
-                      value={formData.gymName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Pewter City Gym"
-                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
-                      maxLength={20}
-                    />
-                    <div className="w-full flex justify-end mt-1.5">
-                      <div className="text-xs text-[#767786] select-none">{formData.gymName.length}/20</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#FAFAFA]">Description</label>
-                  <div>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      placeholder="Describe what your gym is like. Remember that the environment of your gym will be used during battles."
-                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-32 placeholder:text-[#767786]"
-                      maxLength={250}
-                    />
-                    <div className="w-full flex justify-end">
-                      <div className="text-xs text-[#767786] select-none">{formData.description.length}/250</div>
-                    </div>
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Left Column: Inputs */}
+            <div className="md:col-span-2 flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-[#FAFAFA]">Gym Name</label>
+                <div>
+                  <input
+                    type="text"
+                    name="gymName"
+                    value={formData.gymName}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Pewter City Gym"
+                    className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
+                    maxLength={20}
+                  />
+                  <div className="w-full flex justify-end mt-1.5">
+                    <div className="text-xs text-[#767786] select-none">{formData.gymName.length}/20</div>
                   </div>
                 </div>
               </div>
 
-              {/* Right Column: Image */}
-              <div className="relative group aspect-video md:aspect-auto md:h-full edit-menu-container">
-                <div className="absolute inset-0 rounded-xl overflow-hidden border-0.5 border-[#000] bg-[#202024]">
-                  {isImageLoading('gym') ? (
-                    <div className="w-full h-full flex items-center justify-center text-[#26272B]">
-                      <Loader2 size={48} className="animate-spin text-blue-500" />
-                    </div>
-                  ) : formData.gymImage ? (
-                    <img
-                      src={formData.gymImage}
-                      alt="Gym Environment"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#26272B]">
-                      <ImagePlus size={48} />
-                    </div>
-                  )}
-                </div>
-
-                <div className="absolute bottom-2 right-2 z-20">
-                  <button
-                    onClick={() => setActiveMenu(activeMenu === 'gym' ? null : 'gym')}
-                    className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer"
-                  >
-                    <PenLine size={20} />
-                  </button>
-                  {activeMenu === 'gym' && renderImageMenu('gym')}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-[#FAFAFA]">Description</label>
+                <div>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Describe what your gym is like. Remember that the environment of your gym will be used during battles."
+                    className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-32 placeholder:text-[#767786]"
+                    maxLength={250}
+                  />
+                  <div className="w-full flex justify-end mt-1">
+                    <div className="text-xs text-[#767786] select-none">{formData.description.length}/250</div>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            {/* Right Column: Image (1:1 Ratio & Responsive) */}
+            <div className="relative group w-full max-w-[200px] max-h-[260px] md:mt-5 md:max-w-none aspect-square edit-menu-container">
+              <div className="absolute inset-0 rounded-xl overflow-hidden border-0.5 border-[#000] bg-[#202024]">
+                {isImageLoading('gym') ? (
+                  <div className="w-full h-full flex items-center justify-center text-[#26272B]">
+                    <Loader2 size={48} className="animate-spin text-blue-500" />
+                  </div>
+                ) : formData.gymImage ? (
+                  <img
+                    src={formData.gymImage}
+                    alt="Gym Environment"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[#26272B]">
+                    <ImagePlus size={48} />
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setActiveMenu(activeMenu === 'gym' ? null : 'gym')}
+                className={editButtonStyle}
+              >
+                <PenLine size={20} />
+              </button>
+              {activeMenu === 'gym' && renderImageMenu('gym')}
             </div>
           </section>
 
 
           {/* Badge Section */}
-          <section className="space-y-3">
+          <section className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-[#FAFAFA] block">Badge</label>
             <div className="flex items-start gap-6">
               <div className="relative w-32 h-32 edit-menu-container">
@@ -399,98 +390,93 @@ function Gym() {
                   )}
                 </div>
 
-                <div className="absolute bottom-2 right-2 z-20">
-                  <button
-                    onClick={() => setActiveMenu(activeMenu === 'badge' ? null : 'badge')}
-                    className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer"
-                  >
-                    <PenLine size={20} />
-                  </button>
-                  {activeMenu === 'badge' && renderImageMenu('badge')}
-                </div>
+                <button
+                  onClick={() => setActiveMenu(activeMenu === 'badge' ? null : 'badge')}
+                  className={editButtonStyle}
+                >
+                  <PenLine size={20} />
+                </button>
+                {activeMenu === 'badge' && renderImageMenu('badge')}
               </div>
             </div>
           </section>
 
 
           {/* Leader Section */}
-          <section className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#FAFAFA]">Leader Name</label>
-                  <div>
-                    <input
-                      type="text"
-                      name="leaderName"
-                      value={formData.leaderName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Brock"
-                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
-                      maxLength={20}
-                    />
-                    <div className="w-full flex justify-end mt-1.5">
-                      <div className="text-xs text-[#767786] select-none">{formData.leaderName.length}/20</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#FAFAFA]">𝕏 / Twitter</label>
-                  <div>
-                    <input
-                      type="text"
-                      name="twitter"
-                      value={formData.twitter || ''}
-                      maxLength={25}
-                      onChange={handleInputChange}
-                      placeholder="@username"
-                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
-                    />
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-[#FAFAFA]">Leader Name</label>
+                <div>
+                  <input
+                    type="text"
+                    name="leaderName"
+                    value={formData.leaderName}
+                    onChange={handleInputChange}
+                    placeholder="e.g. Brock"
+                    className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
+                    maxLength={20}
+                  />
+                  <div className="w-full flex justify-end mt-1.5">
+                    <div className="text-xs text-[#767786] select-none">{formData.leaderName.length}/20</div>
                   </div>
                 </div>
               </div>
 
-              <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 edit-menu-container">
-                <div className="absolute inset-0 rounded-full overflow-hidden border-0.5 border-[#000] bg-[#202024] flex items-center justify-center">
-                  {isImageLoading('leader') ? (
-                    <div className="text-[#26272B]">
-                      <Loader2 size={32} className="animate-spin text-blue-500" />
-                    </div>
-                  ) : formData.leaderImage ? (
-                    <img
-                      src={formData.leaderImage}
-                      alt="Leader"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="text-[#26272B]">
-                      <ImagePlus size={32} />
-                    </div>
-                  )}
-                </div>
-                <div className="absolute bottom-2 right-2 z-20">
-                  <button
-                    onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')}
-                    className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer"
-                  >
-                    <PenLine size={20} />
-                  </button>
-                  {activeMenu === 'leader' && renderImageMenu('leader')}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-[#FAFAFA]">𝕏 / Twitter</label>
+                <div>
+                  <input
+                    type="text"
+                    name="twitter"
+                    value={formData.twitter || ''}
+                    maxLength={25}
+                    onChange={handleInputChange}
+                    placeholder="@username"
+                    className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
+                  />
                 </div>
               </div>
+            </div>
+
+            {/* Leader Image */}
+            <div className="relative w-32 h-32 md:ml-15 md:mt-6 md:w-40 md:h-40 flex-shrink-0 edit-menu-container">
+              <div className="absolute inset-0 rounded-full overflow-hidden border-0.5 border-[#000] bg-[#202024] flex items-center justify-center">
+                {isImageLoading('leader') ? (
+                  <div className="text-[#26272B]">
+                    <Loader2 size={32} className="animate-spin text-blue-500" />
+                  </div>
+                ) : formData.leaderImage ? (
+                  <img
+                    src={formData.leaderImage}
+                    alt="Leader"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-[#26272B]">
+                    <ImagePlus size={32} />
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')}
+                className={editButtonStyle}
+              >
+                <PenLine size={20} />
+              </button>
+              {activeMenu === 'leader' && renderImageMenu('leader')}
             </div>
           </section>
 
 
           {/* Team Section */}
-          <section className="space-y-4">
+          <section className="flex flex-col gap-1.5">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-[#FAFAFA]">Team</label>
-              <p className="text-[0.80em] font-regular text-[#A29FA7]">Drag three Pokémon cards from your collection.</p>
+              <label className="text-sm font-medium mt-6 text-[#FAFAFA]">Pokémon Team</label>
+              <p className="text-[0.80em] font-regular text-[#A29FA7]">Drag three pokémon cards from your collection.</p>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-4 mt-4">
               {[0, 1, 2].map((index) => (
                 <div
                   key={index}
@@ -504,17 +490,13 @@ function Gym() {
                     if (cardData) {
                       try {
                         const card = JSON.parse(cardData);
-
-                        // Check for duplicates
                         const isDuplicate = formData.team.some(existingCard =>
                           existingCard && existingCard.token_address === card.token_address
                         );
-
                         if (isDuplicate) {
                           toast.error("This Pokémon is already in your team.");
                           return;
                         }
-
                         setFormData(prev => {
                           const newTeam = [...prev.team];
                           newTeam[index] = card;
@@ -549,23 +531,20 @@ function Gym() {
                       </button>
                     </>
                   ) : (
-                    <>
-                      <div className="flex flex-col items-center justify-center">
-                        <img src={empty_pokemon} alt="empty_pokemon" className="w-16 h-16 md:h-24 md:w-24 lg:h-40 lg:w-40" />
-                        <span className="text-xs leading-3 md:text-sm text-[#3C3C3C] text-center px-2 md:leading-4">Choose a <b>Pokémon</b><br /> <b>drag</b> it here</span>
-                      </div>
-
-                    </>
+                    <div className="flex flex-col items-center justify-center">
+                      <img src={empty_pokemon} alt="empty_pokemon" className="w-16 h-16 md:h-24 md:w-24 lg:h-40 lg:w-40" />
+                      <span className="text-xs leading-3 md:text-sm text-[#3C3C3C] text-center px-2 md:leading-4">Choose a <b>Pokémon</b><br /> <b>drag</b> it here</span>
+                    </div>
                   )}
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Strategy Section */}
-          <section className="space-y-2">
+          {/* Strategy Section - Largura Total Novamente */}
+          <section className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-[#FAFAFA] block">Strategy</label>
-            <div className="relative">
+            <div>
               <textarea
                 name="strategy"
                 value={formData.strategy}
@@ -574,7 +553,7 @@ function Gym() {
                 className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-40 placeholder:text-[#767786]"
                 maxLength={400}
               />
-              <div className="w-full flex justify-end">
+              <div className="w-full flex justify-end mt-1">
                 <div className="text-xs text-[#767786] select-none">{formData.strategy.length}/400</div>
               </div>
             </div>
