@@ -2,7 +2,10 @@ import React from "react";
 import { House, Swords, Gem } from 'lucide-react';
 
 export function SidebarNavigation({ navigate, location }) {
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/battle' && location.pathname === '/') return true;
+    return location.pathname === path;
+  };
 
   const navItems = [
     { label: "Battle", path: "/battle", icon: <Swords size={20} /> },
