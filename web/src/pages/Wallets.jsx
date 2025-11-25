@@ -40,7 +40,6 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
       const data = await response.json();
       if (data.cards) {
         setCards(data.cards);
-        // Removed setting initial hovered card to match "only on hover" requirement
       }
     } catch (error) {
       console.error("Error fetching gift options:", error);
@@ -99,40 +98,46 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="flex items-start gap-6 h-[800px] max-h-[90vh] w-full max-w-7xl justify-center">
+      {/* 
+         ALTERAÇÃO AQUI: 
+         - Adicionado 'flex-col lg:flex-row' para empilhar no mobile e lado a lado no desktop.
+         - Altura ajustada para 'h-full lg:h-[800px]' para caber melhor em telas pequenas.
+      */}
+      <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 h-full lg:h-[800px] max-h-[90vh] w-full max-w-7xl justify-center">
         
         {/* Main Modal Content */}
-        <div className="bg-[#18181B] flex-1 max-w-4xl rounded-2xl border border-[#26272B] shadow-2xl overflow-hidden flex flex-col h-full">
+        <div className="bg-[#18181B] w-full lg:flex-1 max-w-4xl rounded-2xl border border-[#26272B] shadow-2xl overflow-hidden flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-[#26272B] flex justify-between items-start shrink-0">
-            <div>
+          {/* Padding responsivo: p-4 no mobile, p-6 no desktop */}
+          <div className="p-4 sm:p-6 border-b border-[#26272B] flex justify-between items-start shrink-0">
+            <div className="flex-1 mr-4">
               <h2 className="text-xl font-bold text-white mb-2">Select your Pokémons</h2>
               <div className="flex items-center gap-3 bg-[#202024] p-3 rounded-lg border border-[#26272B]">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden shrink-0">
                    <img src={Oak} alt="Professor Oak" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Professor OAK</p>
-                  <p className="text-xs text-gray-400">Select three Pokémon gift cards to start your journey.</p>
+                  <p className="text-xs text-gray-400 line-clamp-2 sm:line-clamp-none">Select three Pokémon gift cards to start your journey.</p>
                 </div>
               </div>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-1">
               <X size={24} />
             </button>
           </div>
 
           {/* Content Area (Grid Only) */}
           <div className="flex-1 overflow-hidden">
-              <SimpleBar style={{ height: '100%' }} className="p-6">
+              <SimpleBar style={{ height: '100%' }} className="p-4 sm:p-6">
                   {loading ? (
                       <div className="flex justify-center items-center h-40 text-gray-400">Loading cards...</div>
                   ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                       {cards.map((card) => {
                           const isSelected = selectedCards.includes(card.token_address);
                           return (
-                          <div key={card.token_address} className="flex flex-col gap-3">
+                          <div key={card.token_address} className="flex flex-col gap-2 sm:gap-3">
                               <div 
                               className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 ${isSelected ? 'border-yellow-500 ring-2 ring-yellow-500/20' : 'border-transparent hover:border-gray-600'}`}
                               onClick={() => toggleCardSelection(card.token_address)}
@@ -148,7 +153,7 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
                               </div>
                               <button
                               onClick={() => toggleCardSelection(card.token_address)}
-                              className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
+                              className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                                   isSelected 
                                   ? 'bg-[#202024] text-white border border-[#26272B] flex items-center justify-center gap-2' 
                                   : 'bg-[#202024] text-gray-400 border border-[#26272B] hover:bg-[#2A2A2E] hover:text-white'
@@ -165,11 +170,11 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-[#26272B] flex justify-end shrink-0 bg-[#18181B]">
+          <div className="p-4 sm:p-6 border-t border-[#26272B] flex justify-end shrink-0 bg-[#18181B]">
             <button
               onClick={handleRedeem}
               disabled={redeeming || selectedCards.length === 0}
-              className={`px-8 py-3 rounded-full font-bold text-black transition-all ${
+              className={`w-full sm:w-auto px-8 py-3 rounded-full font-bold text-black transition-all ${
                 redeeming || selectedCards.length === 0
                   ? 'bg-gray-600 cursor-not-allowed opacity-50'
                   : 'bg-white hover:bg-gray-200 active:scale-95'
@@ -181,7 +186,13 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
         </div>
 
         {/* Right: Preview Panel (Outside) */}
-        <div className={`w-[350px] transition-opacity duration-200 ${hoveredCard ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-[#18181B] rounded-2xl border border-[#26272B] shadow-2xl p-6 flex flex-col items-center justify-center h-full shrink-0`}>
+        {/* 
+            ALTERAÇÃO AQUI: 
+            Adicionado 'hidden lg:flex'. 
+            O preview só aparece em telas grandes (lg), pois depende de hover.
+            No mobile ele some para dar espaço ao modal principal.
+        */}
+        <div className={`hidden lg:flex w-[350px] transition-opacity duration-200 ${hoveredCard ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-[#18181B] rounded-2xl border border-[#26272B] shadow-2xl p-6 flex-col items-center justify-center h-full shrink-0`}>
             {hoveredCard && (
                 <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300 w-full h-full justify-center">
                     <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border border-[#26272B]">
@@ -228,12 +239,8 @@ function Wallets() {
   // 2. USE EFFECT PARA SINCRONIZAR CARTEIRAS E CARTAS
   useEffect(() => {
     const syncWallet = async () => {
-      // Só executa se tiver usuário logado e pelo menos uma carteira conectada
       if (currentUser && (evmWalletAddress || solanaWalletAddress)) {
         try {
-          console.log("Sincronizando carteiras com o Firebase...");
-          
-          // Chama a API que criamos no passo anterior (api/sync-collection.js)
           await fetch(import.meta.env.VITE_SERVER_URL+'/api/sync-collection', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -243,15 +250,12 @@ function Wallets() {
               solana_address: solanaWalletAddress || null
             })
           });
-          
-          console.log("Sincronização iniciada com sucesso.");
         } catch (error) {
           console.error("Erro ao sincronizar carteira:", error);
         }
       }
     };
 
-    // Executa quando o usuário muda ou quando conecta/desconecta uma carteira
     if (isEvmConnected || isSolanaConnected) {
       syncWallet();
     }
@@ -265,14 +269,15 @@ function Wallets() {
           <h1 className="text-2xl font-bold text-white mb-8">Wallets</h1>
 
           {!giftRedeemed && (
-            <div className="bg-[#202024] p-6 rounded-lg flex justify-between items-center mb-8 border border-[#26272B]">
+            // Ajuste responsivo no card de Redeem da página principal também
+            <div className="bg-[#202024] p-6 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border border-[#26272B] gap-4 sm:gap-0">
               <div>
                 <h2 className="font-semibold text-lg text-white">Ask professor oak for 3 free cards</h2>
                 <p className="text-sm text-[#A2A2AB] mt-1">No Pokémon yet? you can redeem 3 free cards for now.</p>
               </div>
               <button 
                 onClick={() => setIsRedeemModalOpen(true)}
-                className="bg-[#363639] text-white font-semibold py-2 px-6 rounded-lg hover:bg-[#4F4F52] transition-colors active:scale-95"
+                className="w-full sm:w-auto bg-[#363639] text-white font-semibold py-2 px-6 rounded-lg hover:bg-[#4F4F52] transition-colors active:scale-95"
               >
                 Redeem
               </button>
@@ -281,9 +286,9 @@ function Wallets() {
 
           <div className="flex flex-col gap-6">
             {/* Seção Beezie (Flow EVM) */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
               <span className="font-semibold text-white text-lg">Beezie (Flow EVM)</span>
-              <div className="flex items-center gap-4 w-full max-w-md">
+              <div className="flex items-center gap-4 w-full md:w-auto max-w-md">
                 <input type="text" readOnly value={evmWalletAddress || "Not Connected"} className="bg-[#202024] text-[#A2A2AB] w-full px-4 py-3 rounded-lg" />
                 <button
                   onClick={() => isEvmConnected ? disconnectEvm() : openReownModal()}
@@ -295,9 +300,9 @@ function Wallets() {
             </div>
 
             {/* Seção Collectorcrypt (Solana) */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
               <span className="font-semibold text-white text-lg">Collectorcrypt (Solana)</span>
-              <div className="flex items-center gap-4 w-full max-w-md">
+              <div className="flex items-center gap-4 w-full md:w-auto max-w-md">
                 <input type="text" readOnly value={solanaWalletAddress || "Not Connected"} className="bg-[#202024] text-[#A2A2AB] w-full max-w-md px-4 py-3 rounded-lg" />
                 <button
                   onClick={() => isSolanaConnected ? disconnectSolana() : setSolanaModalVisible(true)}
