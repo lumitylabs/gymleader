@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wand2, Menu as MenuIcon, ImagePlus, Image as ImageIcon, Loader2, PenLine, ImageUp } from 'lucide-react';
+import { Wand2, Menu as MenuIcon, ImagePlus, Image as ImageIcon, Loader2, PenLine, ImageUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
 import { ref, onValue } from "firebase/database";
 import Sidebar from "../components/ui/general/Sidebar";
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
+import empty_pokemon from "../assets/empty_pokemon.png";
 
 function Gym() {
   const { currentUser } = useAuth();
@@ -486,7 +487,7 @@ function Gym() {
           <section className="space-y-4">
             <div className="flex flex-col">
               <label className="text-sm font-medium text-[#FAFAFA]">Team</label>
-              <p className="text-xs text-gray-500">Drag three Pokémon card from your collection</p>
+              <p className="text-[0.80em] font-regular text-[#A29FA7]">Drag three Pokémon cards from your collection.</p>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -524,7 +525,7 @@ function Gym() {
                       }
                     }
                   }}
-                  className="aspect-[3/4] bg-[#202024] border-2 border-dashed border-[#26272B] rounded-xl flex flex-col items-center justify-center gap-2 text-gray-600 hover:border-gray-500 transition-colors cursor-pointer group relative overflow-hidden"
+                  className="aspect-[3/4] border-1 md:border-2 border-dashed border-[#3C3C3C] rounded-xl flex flex-col items-center justify-center hover:border-gray-500 transition-colors cursor-pointer group relative overflow-hidden"
                 >
                   {formData.team[index] ? (
                     <>
@@ -542,17 +543,18 @@ function Gym() {
                             return { ...prev, team: newTeam };
                           });
                         }}
-                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 hover:bg-red-500 transition-colors"
+                        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1.5 hover:bg-red-500 transition-colors cursor-pointer"
                       >
-                        <div className="w-3 h-3 flex items-center justify-center">x</div>
+                        <X color="#FAFAFA" size={15} />
                       </button>
                     </>
                   ) : (
                     <>
-                      <div className="w-10 h-10 rounded-full bg-[#26272B] flex items-center justify-center group-hover:bg-[#303036] transition-colors">
-                        <div className="w-4 h-4 rounded-full border-2 border-gray-500"></div>
+                      <div className="flex flex-col items-center justify-center">
+                        <img src={empty_pokemon} alt="empty_pokemon" className="w-16 h-16 md:h-24 md:w-24 lg:h-40 lg:w-40" />
+                        <span className="text-xs leading-3 md:text-sm text-[#3C3C3C] text-center px-2 md:leading-4">Choose a <b>Pokémon</b><br /> <b>drag</b> it here</span>
                       </div>
-                      <span className="text-[10px] text-center px-2">Choose a Pokémon<br />drag it here</span>
+
                     </>
                   )}
                 </div>
@@ -584,7 +586,7 @@ function Gym() {
               <button
                 onClick={handleSave}
                 disabled={!isSaveable || saving}
-                className={`px-8 py-2 rounded-full transition-colors duration-300 min-w-[135px] ${isSaveable
+                className={`px-8 py-2 rounded-full transition-colors duration-300 min-w-[135px] select-none ${isSaveable
                   ? 'bg-[#FAFAFA] text-[#131316] cursor-pointer hover:bg-[#E4E4E5]'
                   : 'bg-[#89898A] text-[#161618]'
                   } ${saving && 'opacity-70 cursor-wait'}`}
