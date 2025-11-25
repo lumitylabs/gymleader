@@ -175,9 +175,9 @@ function Battle() {
                           <img
                             key={i}
                             src={imageUrl}
-                            alt={pokemon.name}
+
                             className={`w-10 h-10 object-contain pixelated transition-opacity ${pokemon.pokedexId ? 'brightness-0 opacity-100 group-hover:opacity-70' : 'opacity-70 group-hover:opacity-100'}`}
-                            title={pokemon.name}
+                            
                           />
                         );
                       })}
