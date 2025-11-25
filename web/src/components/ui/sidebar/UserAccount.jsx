@@ -50,7 +50,7 @@ export function UserAccount() {
             animate={{ opacity: 1, y: -10, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-[60px] left-4 right-6 bg-[#18181B] rounded-xl shadow-2xl overflow-hidden z-50"
+            className="absolute bottom-[53px] left-4 right-6 bg-[#18181B] rounded-xl shadow-2xl overflow-hidden z-50"
           >
             <div className="px-4 py-3 bg-[#18181B] border-b border-[#26272B]">
               <p className="text-[10px] text-gray-500 font-bold mb-2">Active Wallets</p>
@@ -81,14 +81,14 @@ export function UserAccount() {
             <div className="p-1">
               <button
                 onClick={() => navigate('/wallets')}
-                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors cursor-pointer"
+                className="flex items-center justify-between w-full px-3 py-3 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors cursor-pointer"
               >
                 <span>Wallets</span>
                 <Wallet size={16} />
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center justify-between w-full px-3 py-2.5 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors cursor-pointer"
+                className="flex items-center justify-between w-full px-3 py-3 text-sm text-gray-200 rounded-lg hover:bg-[#26272B] transition-colors cursor-pointer"
               >
                 <span>Logout</span>
                 <LogOut size={16} />
@@ -115,7 +115,7 @@ export function UserAccount() {
           <span className="font-inter font-medium text-sm text-white truncate w-full text-left leading-none">
             {currentUser?.displayName || "Trainer"}
           </span>
-          <span className="font-inter text-xs text-gray-500 truncate w-full text-left">
+          <span className="font-inter text-xs text-[#9DA3AE] truncate w-full text-left">
             {currentUser?.email}
           </span>
         </div>

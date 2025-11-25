@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wand2, Menu as MenuIcon, ImagePlus, Image as ImageIcon, Loader2, PenLine } from 'lucide-react';
+import { Wand2, Menu as MenuIcon, ImagePlus, Image as ImageIcon, Loader2, PenLine, ImageUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
 import { ref, onValue } from "firebase/database";
 import Sidebar from "../components/ui/general/Sidebar";
+import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 
 function Gym() {
   const { currentUser } = useAuth();
@@ -246,21 +247,21 @@ function Gym() {
   const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
   const renderImageMenu = (type) => (
-    <div className="absolute bottom-0 left-full ml-2 z-30 bg-[#18181B] border border-[#26272B] rounded-xl p-1 flex flex-col gap-1 shadow-xl min-w-[160px]">
+    <div className="absolute bottom-0 left-full ml-2 z-30 bg-[#202024] rounded-xl p-1 flex flex-col gap-1 shadow-xl min-w-[250px]">
       <button
         onClick={() => handleGenerateImage(type)}
         disabled={generating[type]}
-        className="flex items-center justify-between px-3 py-2.5 text-xs text-gray-300 hover:bg-[#26272B] hover:text-white rounded-lg transition-colors w-full disabled:opacity-50 cursor-pointer"
+        className="flex items-center justify-between px-3 py-3 text-sm text-[#FAFAFA] hover:bg-[#2C2C30] rounded-lg transition-colors w-full disabled:opacity-50 cursor-pointer"
       >
         <span>{generating[type] ? "Generating..." : "Generate image"}</span>
         {generating[type] ? <div className="animate-spin w-3 h-3 border-2 border-white border-t-transparent rounded-full" /> : <Wand2 size={14} />}
       </button>
       <button
         onClick={() => handleUploadClick(type)}
-        className="flex items-center justify-between px-3 py-2.5 text-xs text-gray-300 hover:bg-[#26272B] hover:text-white rounded-lg transition-colors w-full cursor-pointer"
+        className="flex items-center justify-between px-3 py-3 text-sm text-[#FAFAFA] hover:bg-[#2C2C30] rounded-lg transition-colors w-full cursor-pointer"
       >
-        <span>Upload Image</span>
-        <ImageIcon size={14} />
+        <span>Upload image</span>
+        <ImageUp size={14} />
       </button>
     </div>
   );
@@ -281,17 +282,17 @@ function Gym() {
 
       <button
         onClick={() => setIsNavbarOpen(true)}
-        className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] hover:rounded-full transition-all ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] hover:rounded-full transition-all cursor-pointer ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         aria-label="Open navigation menu"
       >
-        <MenuIcon color="#A2A2AB" size={23} />
+        <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
       <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[340px]' : 'lg:ml-0'} p-4 sm:p-8`}>
         <div className="max-w-4xl mx-auto space-y-8">
 
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pl-10 lg:pl-0">
             <div className="flex items-center gap-4">
               <h1 className="text-2xl font-bold text-white">My Gym</h1>
             </div>
@@ -305,7 +306,7 @@ function Gym() {
               {/* Left Column: Inputs */}
               <div className="md:col-span-2 space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm text-[#FAFAFA]">Gym Name</label>
+                  <label className="text-sm font-medium text-[#FAFAFA]">Gym Name</label>
                   <div>
                     <input
                       type="text"
@@ -313,28 +314,28 @@ function Gym() {
                       value={formData.gymName}
                       onChange={handleInputChange}
                       placeholder="e.g. Pewter City Gym"
-                      className="w-full bg-transparent border border-[#3A3A3A] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors"
+                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
                       maxLength={20}
                     />
-                    <div className="w-full flex justify-end mt-1">
-                      <div className="text-xs text-[#8C8C8C] select-none">{formData.gymName.length}/20</div>
+                    <div className="w-full flex justify-end mt-1.5">
+                      <div className="text-xs text-[#767786] select-none">{formData.gymName.length}/20</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm text-[#FAFAFA]">Description</label>
+                  <label className="text-sm font-medium text-[#FAFAFA]">Description</label>
                   <div>
                     <textarea
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
                       placeholder="Describe what your gym is like. Remember that the environment of your gym will be used during battles."
-                      className="w-full bg-transparent border border-[#3A3A3A] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-32"
+                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-32 placeholder:text-[#767786]"
                       maxLength={250}
                     />
-                    <div className="w-full flex justify-end mt-1">
-                      <div className="text-xs text-[#8C8C8C] select-none">{formData.description.length}/250</div>
+                    <div className="w-full flex justify-end">
+                      <div className="text-xs text-[#767786] select-none">{formData.description.length}/250</div>
                     </div>
                   </div>
                 </div>
@@ -342,7 +343,7 @@ function Gym() {
 
               {/* Right Column: Image */}
               <div className="relative group aspect-video md:aspect-auto md:h-full edit-menu-container">
-                <div className="absolute inset-0 rounded-xl overflow-hidden border border-[#26272B] bg-[#202024]">
+                <div className="absolute inset-0 rounded-xl overflow-hidden border-0.5 border-[#000] bg-[#202024]">
                   {isImageLoading('gym') ? (
                     <div className="w-full h-full flex items-center justify-center text-[#26272B]">
                       <Loader2 size={48} className="animate-spin text-blue-500" />
@@ -375,11 +376,11 @@ function Gym() {
 
 
           {/* Badge Section */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Badge</h2>
+          <section className="space-y-3">
+            <label className="text-sm font-medium text-[#FAFAFA] block">Badge</label>
             <div className="flex items-start gap-6">
               <div className="relative w-32 h-32 edit-menu-container">
-                <div className="absolute inset-0 bg-[#202024] rounded-2xl border border-[#26272B] overflow-hidden flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#202024] rounded-2xl border-0.5 border-[#000] overflow-hidden flex items-center justify-center">
                   {isImageLoading('badge') ? (
                     <div className="text-[#26272B]">
                       <Loader2 size={32} className="animate-spin text-blue-500" />
@@ -413,41 +414,44 @@ function Gym() {
 
           {/* Leader Section */}
           <section className="space-y-4">
-            <div className="flex flex-col-reverse md:flex-row gap-6 items-start">
-              <div className="flex-1 w-full space-y-2">
-                <label className="text-sm text-[#FAFAFA]">Leader Name</label>
-                <div>
-                  <input
-                    type="text"
-                    name="leaderName"
-                    value={formData.leaderName}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Brock"
-                    className="w-full bg-transparent border border-[#3A3A3A] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors"
-                    maxLength={20}
-                  />
-                  <div className="w-full flex justify-end mt-1">
-                    <div className="text-xs text-[#8C8C8C] select-none">{formData.leaderName.length}/20</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#FAFAFA]">Leader Name</label>
+                  <div>
+                    <input
+                      type="text"
+                      name="leaderName"
+                      value={formData.leaderName}
+                      onChange={handleInputChange}
+                      placeholder="e.g. Brock"
+                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
+                      maxLength={20}
+                    />
+                    <div className="w-full flex justify-end mt-1.5">
+                      <div className="text-xs text-[#767786] select-none">{formData.leaderName.length}/20</div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-2 mt-4">
-                  <label className="text-sm text-[#FAFAFA]">Twitter / X Handle</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[#FAFAFA]">𝕏 / Twitter</label>
                   <div>
                     <input
                       type="text"
                       name="twitter"
                       value={formData.twitter || ''}
+                      maxLength={25}
                       onChange={handleInputChange}
-                      placeholder="@user"
-                      className="w-full bg-transparent border border-[#3A3A3A] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors"
+                      placeholder="@username"
+                      className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0 edit-menu-container">
-                <div className="absolute inset-0 rounded-full overflow-hidden border-2 border-[#26272B] bg-[#202024] flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full overflow-hidden border-0.5 border-[#000] bg-[#202024] flex items-center justify-center">
                   {isImageLoading('leader') ? (
                     <div className="text-[#26272B]">
                       <Loader2 size={32} className="animate-spin text-blue-500" />
@@ -481,7 +485,7 @@ function Gym() {
           {/* Team Section */}
           <section className="space-y-4">
             <div className="flex flex-col">
-              <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Team</h2>
+              <label className="text-sm font-medium text-[#FAFAFA]">Team</label>
               <p className="text-xs text-gray-500">Drag three Pokémon card from your collection</p>
             </div>
 
@@ -557,32 +561,32 @@ function Gym() {
           </section>
 
           {/* Strategy Section */}
-          <section className="space-y-4">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Strategy</h2>
+          <section className="space-y-2">
+            <label className="text-sm font-medium text-[#FAFAFA] block">Strategy</label>
             <div className="relative">
               <textarea
                 name="strategy"
                 value={formData.strategy}
                 onChange={handleInputChange}
                 placeholder="Describe your strategy for your Pokémon team"
-                className="w-full bg-transparent border border-[#3A3A3A] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-40"
+                className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-40 placeholder:text-[#767786]"
                 maxLength={400}
               />
-              <div className="w-full flex justify-end mt-1">
-                <div className="text-xs text-[#8C8C8C] select-none">{formData.strategy.length}/400</div>
+              <div className="w-full flex justify-end">
+                <div className="text-xs text-[#767786] select-none">{formData.strategy.length}/400</div>
               </div>
             </div>
           </section>
 
           {/* Save Button */}
-          <div className="flex justify-end pt-4 pb-20">
+          <div className="flex justify-end pb-20">
             <div className="relative group">
               <button
                 onClick={handleSave}
                 disabled={!isSaveable || saving}
-                className={`px-5 py-2 rounded-full font-medium transition-colors duration-300 ${isSaveable
-                  ? 'bg-[#FAFAFA] text-black cursor-pointer hover:bg-[#E4E4E5]'
-                  : 'bg-[#8D8D8F] text-[#18181B] cursor-not-allowed opacity-50'
+                className={`px-8 py-2 rounded-full transition-colors duration-300 min-w-[135px] ${isSaveable
+                  ? 'bg-[#FAFAFA] text-[#131316] cursor-pointer hover:bg-[#E4E4E5]'
+                  : 'bg-[#89898A] text-[#161618]'
                   } ${saving && 'opacity-70 cursor-wait'}`}
               >
                 {saving ? "Saving..." : "Save"}

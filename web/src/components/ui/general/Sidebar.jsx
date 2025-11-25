@@ -102,7 +102,7 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
     closed: { x: "-100%" },
   };
 
-  const filteredCards = cards.filter(card => 
+  const filteredCards = cards.filter(card =>
     card.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -124,19 +124,19 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
         animate={isOpen ? "open" : "closed"}
         variants={variants}
         transition={{ type: "spring", stiffness: 400, damping: 40 }}
-        className="fixed top-0 left-0 w-[340px] h-screen bg-[#131316] border-r border-[#26272B] font-inter flex flex-col z-40 select-none shadow-2xl"
+        className="fixed top-0 left-0 w-[340px] h-screen bg-[#131316] border-r border-[#26272B] font-inter flex flex-col z-40 select-none"
       >
         <AnimatePresence>
           {previewCard && !isDragging && <CardPreview key={previewCard.token_address + previewCard.cardId} card={previewCard} topPos={mouseY} />}
         </AnimatePresence>
 
         <SidebarHeader setIsOpen={setIsOpen} navigate={navigate} />
-        
+
         <SidebarNavigation navigate={navigate} location={location} />
-        
+
         <SidebarSearch searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-        
-        <SidebarCollection 
+
+        <SidebarCollection
           cards={filteredCards}
           loading={loading}
           syncing={syncing}
@@ -146,7 +146,7 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
           handleDragStart={handleDragStart}
           handleDragEnd={handleDragEnd}
         />
-        
+
         <UserAccount />
       </motion.nav>
     </>
