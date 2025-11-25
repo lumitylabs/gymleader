@@ -213,7 +213,8 @@ function BattleGym() {
         if (choiceId) {
             const lastOptionsLog = battleLog.slice().reverse().find(l => l.type === 'options');
             const selectedOption = lastOptionsLog?.options?.find(o => o.id === choiceId);
-            setBattleLog(prev => [...prev, { type: 'player', message: selectedOption?.narrative || selectedOption?.text || "Player Action" }]);
+            // Show the selected option TEXT as the player message (Blue)
+            setBattleLog(prev => [...prev, { type: 'player', message: selectedOption?.text || "Player Action" }]);
         } else {
             setBattleLog(prev => [...prev, { type: 'player', message: instruction }]);
         }
@@ -250,8 +251,8 @@ function BattleGym() {
 
             const newMessages = [];
 
-            // 1. Add Player Narrative
-            if (!choiceId && data.playerNarrative) {
+            // 1. Add Player Narrative (Always add it, even if choiceId exists)
+            if (data.playerNarrative) {
                 newMessages.push({ type: 'narrative', message: data.playerNarrative });
             }
 
@@ -266,7 +267,8 @@ function BattleGym() {
             // 4. Handle Game Over or Next Options
             if (data.gameOver) {
                 setBattleStatus('ended');
-                const isWin = data.winner === currentUser.uid;
+                // Check if the challenger (player) won by comparing winner with challengerId
+                const isWin = data.winner === data.challengerId;
                 setGameOverState({
                     type: isWin ? 'win' : 'loss',
                     winner: data.winner
@@ -564,7 +566,13 @@ function BattleGym() {
                                             >
                                                 <div className="flex justify-center mb-6">
                                                     {gameOverState.type === 'win' ? (
-                                                        <Trophy size={64} className="text-yellow-500" />
+                                                        <div className="w-24 h-24 relative">
+                                                            <img
+                                                                src={gymData?.badgeImage || '/placeholder-badge.png'}
+                                                                alt="Badge"
+                                                                className="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]"
+                                                            />
+                                                        </div>
                                                     ) : (
                                                         <Shield size={64} className="text-red-500" />
                                                     )}
@@ -582,7 +590,7 @@ function BattleGym() {
 
                                                 <div className="flex gap-4 justify-center">
                                                     <button
-                                                        onClick={() => navigate('/gyms')}
+                                                        onClick={() => navigate('/battle')}
                                                         className="px-6 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 font-bold transition-colors"
                                                     >
                                                         Back to Gyms

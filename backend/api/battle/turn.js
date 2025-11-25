@@ -117,7 +117,8 @@ const handler = async (req, res) => {
                 playerNarrative,
                 leaderNarrative: endResult.narrative, // Use leader field for end message
                 gameOver: true,
-                winner: playerId
+                winner: playerId,
+                challengerId: playerId  // Player won, so winner IS the challenger
             });
         }
 
@@ -196,7 +197,8 @@ const handler = async (req, res) => {
                 playerNarrative,
                 leaderNarrative: turnResult.leaderNarrative + " " + endResult.narrative,
                 gameOver: true,
-                winner: battle.gymId
+                winner: battle.gymId,  // Leader won, so winner is NOT the challenger
+                challengerId: battle.challengerId  // Send challengerId so frontend can properly check
             });
         }
 
