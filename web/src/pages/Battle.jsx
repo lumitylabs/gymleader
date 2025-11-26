@@ -14,7 +14,7 @@ import SimpleBar from 'simplebar-react';
    COMPONENTE: FILTER TAG
    ========================================================================= */
 const FilterTag = ({ name, isActive, onClick }) => {
-  const baseClasses = "flex items-center justify-center font-inter font-semibold text-[0.80em] py-[14px] px-5 rounded-xl cursor-pointer transition-all duration-200 whitespace-nowrap select-none border";
+  const baseClasses = "flex items-center justify-center font-inter font-semibold text-[0.80em] py-[14px] px-4 rounded-xl cursor-pointer transition-all duration-200 whitespace-nowrap select-none";
   const activeClasses = "bg-[#FAFAFA] text-[#1C1C1F] border-transparent shadow-sm scale-105";
   const inactiveClasses = "bg-[#26272B] text-[#A2A2AB] border-transparent hover:text-white hover:bg-[#2E2F33]";
 
@@ -214,7 +214,7 @@ function Battle() {
 
       <button
         onClick={() => setIsNavbarOpen(true)}
-        className={`fixed top-5 left-2 z-30 p-2 rounded-full hover:bg-[#1F1F22] cursor-pointer transition-all duration-300 ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        className={`fixed top-5 left-2 z-30 p-2 rounded-full hover:bg-black/40 cursor-pointer transition-all duration-300 ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
       >
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />

@@ -254,7 +254,7 @@ function Gym() {
 
       <button
         onClick={() => setIsNavbarOpen(true)}
-        className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] transition-all cursor-pointer ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-black/40 transition-all cursor-pointer ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
