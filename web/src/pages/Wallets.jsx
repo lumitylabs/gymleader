@@ -21,9 +21,11 @@ import { X, Check } from 'lucide-react';
 import { db } from "../firebase/config";
 import { ref, onValue } from "firebase/database";
 import Oak from '../assets/oak.png';
+import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
+
+// --- IMPORTAÇÃO DO SIMPLEBAR E CSS ---
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
-import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 
 // Modal Component (Mantido idêntico)
 const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
@@ -128,6 +130,7 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
 
           {/* Content Area (Grid Only) */}
           <div className="flex-1 overflow-hidden">
+            {/* Nota: Aqui mantive o scroll padrão do SimpleBar para o modal, conforme seu código original */}
             <SimpleBar style={{ height: '100%' }} className="p-4 sm:p-6">
               {loading ? (
                 <div className="flex justify-center items-center h-40 text-gray-400">Loading cards...</div>
@@ -199,7 +202,7 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
 };
 
 function Wallets() {
-  const [isNavbarOpen, setIsNavbarOpen] = useState(true);
+  const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth >= 1024);
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [giftRedeemed, setGiftRedeemed] = useState(false);
 
@@ -257,7 +260,9 @@ function Wallets() {
   const inputStyle = "w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-3.5 text-white focus:outline-none transition-colors placeholder:text-[#9DA3AE]";
 
   return (
-    <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
+    // FIX 1: Container travado com h-screen e overflow-hidden
+    <div className="bg-[#18181B] h-screen w-full font-inter text-white flex overflow-hidden">
+
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
 
       <button
@@ -268,96 +273,104 @@ function Wallets() {
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      {/* PADRONIZAÇÃO: layout responsivo igual ao Gym.jsx */}
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'} p-4 sm:p-8`}>
-        <div className="max-w-4xl mx-auto space-y-8 pb-20">
+      {/* FIX 2: Spacer fantasma para layout Flexbox */}
+      <div
+        className={`hidden lg:block flex-shrink-0 bg-transparent transition-[width] duration-300 ease-in-out h-full ${isNavbarOpen ? 'w-[260px]' : 'w-0'}`}
+        aria-hidden="true"
+      />
 
-          {/* PADRONIZAÇÃO: Header alinhado para mobile e desktop */}
-          <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
-            <h1 className="text-2xl font-bold text-white">Wallets</h1>
-          </div>
+      {/* FIX 3: Área de conteúdo Flexível */}
+      <div className="flex-1 min-w-0 h-full relative flex flex-col">
 
-          {!giftRedeemed && (
-            <div className="w-full">
-              <div className="group relative bg-gradient-to-r from-[#FFD77D]/5 via-[#BB9F60]/5 to-[#18181B]/5 w-full rounded-2xl p-6 sm:px-8 sm:py-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 transition-all duration-300 ease-out">
+        {/* FIX 4: SimpleBar com a classe login-page-scrollbar */}
+        <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
 
-                {/* Texto */}
-                <div className="flex flex-col gap-1">
-                  <h2 className="font-medium text-[#FFF1E0] text-md">
-                    Ask Professor OAK for 3 free cards
-                  </h2>
-                  <div className="flex flex-col text-[#FFDBAF] font-regular text-sm leading-snug">
-                    <span>No Pokémon yet?</span>
-                    <span>You can redeem 3 free cards for now.</span>
+          <main className="p-4 sm:p-8 w-full min-h-full">
+            <div className="max-w-4xl mx-auto space-y-8 pb-20">
+
+              <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
+                <h1 className="text-2xl font-bold text-white">Wallets</h1>
+              </div>
+
+              {!giftRedeemed && (
+                <div className="w-full">
+                  <div className="group relative bg-gradient-to-r from-[#FFD77D]/5 via-[#BB9F60]/5 to-[#18181B]/5 w-full rounded-2xl p-6 sm:px-8 sm:py-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 transition-all duration-300 ease-out">
+                    <div className="flex flex-col gap-1">
+                      <h2 className="font-medium text-[#FFF1E0] text-md">
+                        Ask Professor OAK for 3 free cards
+                      </h2>
+                      <div className="flex flex-col text-[#FFDBAF] font-regular text-sm leading-snug">
+                        <span>No Pokémon yet?</span>
+                        <span>You can redeem 3 free cards for now.</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsRedeemModalOpen(true)}
+                      className="w-full sm:w-auto bg-[#FFE7CA] shadow-[0_0px_90px_1px_rgba(255,230,195,0.5)] text-[#1A1A1A] text-[15px] py-2.5 px-8 rounded-full transition-all duration-200 transform hover:bg-[#FFDEB5] hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] active:scale-95 cursor-pointer"
+                    >
+                      Redeem
+                    </button>
                   </div>
                 </div>
-
-                {/* Botão */}
-                <button
-                  onClick={() => setIsRedeemModalOpen(true)}
-                  className="w-full sm:w-auto bg-[#FFE7CA] shadow-[0_0px_90px_1px_rgba(255,230,195,0.5)] text-[#1A1A1A] text-[15px] py-2.5 px-8 rounded-full transition-all duration-200 transform hover:bg-[#FFDEB5] hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] active:scale-95 cursor-pointer"
-                >
-                  Redeem
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-8">
-            {/* --- Seção Beezie (Flow EVM) --- */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${isEvmConnected ? 'bg-green-400 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-[#3F3F46]'}`}></div>
-                <label className="text-sm font-medium text-[#FAFAFA]">Beezie</label>
-                <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-1.5 leading-3">Flow EVM</span>
-              </div>
-
-              {!isEvmConnected ? (
-                <div>
-                  <button onClick={() => openReownModal()} className={connectButtonStyle} title="Connect">
-                    <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
-                    Connect
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <button onClick={() => disconnectEvm()} className={disconnectButtonStyle}>
-                    <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
-                    Disconnect
-                  </button>
-                  <input type="text" readOnly value={evmWalletAddress || ""} className={inputStyle} maxLength={60} />
-                </div>
               )}
-            </div>
 
-            {/* --- Seção Collectorcrypt (Solana) --- */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full ${isSolanaConnected ? 'bg-[#22C55E]' : 'bg-[#3F3F46]'}`}></div>
-                <label className="text-sm font-medium text-[#FAFAFA]">Collector</label>
-                <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-1.5 leading-3">Solana</span>
+              <div className="flex flex-col gap-8">
+                {/* --- Seção Beezie (Flow EVM) --- */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isEvmConnected ? 'bg-green-400 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-[#3F3F46]'}`}></div>
+                    <label className="text-sm font-medium text-[#FAFAFA]">Beezie</label>
+                    <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-1.5 leading-3">Flow EVM</span>
+                  </div>
+
+                  {!isEvmConnected ? (
+                    <div>
+                      <button onClick={() => openReownModal()} className={connectButtonStyle} title="Connect">
+                        <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
+                        Connect
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => disconnectEvm()} className={disconnectButtonStyle}>
+                        <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
+                        Disconnect
+                      </button>
+                      <input type="text" readOnly value={evmWalletAddress || ""} className={inputStyle} maxLength={60} />
+                    </div>
+                  )}
+                </div>
+
+                {/* --- Seção Collectorcrypt (Solana) --- */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isSolanaConnected ? 'bg-[#22C55E]' : 'bg-[#3F3F46]'}`}></div>
+                    <label className="text-sm font-medium text-[#FAFAFA]">Collector</label>
+                    <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-1.5 leading-3">Solana</span>
+                  </div>
+
+                  {!isSolanaConnected ? (
+                    <div>
+                      <button onClick={() => setSolanaModalVisible(true)} className={connectButtonStyle} title="Connect">
+                        <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
+                        Connect
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => disconnectSolana()} className={disconnectButtonStyle}>
+                        <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
+                        Disconnect
+                      </button>
+                      <input type="text" readOnly value={solanaWalletAddress || ""} className={inputStyle} maxLength={60} />
+                    </div>
+                  )}
+                </div>
               </div>
-
-              {!isSolanaConnected ? (
-                <div>
-                  <button onClick={() => setSolanaModalVisible(true)} className={connectButtonStyle} title="Connect">
-                    <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
-                    Connect
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <button onClick={() => disconnectSolana()} className={disconnectButtonStyle}>
-                    <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
-                    Disconnect
-                  </button>
-                  <input type="text" readOnly value={solanaWalletAddress || ""} className={inputStyle} maxLength={60} />
-                </div>
-              )}
             </div>
-          </div>
-        </div>
-      </main>
+          </main>
+        </SimpleBar>
+      </div>
 
       <RedeemModal
         isOpen={isRedeemModalOpen}

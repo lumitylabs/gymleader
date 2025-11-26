@@ -1,4 +1,3 @@
-// pages/Gym.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Wand2, ImagePlus, PenLine, ImageUp, X, LoaderCircle } from 'lucide-react';
@@ -219,7 +218,7 @@ function Gym() {
   const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
   const renderImageMenu = (type) => (
-    <div className="absolute bottom-0 left-full ml-2 z-30 bg-[#202024] rounded-xl p-1 flex flex-col gap-1 shadow-xl min-w-[250px]">
+    <div className="absolute bottom-3 left-full ml-2 z-30 bg-[#202024] rounded-xl p-1 flex flex-col gap-1 shadow-xl min-w-[200px]">
       <button
         onClick={() => handleGenerateImage(type)}
         disabled={generating[type]}
@@ -242,46 +241,33 @@ function Gym() {
   const editButtonStyle = "absolute bottom-2 right-2 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer";
 
   return (
-    // MUDANÇA 1: Div container pai com h-screen e overflow-hidden para travar a tela inteira
-    <div className="bg-[#18181B] h-screen font-inter text-white flex overflow-hidden">
+    <div className="bg-[#18181B] h-screen w-full font-inter text-white flex overflow-hidden">
 
-      {/* MUDANÇA 2: Sidebar fora do SimpleBar (ela fica fixa) */}
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        className="hidden"
-        onChange={handleFileChange}
-        accept="image/*"
-      />
+      <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
 
-      {/* Botão Mobile Fixo (fora do scroll para não bugar a posição fixed) */}
       <button
         onClick={() => setIsNavbarOpen(true)}
-        className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] hover:rounded-full transition-all cursor-pointer ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-        aria-label="Open navigation menu"
+        className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] transition-all cursor-pointer ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      {/* MUDANÇA 3: SimpleBar envolve APENAS o conteúdo principal */}
-      {/* Usamos flex-1 para ocupar o espaço restante e h-full para altura total */}
-      <div className={`flex-1 h-full transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'}`}>
-        <SimpleBar
-          style={{ maxHeight: '100vh', height: '100%' }}
-          className="login-page-scrollbar"
-        >
-          <main
-            className="p-4 sm:p-8 min-h-screen" // min-h-screen no main para garantir fundo
-            style={{
-              transform: 'translateZ(0)',
-              WebkitTransform: 'translateZ(0)',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              willChange: 'transform, opacity'
-            }}
-          >
+      {/* Spacer para empurrar conteúdo quando Sidebar abre (Layout Flexbox) */}
+      <div
+        className={`hidden lg:block flex-shrink-0 bg-transparent transition-[width] duration-300 ease-in-out h-full ${isNavbarOpen ? 'w-[260px]' : 'w-0'}`}
+        aria-hidden="true"
+      />
+
+      {/* Área de Conteúdo */}
+      <div className="flex-1 min-w-0 h-full relative flex flex-col">
+        {/* 
+            AQUI ESTÁ A CORREÇÃO:
+            Adicionada a classe 'login-page-scrollbar' para aplicar seu CSS personalizado.
+        */}
+        <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
+          <main className="p-4 sm:p-8 w-full min-h-full">
             <div className="max-w-4xl mx-auto space-y-6 pb-20">
 
               <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
@@ -295,57 +281,24 @@ function Gym() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#FAFAFA]">Gym Name</label>
                     <div>
-                      <input
-                        type="text"
-                        name="gymName"
-                        value={formData.gymName}
-                        onChange={handleInputChange}
-                        placeholder="e.g. Pewter City Gym"
-                        className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
-                        maxLength={20}
-                      />
-                      <div className="w-full flex justify-end mt-1.5">
-                        <div className="text-xs text-[#767786] select-none">{formData.gymName.length}/20</div>
-                      </div>
+                      <input type="text" name="gymName" value={formData.gymName} onChange={handleInputChange} placeholder="e.g. Pewter City Gym" className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]" maxLength={20} />
+                      <div className="w-full flex justify-end mt-1.5"><div className="text-xs text-[#767786] select-none">{formData.gymName.length}/20</div></div>
                     </div>
                   </div>
-
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#FAFAFA]">Description</label>
                     <div>
-                      <textarea
-                        name="description"
-                        value={formData.description}
-                        onChange={handleInputChange}
-                        placeholder="Describe what your gym is like. Remember that the environment of your gym will be used during battles."
-                        className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-32 placeholder:text-[#767786]"
-                        maxLength={250}
-                      />
-                      <div className="w-full flex justify-end mt-1">
-                        <div className="text-xs text-[#767786] select-none">{formData.description.length}/250</div>
-                      </div>
+                      <textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Describe what your gym is like. Remember that the environment of your gym will be used during battles." className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-32 placeholder:text-[#767786]" maxLength={250} />
+                      <div className="w-full flex justify-end mt-1"><div className="text-xs text-[#767786] select-none">{formData.description.length}/250</div></div>
                     </div>
                   </div>
                 </div>
 
                 <div className="relative group w-full max-w-[200px] max-h-[260px] md:mt-5 md:max-w-none aspect-square edit-menu-container">
                   <div className="absolute inset-0 rounded-xl overflow-hidden border-0.5 border-[#000] bg-[#202024]">
-                    {isImageLoading('gym') ? (
-                      <div className="w-full h-full flex items-center justify-center text-[#26272B]">
-                        <LoaderCircle size={48} className="animate-spin text-blue-500" />
-                      </div>
-                    ) : formData.gymImage ? (
-                      <img src={formData.gymImage} alt="Gym Environment" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[#26272B]">
-                        <ImagePlus size={48} />
-                      </div>
-                    )}
+                    {isImageLoading('gym') ? <div className="w-full h-full flex items-center justify-center text-[#26272B]"><LoaderCircle size={48} className="animate-spin text-blue-500" /></div> : formData.gymImage ? <img src={formData.gymImage} alt="Gym Environment" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[#26272B]"><ImagePlus size={48} /></div>}
                   </div>
-
-                  <button onClick={() => setActiveMenu(activeMenu === 'gym' ? null : 'gym')} className={editButtonStyle}>
-                    <PenLine size={20} />
-                  </button>
+                  <button onClick={() => setActiveMenu(activeMenu === 'gym' ? null : 'gym')} className={editButtonStyle}><PenLine size={20} /></button>
                   {activeMenu === 'gym' && renderImageMenu('gym')}
                 </div>
               </section>
@@ -356,22 +309,9 @@ function Gym() {
                 <div className="flex items-start gap-6">
                   <div className="relative w-32 h-32 edit-menu-container">
                     <div className="absolute inset-0 bg-[#202024] rounded-2xl border-0.5 border-[#000] overflow-hidden flex items-center justify-center">
-                      {isImageLoading('badge') ? (
-                        <div className="text-[#26272B]">
-                          <LoaderCircle size={32} className="animate-spin text-blue-500" />
-                        </div>
-                      ) : formData.badgeImage ? (
-                        <img src={formData.badgeImage} alt="Badge" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-[#26272B]">
-                          <ImagePlus size={32} />
-                        </div>
-                      )}
+                      {isImageLoading('badge') ? <div className="text-[#26272B]"><LoaderCircle size={32} className="animate-spin text-blue-500" /></div> : formData.badgeImage ? <img src={formData.badgeImage} alt="Badge" className="w-full h-full object-cover" /> : <div className="text-[#26272B]"><ImagePlus size={32} /></div>}
                     </div>
-
-                    <button onClick={() => setActiveMenu(activeMenu === 'badge' ? null : 'badge')} className={editButtonStyle}>
-                      <PenLine size={20} />
-                    </button>
+                    <button onClick={() => setActiveMenu(activeMenu === 'badge' ? null : 'badge')} className={editButtonStyle}><PenLine size={20} /></button>
                     {activeMenu === 'badge' && renderImageMenu('badge')}
                   </div>
                 </div>
@@ -382,123 +322,29 @@ function Gym() {
                 <div className="md:col-span-2 flex flex-col gap-5">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#FAFAFA]">Leader Name</label>
-                    <div>
-                      <input
-                        type="text"
-                        name="leaderName"
-                        value={formData.leaderName}
-                        onChange={handleInputChange}
-                        placeholder="e.g. Brock"
-                        className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
-                        maxLength={20}
-                      />
-                      <div className="w-full flex justify-end mt-1.5">
-                        <div className="text-xs text-[#767786] select-none">{formData.leaderName.length}/20</div>
-                      </div>
-                    </div>
+                    <div><input type="text" name="leaderName" value={formData.leaderName} onChange={handleInputChange} placeholder="e.g. Brock" className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]" maxLength={20} /><div className="w-full flex justify-end mt-1.5"><div className="text-xs text-[#767786] select-none">{formData.leaderName.length}/20</div></div></div>
                   </div>
-
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium text-[#FAFAFA]">𝕏 / Twitter</label>
-                    <div>
-                      <input
-                        type="text"
-                        name="twitter"
-                        value={formData.twitter || ''}
-                        maxLength={25}
-                        onChange={handleInputChange}
-                        placeholder="@username"
-                        className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]"
-                      />
-                    </div>
+                    <div><input type="text" name="twitter" value={formData.twitter || ''} maxLength={25} onChange={handleInputChange} placeholder="@username" className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-4 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors placeholder:text-[#9DA3AE]" /></div>
                   </div>
                 </div>
-
-                {/* Leader Image */}
                 <div className="relative w-32 h-32 md:ml-15 md:mt-6 md:w-40 md:h-40 flex-shrink-0 edit-menu-container">
                   <div className="absolute inset-0 rounded-full overflow-hidden border-0.5 border-[#000] bg-[#202024] flex items-center justify-center">
-                    {isImageLoading('leader') ? (
-                      <div className="text-[#26272B]">
-                        <LoaderCircle size={32} className="animate-spin text-blue-500" />
-                      </div>
-                    ) : formData.leaderImage ? (
-                      <img src={formData.leaderImage} alt="Leader" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="text-[#26272B]">
-                        <ImagePlus size={32} />
-                      </div>
-                    )}
+                    {isImageLoading('leader') ? <div className="text-[#26272B]"><LoaderCircle size={32} className="animate-spin text-blue-500" /></div> : formData.leaderImage ? <img src={formData.leaderImage} alt="Leader" className="w-full h-full object-cover" /> : <div className="text-[#26272B]"><ImagePlus size={32} /></div>}
                   </div>
-                  <button onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')} className={editButtonStyle}>
-                    <PenLine size={20} />
-                  </button>
+                  <button onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')} className={editButtonStyle}><PenLine size={20} /></button>
                   {activeMenu === 'leader' && renderImageMenu('leader')}
                 </div>
               </section>
 
               {/* Team Section */}
               <section className="flex flex-col gap-1.5">
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium mt-6 text-[#FAFAFA]">Pokémon Team</label>
-                  <p className="text-[0.80em] font-regular text-[#A29FA7]">Drag three pokémon cards from your collection.</p>
-                </div>
-
+                <div className="flex flex-col"><label className="text-sm font-medium mt-6 text-[#FAFAFA]">Pokémon Team</label><p className="text-[0.80em] font-regular text-[#A29FA7]">Drag three pokémon cards from your collection.</p></div>
                 <div className="grid grid-cols-3 gap-4 mt-4">
                   {[0, 1, 2].map((index) => (
-                    <div
-                      key={index}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        e.dataTransfer.dropEffect = "copy";
-                      }}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        const cardData = e.dataTransfer.getData("application/json");
-                        if (cardData) {
-                          try {
-                            const card = JSON.parse(cardData);
-                            const isDuplicate = formData.team.some(existingCard =>
-                              existingCard && existingCard.token_address === card.token_address
-                            );
-                            if (isDuplicate) {
-                              toast.error("This Pokémon is already in your team.");
-                              return;
-                            }
-                            setFormData(prev => {
-                              const newTeam = [...prev.team];
-                              newTeam[index] = card;
-                              return { ...prev, team: newTeam };
-                            });
-                          } catch (err) {
-                            console.error("Failed to parse dropped card", err);
-                          }
-                        }
-                      }}
-                      className="aspect-[3/4] border-1 md:border-2 border-dashed border-[#3C3C3C] rounded-xl flex flex-col items-center justify-center hover:border-gray-500 transition-colors cursor-pointer group relative overflow-hidden"
-                    >
-                      {formData.team[index] ? (
-                        <>
-                          <img src={formData.team[index].image} alt={formData.team[index].name} className="h-full w-auto max-w-none" />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFormData(prev => {
-                                const newTeam = [...prev.team];
-                                newTeam[index] = null;
-                                return { ...prev, team: newTeam };
-                              });
-                            }}
-                            className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1.5 hover:bg-red-500 transition-colors cursor-pointer"
-                          >
-                            <X color="#FAFAFA" size={15} />
-                          </button>
-                        </>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center">
-                          <img src={empty_pokemon} alt="empty_pokemon" className="w-16 h-16 md:h-24 md:w-24 lg:h-40 lg:w-40" />
-                          <span className="text-xs leading-3 md:text-sm text-[#3C3C3C] text-center px-2 md:leading-4">Choose a <b>Pokémon</b><br /> <b>drag</b> it here</span>
-                        </div>
-                      )}
+                    <div key={index} onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }} onDrop={(e) => { e.preventDefault(); const cardData = e.dataTransfer.getData("application/json"); if (cardData) { try { const card = JSON.parse(cardData); const isDuplicate = formData.team.some(existingCard => existingCard && existingCard.token_address === card.token_address); if (isDuplicate) { toast.error("This Pokémon is already in your team."); return; } setFormData(prev => { const newTeam = [...prev.team]; newTeam[index] = card; return { ...prev, team: newTeam }; }); } catch (err) { console.error("Failed to parse dropped card", err); } } }} className="aspect-[3/4] border-1 md:border-2 border-dashed border-[#3C3C3C] rounded-xl flex flex-col items-center justify-center hover:border-gray-500 transition-colors cursor-pointer group relative overflow-hidden">
+                      {formData.team[index] ? (<> <img src={formData.team[index].image} alt={formData.team[index].name} className="h-full w-auto max-w-none" /> <button onClick={(e) => { e.stopPropagation(); setFormData(prev => { const newTeam = [...prev.team]; newTeam[index] = null; return { ...prev, team: newTeam }; }); }} className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1.5 hover:bg-red-500 transition-colors cursor-pointer" > <X color="#FAFAFA" size={15} /> </button> </>) : (<div className="flex flex-col items-center justify-center"> <img src={empty_pokemon} alt="empty_pokemon" className="w-16 h-16 md:h-24 md:w-24 lg:h-40 lg:w-40" /> <span className="text-xs leading-3 md:text-sm text-[#3C3C3C] text-center px-2 md:leading-4">Choose a <b>Pokémon</b><br /> <b>drag</b> it here</span> </div>)}
                     </div>
                   ))}
                 </div>
@@ -507,49 +353,15 @@ function Gym() {
               {/* Strategy Section */}
               <section className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-[#FAFAFA] block">Strategy</label>
-                <div>
-                  <textarea
-                    name="strategy"
-                    value={formData.strategy}
-                    onChange={handleInputChange}
-                    placeholder="Describe your strategy for your Pokémon team"
-                    className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-40 placeholder:text-[#767786]"
-                    maxLength={400}
-                  />
-                  <div className="w-full flex justify-end mt-1">
-                    <div className="text-xs text-[#767786] select-none">{formData.strategy.length}/400</div>
-                  </div>
-                </div>
+                <div><textarea name="strategy" value={formData.strategy} onChange={handleInputChange} placeholder="Describe your strategy for your Pokémon team" className="w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-1 focus:ring-[#FAFAFA] transition-colors resize-none h-40 placeholder:text-[#767786]" maxLength={400} /><div className="w-full flex justify-end mt-1"><div className="text-xs text-[#767786] select-none">{formData.strategy.length}/400</div></div></div>
               </section>
 
-              {/* Save Button */}
               <div className="flex justify-end">
                 <div className="relative group">
-                  <button
-                    onClick={handleSave}
-                    disabled={!isSaveable || saving}
-                    className={`px-8 py-2 rounded-full transition-colors duration-300 min-w-[135px] select-none ${isSaveable
-                      ? 'bg-[#FAFAFA] text-[#131316] cursor-pointer hover:bg-[#E4E4E5]'
-                      : 'bg-[#89898A] text-[#161618]'
-                      } ${saving && 'opacity-70 cursor-wait'}`}
-                  >
-                    {saving ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <span>Saving</span>
-                        <LoaderCircle className="animate-spin" size={18} />
-                      </div>
-                    ) : (
-                      "Save"
-                    )}
+                  <button onClick={handleSave} disabled={!isSaveable || saving} className={`px-8 py-2 rounded-full transition-colors duration-300 min-w-[135px] select-none ${isSaveable ? 'bg-[#FAFAFA] text-[#131316] cursor-pointer hover:bg-[#E4E4E5]' : 'bg-[#89898A] text-[#161618]'} ${saving && 'opacity-70 cursor-wait'}`}>
+                    {saving ? (<div className="flex items-center justify-center gap-2"><span>Saving</span><LoaderCircle className="animate-spin" size={18} /></div>) : ("Save")}
                   </button>
-                  {!isSaveable && (
-                    <div className="absolute bottom-full right-0 mb-2 w-max max-w-xs bg-[#26272B] rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-[#303136] shadow-lg">
-                      {tooltipMessage}
-                      <svg className="absolute text-[#26272B] h-2 w-full left-0 top-full rotate-180" x="0px" y="0px" viewBox="0 0 255 255">
-                        <polygon className="fill-current" points="0,255 127.5,127.5 255,255" />
-                      </svg>
-                    </div>
-                  )}
+                  {!isSaveable && (<div className="absolute bottom-full right-0 mb-2 w-max max-w-xs bg-[#26272B] rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-[#303136] shadow-lg">{tooltipMessage}<svg className="absolute text-[#26272B] h-2 w-full left-0 top-full rotate-180" x="0px" y="0px" viewBox="0 0 255 255"><polygon className="fill-current" points="0,255 127.5,127.5 255,255" /></svg></div>)}
                 </div>
               </div>
 

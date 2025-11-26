@@ -7,6 +7,9 @@ import Sidebar from "../components/ui/general/Sidebar";
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 import { animate } from 'framer-motion';
 
+import "simplebar-react/dist/simplebar.min.css";
+import SimpleBar from 'simplebar-react';
+
 /* =========================================================================
    COMPONENTE: FILTER TAG
    ========================================================================= */
@@ -205,7 +208,8 @@ function Battle() {
   });
 
   return (
-    <div className="bg-[#18181B] min-h-screen font-inter text-white flex overflow-x-hidden">
+    <div className="bg-[#18181B] h-screen w-full font-inter text-white flex overflow-hidden">
+
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
 
       <button
@@ -216,125 +220,137 @@ function Battle() {
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'} p-4 sm:p-8 w-full max-w-[100vw]`}>
-        <div className="max-w-5xl mx-auto pb-20">
+      {/* Spacer para Layout Flexbox */}
+      <div
+        className={`hidden lg:block flex-shrink-0 bg-transparent transition-[width] duration-300 ease-in-out h-full ${isNavbarOpen ? 'w-[260px]' : 'w-0'}`}
+        aria-hidden="true"
+      />
 
-          {/* HEADER - ALTERADO PARA IGUALAR COMMUNITY CHAPLINS */}
-          <div className="flex flex-col mb-6">
+      {/* Área de Conteúdo */}
+      <div className="flex-1 min-w-0 h-full relative flex flex-col">
 
-            {/* Top Bar Container: Title Desktop + Search Bar (Right aligned on mobile) */}
-            <div className="flex justify-end md:justify-between items-center w-full gap-4 select-none">
-              <h1 className="hidden md:block text-2xl font-bold text-white whitespace-nowrap">
-                Battle
-              </h1>
+        {/* SimpleBar com classe personalizada */}
+        <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
+          <main className="p-4 sm:p-8 w-full min-h-full">
 
-              {/* Barra de pesquisa estilo 'Community Chaplins' */}
-              <div className="flex items-center gap-2 px-6 py-4 w-full max-w-xs md:max-w-sm rounded-full bg-[#202024] transition-all">
-                <Search color="#FAFAFA" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="bg-transparent text-[#FAFAFA] placeholder:text-[#959BA5] text-sm focus:outline-none w-full"
-                />
-              </div>
-            </div>
+            {/* 
+                CORREÇÃO AQUI: 
+                Mudado de max-w-5xl para max-w-4xl para igualar Gym e Wallets
+            */}
+            <div className="max-w-4xl mx-auto pb-20">
 
-            {/* Mobile Title (Abaixo da search bar, igual ao Home) */}
-            <div className="md:hidden mt-5">
-              <h1 className="text-xl font-bold text-[#FAFAFA]">Battle</h1>
-            </div>
+              <div className="flex flex-col mb-6">
+                <div className="flex justify-end md:justify-between items-center w-full gap-4 select-none">
+                  <h1 className="hidden md:block text-2xl font-bold text-white whitespace-nowrap">
+                    Battle
+                  </h1>
 
-            {/* Filter Bar */}
-            <div className="mt-5 w-full pl-0">
-              <FilterBar
-                activeCategory={activeTab}
-                onCategorySelect={setActiveTab}
-                categories={["All", "Gym Challenge", "Victory Road", "Elite Four", "Battle Frontier", "Leaders"]}
-              />
-            </div>
-          </div>
-
-          {/* LISTA DE GINÁSIOS */}
-          <div className="space-y-4">
-            {loading ? (
-              <>
-                <GymCardSkeleton /><GymCardSkeleton /><GymCardSkeleton />
-              </>
-            ) : filteredGyms.length > 0 ? (
-              filteredGyms.map((gym, index) => (
-                <div key={index}
-                  onClick={() => navigate(`/battle/${gym.userId}`)}
-                  className="bg-[#202024] hover:bg-[#232326] rounded-3xl p-6 flex flex-col md:flex-row gap-6 transition-all duration-200 cursor-pointer group min-h-[200px]"
-                >
-                  <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0">
-                    {gym.badgeImage ? (
-                      <img src={gym.badgeImage} alt="Badge" className="w-full h-full object-cover rounded-[32px] shadow-lg group-hover:scale-[1.02] transition-transform duration-300" />
-                    ) : (
-                      <div className="w-full h-full bg-[#26272B] rounded-[32px] flex items-center justify-center text-gray-600 text-xs font-medium">No Badge</div>
-                    )}
-                  </div>
-
-                  <div className="flex-1 flex flex-col justify-between text-center md:text-left py-1">
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <h3 className="text-xl font-bold text-white group-hover:text-[#FAFAFA]">{gym.gymName}</h3>
-                        <div className="text-sm text-[#A2A2AB] flex items-center justify-center md:justify-start gap-1.5">
-                          <span>By {gym.twitter ? (
-                            <a
-                              href={`https://x.com/${gym.twitter.replace(/^@/, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="hover:underline hover:underline-offset-2 text-blue-400 transition-all relative z-10"
-                            >
-                              {`@${gym.leaderName}` || 'Unknown'}
-                            </a>
-                          ) : (
-                            <span className="text-[#A2A2AB]">{gym.leaderName || 'Unknown'}</span>
-                          )}</span>
-                          <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
-                          <div className="flex items-center gap-1"><MapPin color="#FFADAD" size={13} /><span>Kanto</span></div>
-                        </div>
-                      </div>
-                      <p className="text-sm text-[#F3F7FA] leading-relaxed line-clamp-2 md:line-clamp-3 max-w-2xl">
-                        {gym.description || "No description provided for this gym challenge."}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-center md:justify-start gap-2 pt-4">
-                      {gym.team && gym.team.map((pokemon, i) => {
-                        if (!pokemon) return (
-                          <div key={i} className="w-8 h-8 bg-[#26272B] rounded-full flex items-center justify-center text-[#52525B] text-[10px] border border-[#2E2F33]">?</div>
-                        );
-                        const imageUrl = `https://steady-gaufre-1267b2.netlify.app/${pokemon.pokedexId}.png`;
-                        return (
-                          <img
-                            key={i}
-                            src={imageUrl}
-                            alt="pokemon"
-                            className={`w-10 h-10 object-contain pixelated transition-opacity duration-200 ${pokemon.pokedexId
-                              ? 'brightness-0 opacity-100 group-hover:opacity-70'
-                              : 'opacity-70 group-hover:opacity-100'
-                              }`}
-                          />
-                        );
-                      })}
-                    </div>
+                  <div className="flex items-center gap-2 px-6 py-4 w-full max-w-xs md:max-w-sm rounded-full bg-[#202024] transition-all">
+                    <Search color="#FAFAFA" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="bg-transparent text-[#FAFAFA] placeholder:text-[#959BA5] text-sm focus:outline-none w-full"
+                    />
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-24 text-[#52525B]">
-                <Search size={48} strokeWidth={1} className="mb-4 opacity-50" />
-                <p className="text-lg font-medium">No gyms found</p>
-              </div>
-            )}
-          </div>
 
-        </div>
-      </main>
+                <div className="md:hidden mt-5">
+                  <h1 className="text-xl font-bold text-[#FAFAFA]">Battle</h1>
+                </div>
+
+                <div className="mt-5 w-full pl-0">
+                  <FilterBar
+                    activeCategory={activeTab}
+                    onCategorySelect={setActiveTab}
+                    categories={["All", "Gym Challenge", "Victory Road", "Elite Four", "Battle Frontier", "Leaders"]}
+                  />
+                </div>
+              </div>
+
+              {/* LISTA DE GINÁSIOS */}
+              <div className="space-y-4">
+                {loading ? (
+                  <>
+                    <GymCardSkeleton /><GymCardSkeleton /><GymCardSkeleton />
+                  </>
+                ) : filteredGyms.length > 0 ? (
+                  filteredGyms.map((gym, index) => (
+                    <div key={index}
+                      onClick={() => navigate(`/battle/${gym.userId}`)}
+                      className="bg-[#202024] hover:bg-[#232326] rounded-3xl p-6 flex flex-col md:flex-row gap-6 transition-all duration-200 cursor-pointer group min-h-[200px]"
+                    >
+                      <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0">
+                        {gym.badgeImage ? (
+                          <img src={gym.badgeImage} alt="Badge" className="w-full h-full object-cover rounded-[32px] shadow-lg group-hover:scale-[1.02] transition-transform duration-300" />
+                        ) : (
+                          <div className="w-full h-full bg-[#26272B] rounded-[32px] flex items-center justify-center text-gray-600 text-xs font-medium">No Badge</div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-between text-center md:text-left py-1">
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <h3 className="text-xl font-bold text-white group-hover:text-[#FAFAFA]">{gym.gymName}</h3>
+                            <div className="text-sm text-[#A2A2AB] flex items-center justify-center md:justify-start gap-1.5">
+                              <span>By {gym.twitter ? (
+                                <a
+                                  href={`https://x.com/${gym.twitter.replace(/^@/, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="hover:underline hover:underline-offset-2 text-blue-400 transition-all relative z-10"
+                                >
+                                  {`@${gym.leaderName}` || 'Unknown'}
+                                </a>
+                              ) : (
+                                <span className="text-[#A2A2AB]">{gym.leaderName || 'Unknown'}</span>
+                              )}</span>
+                              <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
+                              <div className="flex items-center gap-1"><MapPin color="#FFADAD" size={13} /><span>Kanto</span></div>
+                            </div>
+                          </div>
+                          <p className="text-sm text-[#F3F7FA] leading-relaxed line-clamp-2 md:line-clamp-3 max-w-2xl">
+                            {gym.description || "No description provided for this gym challenge."}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-center md:justify-start gap-2 pt-4">
+                          {gym.team && gym.team.map((pokemon, i) => {
+                            if (!pokemon) return (
+                              <div key={i} className="w-8 h-8 bg-[#26272B] rounded-full flex items-center justify-center text-[#52525B] text-[10px] border border-[#2E2F33]">?</div>
+                            );
+                            const imageUrl = `https://steady-gaufre-1267b2.netlify.app/${pokemon.pokedexId}.png`;
+                            return (
+                              <img
+                                key={i}
+                                src={imageUrl}
+                                alt="pokemon"
+                                className={`w-10 h-10 object-contain pixelated transition-opacity duration-200 ${pokemon.pokedexId
+                                  ? 'brightness-0 opacity-100 group-hover:opacity-70'
+                                  : 'opacity-70 group-hover:opacity-100'
+                                  }`}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-24 text-[#52525B]">
+                    <Search size={48} strokeWidth={1} className="mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No gyms found</p>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </main>
+        </SimpleBar>
+      </div>
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
