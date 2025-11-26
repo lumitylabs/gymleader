@@ -32,6 +32,7 @@ function BattleGym() {
     const scrollRef = useRef(null);
 
     const [userTeam, setUserTeam] = useState([]);
+    const [userGym, setUserGym] = useState(null);
 
     // Helper to find mentioned pokemon in text
     const getMentionedPokemon = (text) => {
@@ -83,6 +84,17 @@ function BattleGym() {
                 const teamArray = Object.values(data);
                 setUserTeam(teamArray);
             }
+        });
+        return () => unsubscribe();
+    }, [currentUser]);
+
+    // Check User Gym
+    useEffect(() => {
+        if (!currentUser) return;
+        const userGymRef = ref(db, `users/${currentUser.uid}/gym`);
+        const unsubscribe = onValue(userGymRef, (snapshot) => {
+            const data = snapshot.val();
+            setUserGym(data);
         });
         return () => unsubscribe();
     }, [currentUser]);
@@ -139,6 +151,14 @@ function BattleGym() {
         }
     }, [messageQueue, isProcessingQueue]);
 
+    // Debug: Log options to console
+    useEffect(() => {
+        const lastLog = battleLog[battleLog.length - 1];
+        if (lastLog?.type === 'options') {
+            console.log("Player Options & Scores:", lastLog.options);
+        }
+    }, [battleLog]);
+
     // Helper to add messages to queue
     const queueMessages = (messages) => {
         setMessageQueue(prev => [...prev, ...messages]);
@@ -146,6 +166,11 @@ function BattleGym() {
 
     const startBattle = async () => {
         if (!currentUser) return toast.error("You must be logged in to battle");
+
+        if (!userGym || !userGym.gymName || !userGym.leaderName) {
+            toast.error("You must configure your own Gym before battling!");
+            return;
+        }
 
         setBattleStatus('starting');
         // Initial loading state
@@ -345,7 +370,9 @@ function BattleGym() {
                                         </div>
                                     </div>
                                     <div className="text-sm text-gray-400">
-                                        Wins 3 de 5
+                                        <span className="text-green-400 font-bold">{gymData?.stats?.wins || 0} Wins</span>
+                                        <span className="mx-2">|</span>
+                                        <span className="text-red-400 font-bold">{gymData?.stats?.losses || 0} Losses</span>
                                     </div>
                                 </div>
 
@@ -536,7 +563,7 @@ function BattleGym() {
                                                             <textarea
                                                                 value={playerInput}
                                                                 onChange={(e) => setPlayerInput(e.target.value)}
-                                                                placeholder={`Ex: Joga uma waterfall na cabeça do onix`}
+                                                                placeholder={`Ex: Use Waterfall on Onix!`}
                                                                 className="w-full bg-[#18181B] border border-[#26272B] rounded-lg p-3 text-white text-sm focus:outline-none focus:border-gray-500 resize-none h-24"
                                                             />
                                                             <div className="flex justify-end">

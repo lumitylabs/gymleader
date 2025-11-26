@@ -103,6 +103,9 @@ const handler = async (req, res) => {
                 history: [...battle.history, { role: 'player_move', text: playerNarrative }, { role: 'end', text: endResult.narrative }]
             });
 
+            // Increment Gym Losses
+            await db.ref(`gyms/${battle.gymId}/stats/losses`).transaction((current) => (current || 0) + 1);
+
             // Award Badge
             await db.ref(`users/${playerId}/badges/${battle.gymId}`).set({
                 earnedAt: Date.now(),
@@ -166,6 +169,10 @@ const handler = async (req, res) => {
         
         const turnResult = await generateJSON(combinedTurnPrompt);
         
+        if (turnResult.playerOptions) {
+            console.log(`[Battle ${battleId}] Generated Options:`, turnResult.playerOptions.map(o => `${o.id}: ${o.text} (Score: ${o.score})`));
+        }
+        
         // Update Score after Leader Move
         currentScore += turnResult.leaderScoreChange;
 
@@ -192,6 +199,9 @@ const handler = async (req, res) => {
                 winner: battle.gymId,
                 history: [...battle.history, { role: 'player_move', text: playerNarrative }, { role: 'leader_move', text: turnResult.leaderNarrative }, { role: 'end', text: endResult.narrative }]
             });
+
+            // Increment Gym Wins
+            await db.ref(`gyms/${battle.gymId}/stats/wins`).transaction((current) => (current || 0) + 1);
 
             return res.status(200).json({
                 playerNarrative,
