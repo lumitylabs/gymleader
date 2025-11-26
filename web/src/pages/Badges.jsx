@@ -1,10 +1,124 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/ui/general/Sidebar';
-import { Search, Filter } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, animate } from 'framer-motion';
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
-
 import { useAuth } from "../contexts/AuthContext";
+
+// --- COMPONENTES VISUAIS (CHAPLIN STYLE) ---
+
+const FilterTag = ({ name, isActive, onClick }) => {
+  // Estilo IDÊNTICO ao fornecido no exemplo do Chaplin
+  const baseClasses = "flex items-center justify-center font-inter font-semibold text-[0.80em] p-[14px] px-4 rounded-xl cursor-pointer transition-colors whitespace-nowrap select-none";
+  const activeClasses = "bg-[#FAFAFA] text-[#1C1C1F]";
+  const inactiveClasses = "bg-[#26272B] text-[#A2A2AB] hover:text-white";
+
+  return (
+    <button className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`} onClick={() => onClick(name)}>
+      {name}
+    </button>
+  );
+};
+
+// Componente FilterBar Completo (Com setas e scroll)
+function FilterBar({ activeCategory, onCategorySelect, categories }) {
+  const scrollContainerRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftStart = useRef(0);
+
+  const checkScrollability = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      const isOverflowing = scrollWidth > clientWidth;
+      setCanScrollLeft(isOverflowing && scrollLeft > 1);
+      setCanScrollRight(isOverflowing && Math.ceil(scrollLeft) < scrollWidth - clientWidth - 1);
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(() => checkScrollability());
+    observer.observe(container);
+    container.addEventListener('scroll', checkScrollability, { passive: true });
+
+    // Drag logic
+    const handleMouseDown = (e) => {
+      isDragging.current = true;
+      startX.current = e.pageX - container.offsetLeft;
+      scrollLeftStart.current = container.scrollLeft;
+      container.style.cursor = 'grabbing';
+      container.style.userSelect = 'none';
+    };
+    const handleMouseLeave = () => { isDragging.current = false; container.style.cursor = 'grab'; container.style.userSelect = 'auto'; };
+    const handleMouseUp = () => { isDragging.current = false; container.style.cursor = 'grab'; container.style.userSelect = 'auto'; };
+    const handleMouseMove = (e) => {
+      if (!isDragging.current) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX.current) * 1.5;
+      container.scrollLeft = scrollLeftStart.current - walk;
+    };
+
+    container.addEventListener('mousedown', handleMouseDown);
+    container.addEventListener('mouseleave', handleMouseLeave);
+    container.addEventListener('mouseup', handleMouseUp);
+    container.addEventListener('mousemove', handleMouseMove);
+
+    checkScrollability();
+
+    return () => {
+      observer.disconnect();
+      container.removeEventListener('scroll', checkScrollability);
+      container.removeEventListener('mousedown', handleMouseDown);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+      container.removeEventListener('mouseup', handleMouseUp);
+      container.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  const handleScrollByButton = (direction) => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const scrollAmount = container.clientWidth * 0.8;
+    const newScrollLeft = container.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
+
+    animate(container.scrollLeft, newScrollLeft, {
+      type: "spring", stiffness: 400, damping: 40,
+      onUpdate: (latest) => { container.scrollLeft = latest; }
+    });
+  };
+
+  return (
+    <div className="relative w-full group">
+      <div ref={scrollContainerRef} className="w-full overflow-x-auto hide-scrollbar snap-x snap-mandatory cursor-grab">
+        <div className="flex gap-2 py-2">
+          {categories.map((category) => (
+            <div key={category} className="snap-start">
+              <FilterTag name={category} isActive={activeCategory === category} onClick={onCategorySelect} />
+            </div>
+          ))}
+        </div>
+      </div>
+      {canScrollLeft && (
+        <button onClick={() => handleScrollByButton('left')} className="absolute top-1/2 -left-2 z-20 h-full flex items-center justify-start opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-[#18181B] to-transparent cursor-pointer w-12">
+          <ChevronLeft size={24} className="text-white/80" />
+        </button>
+      )}
+      {canScrollRight && (
+        <button onClick={() => handleScrollByButton('right')} className="absolute top-1/2 -right-2 z-20 h-full flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-l from-[#18181B] to-transparent cursor-pointer w-12">
+          <ChevronRight size={24} className="text-white/80" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 function Badges() {
   const { currentUser } = useAuth();
@@ -12,7 +126,7 @@ function Badges() {
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('All'); // All, Kanto, Leaders
+  const [filter, setFilter] = useState('All');
 
   const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
@@ -39,16 +153,16 @@ function Badges() {
 
   const filteredBadges = badges.filter(badge => {
     const matchesSearch = badge.gymName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          badge.leaderName.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      badge.leaderName.toLowerCase().includes(searchTerm.toLowerCase());
+
     if (filter === 'All') return matchesSearch;
     if (filter === 'Kanto') return matchesSearch && badge.location === 'Kanto';
-    // Add more filters as needed
+    if (filter === 'Leaders') return matchesSearch;
     return matchesSearch;
   });
 
   return (
-    <div className="flex min-h-screen bg-[#09090B] text-white font-sans selection:bg-yellow-500/30">
+    <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
 
       <button
@@ -59,85 +173,91 @@ function Badges() {
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[340px]' : 'lg:ml-0'} p-4 sm:p-8`}>
-        <div className="max-w-7xl mx-auto space-y-8">
-          
-          {/* Header & Search */}
-          <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold tracking-tight">Badges</h1>
-              
-              {/* Search Bar */}
-              <div className="relative w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search" 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-[#18181B] border border-[#26272B] rounded-xl py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all"
-                />
+      <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'} p-4 sm:p-8`}>
+        <div className="max-w-4xl mx-auto pb-20">
+
+          {/* --- HEADER CORRIGIDO --- */}
+          <div className="flex flex-col mb-8">
+
+            {/* ROW 1: Desktop Title (Left) & Search (Right) */}
+            {/* Mobile: Apenas Search aparece aqui */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+              {/* TITULO DESKTOP: Padding Top/Left exato do Gym */}
+              <h1 className="hidden md:block text-2xl font-bold text-white whitespace-nowrap pl-0 pt-1.5 lg:pt-0">
+                Badges
+              </h1>
+
+              {/* SEARCH BAR */}
+              {/* No mobile, adicionamos pl-12 para compensar o botão do menu */}
+              <div className="relative w-full md:w-96 pl-12 md:pl-0">
+                <div className="relative w-full">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2" color="#959BA5" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-[#202024] rounded-full pl-10 pr-4 py-4 text-sm placeholder:text-[#959BA5] focus:outline-none text-white"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Filters */}
-            <div className="flex gap-2">
-              {['All', 'Kanto', 'Leaders'].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    filter === f 
-                      ? 'bg-white text-black' 
-                      : 'bg-[#18181B] text-gray-400 hover:text-white border border-[#26272B]'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
+            {/* ROW 2: Mobile Title (Left aligned) */}
+            {/* Adicionado pl-12 para alinhar com o botão menu visualmente */}
+            <div className="md:hidden mt-5 pl-12">
+              <h1 className="text-lg font-semibold text-[#FAFAFA]">
+                Badges
+              </h1>
             </div>
+
+            {/* ROW 3: Filters (Full Chaplin Implementation) */}
+            {/* No mobile, pl-12 para alinhar o inicio da lista com o titulo */}
+            <div className="mt-4 md:mt-6 w-full pl-12 md:pl-0">
+              <FilterBar
+                activeCategory={filter}
+                onCategorySelect={setFilter}
+                categories={['All', 'Kanto', 'Leaders']}
+              />
+            </div>
+
           </div>
 
-          {/* Badges Grid */}
+          {/* Grid de Conteúdo */}
           {loading ? (
             <div className="text-center text-gray-500 py-20">Loading badges...</div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredBadges.map((badge) => (
-                <motion.div 
+                <motion.div
                   key={badge.gymId}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-[#18181B] rounded-3xl overflow-hidden border border-[#26272B] group hover:border-yellow-500/50 transition-colors"
+                  className="bg-[#202024] rounded-3xl overflow-hidden border border-[#26272B] group hover:border-yellow-500/50 transition-colors"
                 >
-                  {/* Badge Image Container */}
-                  <div className="aspect-square bg-[#131316] relative">
-                    {/* Glow Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20" />
-                    
-                    <img 
-                      src={badge.badgeImage} 
-                      alt={badge.gymName} 
-                      className="w-full h-full object-cover"
+                  <div className="aspect-square bg-[#131316] relative p-4">
+                    <img
+                      src={badge.badgeImage}
+                      alt={badge.gymName}
+                      className="w-full h-full object-contain drop-shadow-md"
                     />
                   </div>
-
-                  {/* Badge Info */}
-                  <div className="p-5 bg-black/40 border-t border-[#26272B]">
-                    <h3 className="font-bold text-white mb-1">{badge.gymName}</h3>
-                    <div className="flex flex-col gap-0.5 text-sm text-gray-400">
-                      <p>
+                  <div className="p-4 border-t border-[#26272B]">
+                    <h3 className="font-bold text-white mb-1 truncate">{badge.gymName}</h3>
+                    <div className="flex flex-col gap-0.5 text-xs text-gray-400">
+                      <p className="truncate">
                         By <span className="text-blue-400">{badge.twitter ? `@${badge.twitter}` : badge.leaderName}</span>
                       </p>
                       <div className="flex items-center gap-1">
-                        <span className="w-1 h-1 rounded-full bg-gray-600" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
                         <span>{badge.location}</span>
                       </div>
                     </div>
                   </div>
                 </motion.div>
               ))}
-              
+
               {filteredBadges.length === 0 && (
                 <div className="col-span-full text-center py-20 text-gray-500">
                   No badges found. Go fight some Gym Leaders!
