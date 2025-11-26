@@ -58,7 +58,7 @@ export function UserAccount() {
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-2 text-gray-300">
-                    <div className={`w-1.5 h-1.5 rounded-full ${isEvmConnected ? 'bg-yellow-400 shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'bg-gray-600'}`}></div>
+                    <div className={`w-1.5 h-1.5 rounded-full ${isEvmConnected ? 'bg-green-400 shadow-[0_0_5px_rgba(250,204,21,0.5)]' : 'bg-gray-600'}`}></div>
                     <span>Beezie</span>
                   </div>
                   <span className="font-mono text-gray-500 text-[10px]">
@@ -68,7 +68,7 @@ export function UserAccount() {
 
                 <div className="flex justify-between items-center text-xs">
                   <div className="flex items-center gap-2 text-gray-300">
-                    <div className={`w-1.5 h-1.5 rounded-full ${isSolanaConnected ? 'bg-purple-500 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-gray-600'}`}></div>
+                    <div className={`w-1.5 h-1.5 rounded-full ${isSolanaConnected ? 'bg-green-400 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-gray-600'}`}></div>
                     <span>Collector</span>
                   </div>
                   <span className="font-mono text-gray-500 text-[10px]">
