@@ -7,6 +7,11 @@ import CgcLogo from "../../../assets/graders/cgc.png";
 import SgcLogo from "../../../assets/graders/sgc.png";
 import TagLogo from "../../../assets/graders/tag.png";
 
+// --- IMPORTAÇÃO DE LOGOS (ADICIONADO) ---
+import BeezieLogo from "../../../assets/beezie_logo.svg";
+import CollectorLogo from "../../../assets/collector_logo.svg";
+import OakLogo from "../../../assets/oak_logo.svg";
+
 const GRADER_IMAGES = {
   psa: PsaLogo, cgc: CgcLogo, sgc: SgcLogo, tag: TagLogo
 };
@@ -14,14 +19,55 @@ const GRADER_IMAGES = {
 export function CardPreview({ card, topPos }) {
   if (!card) return null;
 
-  const PREVIEW_HEIGHT = 720; 
-  const SCREEN_MARGIN = 20; 
+  const PREVIEW_HEIGHT = 720;
+  const SCREEN_MARGIN = 20;
   const maxTopAllowed = window.innerHeight - PREVIEW_HEIGHT - SCREEN_MARGIN;
   let targetTop = topPos - 100;
   const finalTop = Math.max(SCREEN_MARGIN, Math.min(targetTop, maxTopAllowed));
 
   const graderKey = card.grader ? card.grader.toLowerCase() : "";
   const GraderLogoSrc = GRADER_IMAGES[graderKey];
+
+  // --- LÓGICA DO CHIP/BADGE (BASEADO EM COLLECTIONITEM) ---
+  let PlatformBadge;
+
+  if (card.tag === 'OAK GIFT') {
+    PlatformBadge = (
+      <div className="flex items-center gap-[2px] bg-gradient-to-r from-[#161A1C] from-10% via-[#0C2D56] via-50% to-[#78313B] to-90% rounded-full px-2.5 py-1 h-6">
+        <img src={OakLogo} alt="Oak" className="w-4 h-4" />
+        <div className="text-white font-bold text-[10px] flex items-center gap-1">
+          OAK GIFT
+        </div>
+      </div>
+    );
+  } else if (card.chain === 'flow') {
+    PlatformBadge = (
+      <div className="flex items-center gap-[2px] bg-gradient-to-r from-[#131316]/90 to-[#575765]/90 rounded-full px-2.5 py-1 h-6">
+        <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
+        <div className="text-white font-semibold text-[11px] flex items-center gap-1">
+          beezie
+        </div>
+      </div>
+    );
+  } else if (card.chain === 'solana') {
+    PlatformBadge = (
+      <div className="flex items-center bg-gradient-to-r from-[#121212] from-10% via-[#1E2D2F] via-30% to-[#2B1E14] to-90% rounded-full px-2.5 py-1 h-6">
+        <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
+        <div className="text-white font-bold text-[10px] flex items-center gap-1">
+          COLLECTOR
+        </div>
+      </div>
+    );
+  } else {
+    PlatformBadge = (
+      <div className="flex items-center gap-1.5 bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+        <div className="text-white font-bold text-[10px] flex items-center gap-1">
+          <div className="w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+          UNKNOWN
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -35,9 +81,9 @@ export function CardPreview({ card, topPos }) {
       <div className="relative bg-[#18181B] p-2 rounded-2xl shadow-2xl border border-[#26272B]">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#131316]">
           {card.image ? (
-            <img 
-              src={card.image} 
-              alt={card.name} 
+            <img
+              src={card.image}
+              alt={card.name}
               className="w-full h-full object-contain"
             />
           ) : (
@@ -50,13 +96,19 @@ export function CardPreview({ card, topPos }) {
         <div className="mt-3 px-1 pb-1 flex justify-between items-center">
           <div>
             <p className="text-white font-bold text-lg leading-tight">{card.name}</p>
-            <p className="text-gray-500 text-sm">{card.fullName.split('#')[0]}</p>
+            <p className="text-gray-500 text-sm">{`#${card.cardId}`}</p>
           </div>
-          {GraderLogoSrc && (
-             <div className="bg-white/10 p-1.5 rounded-md">
+
+          {/* Container para Badge e Grader */}
+          <div className="flex items-center gap-2">
+            {PlatformBadge}
+
+            {GraderLogoSrc && (
+              <div className="bg-white/10 p-1.5 rounded-md flex items-center justify-center">
                 <img src={GraderLogoSrc} alt="Grader" className="h-5 w-auto" />
-             </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
