@@ -280,18 +280,30 @@ function Battle() {
                     <div className="space-y-3">
                       <div className="space-y-1">
                         <h3 className="text-xl font-bold text-white group-hover:text-[#FAFAFA]">{gym.gymName}</h3>
-                        <div className="text-sm text-[#A1A1AA] flex items-center justify-center md:justify-start gap-1.5">
-                          <span>By <span className="text-white font-medium">{gym.leaderName || 'Unknown'}</span></span>
-                          <span className="w-1 h-1 bg-[#3F3F46] rounded-full"></span>
-                          <div className="flex items-center gap-1"><MapPin size={13} /><span>Kanto</span></div>
+                        <div className="text-sm text-[#A2A2AB] flex items-center justify-center md:justify-start gap-1.5">
+                          <span>By {gym.twitter ? (
+                            <a
+                              href={`https://x.com/${gym.twitter.replace(/^@/, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="hover:underline hover:underline-offset-2 text-blue-400 transition-all relative z-10"
+                            >
+                              {`@${gym.leaderName}` || 'Unknown'}
+                            </a>
+                          ) : (
+                            <span className="text-[#A2A2AB]">{gym.leaderName || 'Unknown'}</span>
+                          )}</span>
+                          <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
+                          <div className="flex items-center gap-1"><MapPin color="#FFADAD" size={13} /><span>Kanto</span></div>
                         </div>
                       </div>
-                      <p className="text-sm text-[#F3F3FA] leading-relaxed line-clamp-2 md:line-clamp-3 max-w-2xl">
+                      <p className="text-sm text-[#F3F7FA] leading-relaxed line-clamp-2 md:line-clamp-3 max-w-2xl">
                         {gym.description || "No description provided for this gym challenge."}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-center md:justify-start gap-2 pt-5">
+                    <div className="flex items-center justify-center md:justify-start gap-2 pt-4">
                       {gym.team && gym.team.map((pokemon, i) => {
                         if (!pokemon) return (
                           <div key={i} className="w-8 h-8 bg-[#26272B] rounded-full flex items-center justify-center text-[#52525B] text-[10px] border border-[#2E2F33]">?</div>
