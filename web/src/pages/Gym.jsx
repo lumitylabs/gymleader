@@ -1,6 +1,7 @@
+// pages/Gym.jsx
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wand2, ImagePlus, Loader2, PenLine, ImageUp, X } from 'lucide-react';
+import { Wand2, ImagePlus, PenLine, ImageUp, X, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
@@ -12,6 +13,7 @@ import empty_pokemon from "../assets/empty_pokemon.png";
 function Gym() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  // Inicialização padrão igual ao Wallets ou lógica de breakpoint
   const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth >= 1024);
 
   const [loading, setLoading] = useState(true);
@@ -264,7 +266,6 @@ function Gym() {
 
   const isImageLoading = (type) => generating[type] || (uploading && uploadType === type);
 
-  // Botão de edição padronizado para posicionamento consistente
   const editButtonStyle = "absolute bottom-2 right-2 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer";
 
   return (
@@ -287,10 +288,11 @@ function Gym() {
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[340px]' : 'lg:ml-0'} p-4 sm:p-8`}>
-        <div className="max-w-4xl mx-auto space-y-6">
+      {/* PADRONIZAÇÃO: Main com margem lg:ml-[260px] igual ao Wallets */}
+      <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'} p-4 sm:p-8`}>
+        <div className="max-w-4xl mx-auto space-y-6 pb-20">
 
-          {/* Header - Alinhado com o botão mobile */}
+          {/* PADRONIZAÇÃO: Header alinhado para mobile e desktop */}
           <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
             <h1 className="text-2xl font-bold text-white">My Gym</h1>
             {error && <span className="text-red-400 text-sm">{error}</span>}
@@ -298,7 +300,6 @@ function Gym() {
 
           {/* Gym Info Section */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Left Column: Inputs */}
             <div className="md:col-span-2 flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-[#FAFAFA]">Gym Name</label>
@@ -336,19 +337,14 @@ function Gym() {
               </div>
             </div>
 
-            {/* Right Column: Image (1:1 Ratio & Responsive) */}
             <div className="relative group w-full max-w-[200px] max-h-[260px] md:mt-5 md:max-w-none aspect-square edit-menu-container">
               <div className="absolute inset-0 rounded-xl overflow-hidden border-0.5 border-[#000] bg-[#202024]">
                 {isImageLoading('gym') ? (
                   <div className="w-full h-full flex items-center justify-center text-[#26272B]">
-                    <Loader2 size={48} className="animate-spin text-blue-500" />
+                    <LoaderCircle size={48} className="animate-spin text-blue-500" />
                   </div>
                 ) : formData.gymImage ? (
-                  <img
-                    src={formData.gymImage}
-                    alt="Gym Environment"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={formData.gymImage} alt="Gym Environment" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[#26272B]">
                     <ImagePlus size={48} />
@@ -356,10 +352,7 @@ function Gym() {
                 )}
               </div>
 
-              <button
-                onClick={() => setActiveMenu(activeMenu === 'gym' ? null : 'gym')}
-                className={editButtonStyle}
-              >
+              <button onClick={() => setActiveMenu(activeMenu === 'gym' ? null : 'gym')} className={editButtonStyle}>
                 <PenLine size={20} />
               </button>
               {activeMenu === 'gym' && renderImageMenu('gym')}
@@ -375,14 +368,10 @@ function Gym() {
                 <div className="absolute inset-0 bg-[#202024] rounded-2xl border-0.5 border-[#000] overflow-hidden flex items-center justify-center">
                   {isImageLoading('badge') ? (
                     <div className="text-[#26272B]">
-                      <Loader2 size={32} className="animate-spin text-blue-500" />
+                      <LoaderCircle size={32} className="animate-spin text-blue-500" />
                     </div>
                   ) : formData.badgeImage ? (
-                    <img
-                      src={formData.badgeImage}
-                      alt="Badge"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={formData.badgeImage} alt="Badge" className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-[#26272B]">
                       <ImagePlus size={32} />
@@ -390,10 +379,7 @@ function Gym() {
                   )}
                 </div>
 
-                <button
-                  onClick={() => setActiveMenu(activeMenu === 'badge' ? null : 'badge')}
-                  className={editButtonStyle}
-                >
+                <button onClick={() => setActiveMenu(activeMenu === 'badge' ? null : 'badge')} className={editButtonStyle}>
                   <PenLine size={20} />
                 </button>
                 {activeMenu === 'badge' && renderImageMenu('badge')}
@@ -444,24 +430,17 @@ function Gym() {
               <div className="absolute inset-0 rounded-full overflow-hidden border-0.5 border-[#000] bg-[#202024] flex items-center justify-center">
                 {isImageLoading('leader') ? (
                   <div className="text-[#26272B]">
-                    <Loader2 size={32} className="animate-spin text-blue-500" />
+                    <LoaderCircle size={32} className="animate-spin text-blue-500" />
                   </div>
                 ) : formData.leaderImage ? (
-                  <img
-                    src={formData.leaderImage}
-                    alt="Leader"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={formData.leaderImage} alt="Leader" className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-[#26272B]">
                     <ImagePlus size={32} />
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')}
-                className={editButtonStyle}
-              >
+              <button onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')} className={editButtonStyle}>
                 <PenLine size={20} />
               </button>
               {activeMenu === 'leader' && renderImageMenu('leader')}
@@ -511,11 +490,7 @@ function Gym() {
                 >
                   {formData.team[index] ? (
                     <>
-                      <img
-                        src={formData.team[index].image}
-                        alt={formData.team[index].name}
-                        className="h-full w-auto max-w-none"
-                      />
+                      <img src={formData.team[index].image} alt={formData.team[index].name} className="h-full w-auto max-w-none" />
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -541,7 +516,7 @@ function Gym() {
             </div>
           </section>
 
-          {/* Strategy Section - Largura Total Novamente */}
+          {/* Strategy Section */}
           <section className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-[#FAFAFA] block">Strategy</label>
             <div>
@@ -560,7 +535,7 @@ function Gym() {
           </section>
 
           {/* Save Button */}
-          <div className="flex justify-end pb-20">
+          <div className="flex justify-end">
             <div className="relative group">
               <button
                 onClick={handleSave}
@@ -570,17 +545,19 @@ function Gym() {
                   : 'bg-[#89898A] text-[#161618]'
                   } ${saving && 'opacity-70 cursor-wait'}`}
               >
-                {saving ? "Saving..." : "Save"}
+                {saving ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span>Saving</span>
+                    <LoaderCircle className="animate-spin" size={18} />
+                  </div>
+                ) : (
+                  "Save"
+                )}
               </button>
               {!isSaveable && (
                 <div className="absolute bottom-full right-0 mb-2 w-max max-w-xs bg-[#26272B] rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 border border-[#303136] shadow-lg">
                   {tooltipMessage}
-                  <svg
-                    className="absolute text-[#26272B] h-2 w-full left-0 top-full rotate-180"
-                    x="0px"
-                    y="0px"
-                    viewBox="0 0 255 255"
-                  >
+                  <svg className="absolute text-[#26272B] h-2 w-full left-0 top-full rotate-180" x="0px" y="0px" viewBox="0 0 255 255">
                     <polygon className="fill-current" points="0,255 127.5,127.5 255,255" />
                   </svg>
                 </div>

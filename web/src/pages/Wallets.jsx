@@ -25,7 +25,7 @@ import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 
-// Modal Component
+// Modal Component (Mantido idêntico)
 const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
   const [cards, setCards] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
@@ -203,7 +203,6 @@ function Wallets() {
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [giftRedeemed, setGiftRedeemed] = useState(false);
 
-  // 1. PEGAR O USUÁRIO ATUAL DO FIREBASE
   const { currentUser } = useAuth();
 
   // --- SESSÃO 1: EVM (Beezie / Flow) ---
@@ -216,7 +215,6 @@ function Wallets() {
   const { setVisible: setSolanaModalVisible } = useWalletModal();
   const solanaWalletAddress = publicKey ? publicKey.toBase58() : null;
 
-  // Check if gift is already redeemed
   useEffect(() => {
     if (currentUser) {
       const metaRef = ref(db, `users/${currentUser.uid}/metadata/giftRedeemed`);
@@ -227,7 +225,6 @@ function Wallets() {
     }
   }, [currentUser]);
 
-  // 2. USE EFFECT PARA SINCRONIZAR CARTEIRAS E CARTAS
   useEffect(() => {
     const syncWallet = async () => {
       if (currentUser && (evmWalletAddress || solanaWalletAddress)) {
@@ -252,16 +249,17 @@ function Wallets() {
     }
   }, [currentUser, evmWalletAddress, solanaWalletAddress, isEvmConnected, isSolanaConnected]);
 
+  const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
+
   // Estilos reutilizáveis
   const connectButtonStyle = "flex items-center gap-1 px-6 py-3.5 bg-transparent border border-[#3A3A3A] text-sm text-[#D9D3D3] font-semibold rounded-full cursor-pointer hover:bg-[#1F1F22] transition duration-200 active:scale-95 select-none disabled:cursor-not-allowed";
-
   const disconnectButtonStyle = "h-full flex items-center justify-center gap-2 px-6 py-3.5 border border-[#3F3F46] text-sm text-[#D9D3D3] font-semibold rounded-full cursor-pointer hover:bg-[#2A2A2E] hover:text-white transition duration-200 active:scale-95";
-
   const inputStyle = "w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-3.5 text-white focus:outline-none transition-colors placeholder:text-[#9DA3AE]";
 
   return (
     <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
-      <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} />
+      <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
+
       <button
         onClick={() => setIsNavbarOpen(true)}
         className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-[#1F1F22] hover:rounded-full cursor-pointer transition-all ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
@@ -270,17 +268,17 @@ function Wallets() {
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      {/* MODIFICAÇÃO: Padding ajustado no Main para igualar a página Gym */}
-      <main className={`flex-grow transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'} p-4 sm:p-8`}>
-        <div className="max-w-4xl mx-auto">
+      {/* PADRONIZAÇÃO: layout responsivo igual ao Gym.jsx */}
+      <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[260px]' : 'lg:ml-0'} p-4 sm:p-8`}>
+        <div className="max-w-4xl mx-auto space-y-8 pb-20">
 
-          {/* MODIFICAÇÃO: Header ajustado com padding-left (pl-12) para mobile e padding-top para alinhar ao botão */}
-          <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0 mb-8">
+          {/* PADRONIZAÇÃO: Header alinhado para mobile e desktop */}
+          <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
             <h1 className="text-2xl font-bold text-white">Wallets</h1>
           </div>
 
           {!giftRedeemed && (
-            <div className="w-full mb-8">
+            <div className="w-full">
               <div className="group relative bg-gradient-to-r from-[#FFD77D]/5 via-[#BB9F60]/5 to-[#18181B]/5 w-full rounded-2xl p-6 sm:px-8 sm:py-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 transition-all duration-300 ease-out">
 
                 {/* Texto */}
@@ -308,82 +306,52 @@ function Wallets() {
           <div className="flex flex-col gap-8">
             {/* --- Seção Beezie (Flow EVM) --- */}
             <div className="flex flex-col gap-3">
-              {/* Labels with Status Dot */}
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${isEvmConnected ? 'bg-green-400 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-[#3F3F46]'}`}></div>
                 <label className="text-sm font-medium text-[#FAFAFA]">Beezie</label>
                 <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-2 leading-3">Flow EVM</span>
               </div>
 
-              {/* Action Area */}
               {!isEvmConnected ? (
                 <div>
-                  <button
-                    onClick={() => openReownModal()}
-                    className={connectButtonStyle}
-                    title="Connect"
-                  >
+                  <button onClick={() => openReownModal()} className={connectButtonStyle} title="Connect">
                     <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
                     Connect
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => disconnectEvm()}
-                    className={disconnectButtonStyle}
-                  >
+                  <button onClick={() => disconnectEvm()} className={disconnectButtonStyle}>
                     <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
                     Disconnect
                   </button>
-                  <input
-                    type="text"
-                    readOnly
-                    value={evmWalletAddress || ""}
-                    className={inputStyle}
-                    maxLength={60}
-                  />
+                  <input type="text" readOnly value={evmWalletAddress || ""} className={inputStyle} maxLength={60} />
                 </div>
               )}
             </div>
 
             {/* --- Seção Collectorcrypt (Solana) --- */}
             <div className="flex flex-col gap-3">
-              {/* Labels with Status Dot */}
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${isSolanaConnected ? 'bg-[#22C55E]' : 'bg-[#3F3F46]'}`}></div>
                 <label className="text-sm font-medium text-[#FAFAFA]">Collectorcrypt</label>
                 <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-2 leading-3">Solana</span>
               </div>
 
-              {/* Action Area */}
               {!isSolanaConnected ? (
                 <div>
-                  <button
-                    onClick={() => setSolanaModalVisible(true)}
-                    className={connectButtonStyle}
-                    title="Connect"
-                  >
+                  <button onClick={() => setSolanaModalVisible(true)} className={connectButtonStyle} title="Connect">
                     <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
                     Connect
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => disconnectSolana()}
-                    className={disconnectButtonStyle}
-                  >
+                  <button onClick={() => disconnectSolana()} className={disconnectButtonStyle}>
                     <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
                     Disconnect
                   </button>
-                  <input
-                    type="text"
-                    readOnly
-                    value={solanaWalletAddress || ""}
-                    className={inputStyle}
-                    maxLength={60}
-                  />
+                  <input type="text" readOnly value={solanaWalletAddress || ""} className={inputStyle} maxLength={60} />
                 </div>
               )}
             </div>
