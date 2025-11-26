@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +32,7 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
   const [previewCard, setPreviewCard] = useState(null);
   const [mouseY, setMouseY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const wasAutoClosedRef = React.useRef(false);
 
   // Handlers
   const handleCardHover = (card, event) => {
@@ -49,10 +53,22 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
   const handleDragStart = () => {
     setIsDragging(true);
     setPreviewCard(null);
+
+    // Auto-close sidebar on mobile when dragging starts
+    if (window.innerWidth < 1024 && isOpen) {
+      setIsOpen(false);
+      wasAutoClosedRef.current = true;
+    }
   };
 
   const handleDragEnd = () => {
     setIsDragging(false);
+
+    // Restore sidebar if it was auto-closed
+    if (wasAutoClosedRef.current) {
+      setIsOpen(true);
+      wasAutoClosedRef.current = false;
+    }
   };
 
   // Firebase Listener
