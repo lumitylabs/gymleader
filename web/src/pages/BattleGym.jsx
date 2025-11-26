@@ -448,10 +448,11 @@ function BattleGym() {
                                                                             {relevantPokemon.map((poke, i) => (
                                                                                 <div key={i} className="w-12 h-12">
                                                                                     <img
-                                                                                        src={`https://img.pokemondb.net/sprites/black-white/anim/normal/${(poke.name || 'pikachu').toLowerCase().split(' ')[0]}.gif`}
+                                                                                        src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`}
                                                                                         onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`}
                                                                                         className="w-full h-full object-contain"
                                                                                         alt={poke.name}
+                                                                                        title={poke.name}
                                                                                     />
                                                                                 </div>
                                                                             ))}
@@ -516,9 +517,10 @@ function BattleGym() {
                                                                 {relevantPokemon.map((poke, i) => (
                                                                     <div key={i} className="w-12 h-12">
                                                                         <img
-                                                                            src={`https://img.pokemondb.net/sprites/black-white/anim/normal/${(poke.name || 'pikachu').toLowerCase().split(' ')[0]}.gif`}
+                                                                            src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`}
                                                                             onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`}
                                                                             className="w-full h-full object-contain"
+                                                                            title={poke.name}
                                                                             alt={poke.name}
                                                                         />
                                                                     </div>
