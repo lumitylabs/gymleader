@@ -10,7 +10,28 @@ const GIFT_MINTS = [
     "ss4bn6r9wGmWBXwDLz3ikVtvCss6QD57dL5iKeJuPbx",
     "CViyvDfHccyj5Uw9mc4sngmCqbrbmP64YH4wRzBffviy",
     "CVamzfzZ3oQKyhpXcVh4tiYAudF1GTUnqT4MMmASRDBj",
-    "5SM8Qpu1qEtuRfCUYf7M3NgFPTEzDvkRNv7kfKvcf2Ej"
+    "5SM8Qpu1qEtuRfCUYf7M3NgFPTEzDvkRNv7kfKvcf2Ej",
+    "74QyGxUjcWnJoQicR3fVecQ1QkBk9X2KowGQUA2bXRiu", // persian
+    "41AudbcmhAg9ymd6pqvhKCtDpG4TB18hWn4DqkCJ26hn", // ninetales
+    "DMuYix69PtxZi9nX7MDSmgYWhXDV52BLcFH6Pd6gih7q", // drowzee
+    "DUzfgoPZq1cNGiQVycHSiLL2dXXcbYrfyaxdwBdJiMQG", // hypno
+    "BQyiVEZxwawh5BJ2gNDjXYDa5KriMT7wzgXfWJewZDSQ", // kadabra
+    "AY4dFTzrKpCg6F2EPkgumjkNf2iymfGLDqRQWMYAY4jW", // charmeleon
+    "9JfAbHSE1LzeyjX25RXJCEkRPMXFUPjTruH1ssWMipy6", // lapas
+    "G4Fc7yL4T68t26gFGBx8cNFhiPxgcs67YdCj2LZ4L1m6", // lickitung
+    "GJBpM8vCnaRz1RCGDE4X8j3k8G7b1NKHtpS9WEgTUPt8", //dewgong 
+    "CobaacekAU2MUm5TgvjN1HHrkcfw7rj6BFtC7DZVSJBd", //cloyster
+    "9ZeqMbsGJzZkphmMREKpooMR3jZDe97SGgdtdvQsBGeJ", //slowbrow
+    "A5RUALqJTXhXvgnCZMdNcLXWBPgrpEsWEvM7y7LjCe9j", //onix
+    "3vgWRz8rWkAjW2gdVkeKU2NP6vAuqVg6zadGNMZnV4w1", //hitmonchan
+    "PwxCawWxCrxfVkjedX75zFdN9XtbcPL5jNtWza9VHxi", //hitmonlee
+    "4i9YzBaYtw4ngzSuoqPYJNffjLznuqC5LqorMwwXdG3K", //gengar
+    "BZStMfj7B8ab3KJyh4MWAnKSamegv64NCawi5Y6QkWXP", //golbat
+    "DLhzo21zBr17aFnk5zZhLowjHjF63K7pTYHe86osLHBv", //haunter
+    "CNRsNKp6BnADCvgL4BQF6bWzb5fYYxo7uYJurvUXLX5E", //gyarados
+    "2m38XzR9RpPkccRnRgAP9TdJHxmAm9CZoNQg8tdeW1P5", //dragonair
+    "f3ETWtQjckuNG9AeuciwzMiRjw9pnA6sy4caikkcYHf", //dragonite
+    
 ];
 
 const { db } = require('../lib/firebase-admin.js');

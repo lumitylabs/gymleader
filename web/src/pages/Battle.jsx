@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { db } from "../firebase/config";
@@ -198,14 +198,70 @@ function Battle() {
     return () => unsubscribe();
   }, []);
 
-  const filteredGyms = gyms.filter(gym => {
-    const matchesSearch =
-      gym.gymName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      gym.leaderName?.toLowerCase().includes(searchTerm.toLowerCase());
-    if (!matchesSearch) return false;
-    if (activeTab === "All") return true;
-    return true;
-  });
+  // Função auxiliar para definir a prioridade de ordenação
+  const getLocationPriority = (location) => {
+    if (!location) return 5; // Sem localização -> Leaders (Último)
+
+    const loc = location.toLowerCase().trim();
+
+    if (loc === 'leaders') return 5;
+    if (loc === 'gym challenge') return 4;
+    if (loc === 'elite four') return 3;
+    if (loc === 'victory road') return 2;
+
+    // Qualquer outra região (Kanto, Johto, etc) vem primeiro
+    return 1;
+  };
+
+  // Gera as categorias dinamicamente baseadas nos dados existentes
+  const dynamicCategories = useMemo(() => {
+    const fixedCategories = ["Victory Road", "Elite Four", "Gym Challenge", "Leaders"];
+    const locations = new Set();
+
+    gyms.forEach(gym => {
+      if (gym.location && !fixedCategories.includes(gym.location)) {
+        locations.add(gym.location);
+      }
+    });
+
+    // Retorna: All + Regiões (alfabético) + Fixos
+    return ["All", ...Array.from(locations).sort(), ...fixedCategories];
+  }, [gyms]);
+
+  const filteredGyms = gyms
+    .filter(gym => {
+      // 1. Filtro de Busca
+      const matchesSearch =
+        gym.gymName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        gym.leaderName?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      // 2. Filtro por Aba (Location)
+      if (activeTab === "All") return true;
+
+      const gymLocation = gym.location || "";
+
+      // Se a aba for "Leaders", inclui quem tem location "Leaders" OU quem não tem location
+      if (activeTab === "Leaders") {
+        return gymLocation === "Leaders" || gymLocation === "";
+      }
+
+      // Para as outras abas, tem que ser match exato
+      return gymLocation === activeTab;
+    })
+    .sort((a, b) => {
+      // 3. Ordenação: Região -> Victory Road -> Elite Four -> Leaders
+      const priorityA = getLocationPriority(a.location);
+      const priorityB = getLocationPriority(b.location);
+
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      // Desempate por nome do ginásio (opcional)
+      return (a.gymName || "").localeCompare(b.gymName || "");
+    });
 
   return (
     <div className="bg-[#18181B] h-screen w-full font-inter text-white flex overflow-hidden">
@@ -233,10 +289,6 @@ function Battle() {
         <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
           <main className="p-4 sm:p-8 w-full min-h-full">
 
-            {/* 
-                CORREÇÃO AQUI: 
-                Mudado de max-w-5xl para max-w-4xl para igualar Gym e Wallets
-            */}
             <div className="max-w-4xl mx-auto pb-20">
 
               <div className="flex flex-col mb-2.5">
@@ -265,7 +317,7 @@ function Battle() {
                   <FilterBar
                     activeCategory={activeTab}
                     onCategorySelect={setActiveTab}
-                    categories={["All", "Gym Challenge", "Victory Road", "Elite Four", "Battle Frontier", "Leaders"]}
+                    categories={dynamicCategories}
                   />
                 </div>
               </div>
@@ -309,7 +361,10 @@ function Battle() {
                                 <span className="text-[#A2A2AB]">{gym.leaderName || 'Unknown'}</span>
                               )}</span>
                               <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
-                              <div className="flex items-center gap-1"><MapPin color="#FFADAD" size={12} strokeWidth={2} /><span>Kanto</span></div>
+                              <div className="flex items-center gap-1">
+                                <MapPin color="#FFADAD" size={12} strokeWidth={2} />
+                                <span>{gym.location || 'Leaders'}</span>
+                              </div>
                             </div>
                           </div>
                           <p className="text-sm text-[#F3F7FA] leading-relaxed line-clamp-2 md:line-clamp-3 max-w-2xl">
