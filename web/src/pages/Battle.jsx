@@ -372,7 +372,7 @@ function Battle() {
                             src={gym.badgeImage}
                             alt="Badge"
                             className={`
-        w-full h-full transition-transform duration-300 group-hover:scale-[1.02]
+        w-full h-full transition-transform duration-300 
         ${gym.badgeImage.endsWith('.png')
                                 ? 'object-contain drop-shadow-2xl p-4'   // PNG transparente → sombra + não cortar
                                 : 'object-cover'                        // Imagem com fundo → ocupar tudo
