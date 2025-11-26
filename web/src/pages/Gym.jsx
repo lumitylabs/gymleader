@@ -238,7 +238,12 @@ function Gym() {
   );
 
   const isImageLoading = (type) => generating[type] || (uploading && uploadType === type);
-  const editButtonStyle = "absolute bottom-2 right-2 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer";
+
+  // ESTILO 1: Para imagens quadradas (Gym e Badge) - Usa valores negativos para sair da borda
+  const editButtonStyle = "absolute -bottom-3 -right-3 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer";
+
+  // ESTILO 2 (CORREÇÃO): Para o Leader (Círculo) - Usa 'bottom-0 right-0' para "abraçar" a borda redonda
+  const leaderEditButtonStyle = "absolute bottom-0 right-0 z-20 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg cursor-pointer";
 
   return (
     <div className="bg-[#18181B] h-screen w-full font-inter text-white flex overflow-hidden">
@@ -254,18 +259,12 @@ function Gym() {
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      {/* Spacer para empurrar conteúdo quando Sidebar abre (Layout Flexbox) */}
       <div
         className={`hidden lg:block flex-shrink-0 bg-transparent transition-[width] duration-300 ease-in-out h-full ${isNavbarOpen ? 'w-[260px]' : 'w-0'}`}
         aria-hidden="true"
       />
 
-      {/* Área de Conteúdo */}
       <div className="flex-1 min-w-0 h-full relative flex flex-col">
-        {/* 
-            AQUI ESTÁ A CORREÇÃO:
-            Adicionada a classe 'login-page-scrollbar' para aplicar seu CSS personalizado.
-        */}
         <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
           <main className="p-4 sm:p-8 w-full min-h-full">
             <div className="max-w-4xl mx-auto space-y-6 pb-20">
@@ -298,6 +297,7 @@ function Gym() {
                   <div className="absolute inset-0 rounded-xl overflow-hidden border-0.5 border-[#000] bg-[#202024]">
                     {isImageLoading('gym') ? <div className="w-full h-full flex items-center justify-center text-[#26272B]"><LoaderCircle size={48} className="animate-spin text-blue-500" /></div> : formData.gymImage ? <img src={formData.gymImage} alt="Gym Environment" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[#26272B]"><ImagePlus size={48} /></div>}
                   </div>
+                  {/* Usa o estilo padrão (quadrado) */}
                   <button onClick={() => setActiveMenu(activeMenu === 'gym' ? null : 'gym')} className={editButtonStyle}><PenLine size={20} /></button>
                   {activeMenu === 'gym' && renderImageMenu('gym')}
                 </div>
@@ -311,6 +311,7 @@ function Gym() {
                     <div className="absolute inset-0 bg-[#202024] rounded-2xl border-0.5 border-[#000] overflow-hidden flex items-center justify-center">
                       {isImageLoading('badge') ? <div className="text-[#26272B]"><LoaderCircle size={32} className="animate-spin text-blue-500" /></div> : formData.badgeImage ? <img src={formData.badgeImage} alt="Badge" className="w-full h-full object-cover" /> : <div className="text-[#26272B]"><ImagePlus size={32} /></div>}
                     </div>
+                    {/* Usa o estilo padrão (quadrado) */}
                     <button onClick={() => setActiveMenu(activeMenu === 'badge' ? null : 'badge')} className={editButtonStyle}><PenLine size={20} /></button>
                     {activeMenu === 'badge' && renderImageMenu('badge')}
                   </div>
@@ -333,7 +334,8 @@ function Gym() {
                   <div className="absolute inset-0 rounded-full overflow-hidden border-0.5 border-[#000] bg-[#202024] flex items-center justify-center">
                     {isImageLoading('leader') ? <div className="text-[#26272B]"><LoaderCircle size={32} className="animate-spin text-blue-500" /></div> : formData.leaderImage ? <img src={formData.leaderImage} alt="Leader" className="w-full h-full object-cover" /> : <div className="text-[#26272B]"><ImagePlus size={32} /></div>}
                   </div>
-                  <button onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')} className={editButtonStyle}><PenLine size={20} /></button>
+                  {/* Usa o estilo específico para líder (leaderEditButtonStyle) */}
+                  <button onClick={() => setActiveMenu(activeMenu === 'leader' ? null : 'leader')} className={leaderEditButtonStyle}><PenLine size={20} /></button>
                   {activeMenu === 'leader' && renderImageMenu('leader')}
                 </div>
               </section>
