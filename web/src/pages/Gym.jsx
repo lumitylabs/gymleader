@@ -270,7 +270,7 @@ function Gym() {
             <div className="max-w-4xl mx-auto space-y-6 pb-20">
 
               <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
-                <h1 className="text-2xl font-bold text-white">My Gym</h1>
+                <h1 className="text-lg font-semibold text-[#FAFAFA]">My Gym</h1>
                 {error && <span className="text-red-400 text-sm">{error}</span>}
               </div>
 

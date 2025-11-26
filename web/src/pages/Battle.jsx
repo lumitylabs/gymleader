@@ -241,7 +241,7 @@ function Battle() {
 
               <div className="flex flex-col mb-2.5">
                 <div className="flex justify-end md:justify-between items-center w-full gap-4 select-none">
-                  <h1 className="hidden md:block text-2xl font-bold text-white whitespace-nowrap">
+                  <h1 className="hidden md:block text-lg font-semibold text-[#FAFAFA] whitespace-nowrap">
                     Battle
                   </h1>
 

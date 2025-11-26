@@ -289,7 +289,7 @@ function Wallets() {
             <div className="max-w-4xl mx-auto space-y-8 pb-20">
 
               <div className="flex items-center justify-between pl-12 lg:pl-0 pt-1.5 lg:pt-0">
-                <h1 className="text-2xl font-bold text-white">Wallets</h1>
+                <h1 className="text-lg font-semibold text-[#FAFAFA]">Wallets</h1>
               </div>
 
               {!giftRedeemed && (
