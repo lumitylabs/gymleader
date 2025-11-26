@@ -14,8 +14,8 @@ const GRADER_IMAGES = {
 export function CardPreview({ card, topPos }) {
   if (!card) return null;
 
-  const PREVIEW_HEIGHT = 720; 
-  const SCREEN_MARGIN = 20; 
+  const PREVIEW_HEIGHT = 720;
+  const SCREEN_MARGIN = 20;
   const maxTopAllowed = window.innerHeight - PREVIEW_HEIGHT - SCREEN_MARGIN;
   let targetTop = topPos - 100;
   const finalTop = Math.max(SCREEN_MARGIN, Math.min(targetTop, maxTopAllowed));
@@ -35,9 +35,9 @@ export function CardPreview({ card, topPos }) {
       <div className="relative bg-[#18181B] p-2 rounded-2xl shadow-2xl border border-[#26272B]">
         <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#131316]">
           {card.image ? (
-            <img 
-              src={card.image} 
-              alt={card.name} 
+            <img
+              src={card.image}
+              alt={card.name}
               className="w-full h-full object-contain"
             />
           ) : (
@@ -50,12 +50,12 @@ export function CardPreview({ card, topPos }) {
         <div className="mt-3 px-1 pb-1 flex justify-between items-center">
           <div>
             <p className="text-white font-bold text-lg leading-tight">{card.name}</p>
-            <p className="text-gray-500 text-sm">{card.fullName.split('#')[0]}</p>
+            <p className="text-gray-500 text-sm">{`#${card.cardId}`}</p>
           </div>
           {GraderLogoSrc && (
-             <div className="bg-white/10 p-1.5 rounded-md">
-                <img src={GraderLogoSrc} alt="Grader" className="h-5 w-auto" />
-             </div>
+            <div className="bg-white/10 p-1.5 rounded-md">
+              <img src={GraderLogoSrc} alt="Grader" className="h-5 w-auto" />
+            </div>
           )}
         </div>
       </div>

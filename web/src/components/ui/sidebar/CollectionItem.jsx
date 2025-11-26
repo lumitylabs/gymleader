@@ -23,7 +23,6 @@ import TagLogo from "../../../assets/graders/tag.png";
 // --- IMPORTAÇÃO DE LOGOS ---
 import BeezieLogo from "../../../assets/beezie_logo.svg";
 import CollectorLogo from "../../../assets/collector_logo.svg";
-
 import OakLogo from "../../../assets/oak_logo.svg";
 
 const TAG_COLORS = {
@@ -81,10 +80,10 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
   const GraderLogoSrc = GRADER_IMAGES[graderKey];
 
   let PlatformBadge;
-  
+
   if (card.tag === 'OAK GIFT') {
     PlatformBadge = (
-      <div className="flex items-center gap-[2px] bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+      <div className="flex items-center gap-[2px] bg-gradient-to-r from-[#161A1C] from-10% via-[#0C2D56] via-50% to-[#78313B] to-90% rounded-full px-2.5 py-1 h-6">
         <img src={OakLogo} alt="Oak" className="w-4 h-4" />
         <div className="text-white font-bold text-[10px] flex items-center gap-1">
           OAK GIFT
@@ -93,16 +92,16 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
     );
   } else if (card.chain === 'flow') {
     PlatformBadge = (
-      <div className="flex items-center gap-[2px] bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+      <div className="flex items-center gap-[2px] bg-gradient-to-r from-[#131316]/90 to-[#575765]/90 rounded-full px-2.5 py-1 h-6">
         <img src={BeezieLogo} alt="Beezie" className="w-4 h-4" />
-        <div className="text-white font-bold text-[10px] flex items-center gap-1">
+        <div className="text-white font-semibold text-[11px] flex items-center gap-1">
           beezie
         </div>
       </div>
     );
   } else if (card.chain === 'solana') {
     PlatformBadge = (
-      <div className="flex items-center bg-black/80 rounded-full px-2.5 py-1 h-6 shadow-sm">
+      <div className="flex items-center bg-gradient-to-r from-[#121212] from-10% via-[#1E2D2F] via-30% to-[#2B1E14] to-90% rounded-full px-2.5 py-1 h-6">
         <img src={CollectorLogo} alt="Collector" className="w-4 h-4" />
         <div className="text-white font-bold text-[10px] flex items-center gap-1">
           COLLECTOR
