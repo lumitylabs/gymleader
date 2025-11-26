@@ -180,8 +180,7 @@ function BattleGym() {
 
             // Queue sequence
             queueMessages([
-                { type: 'referee', message: 'The judge has connected to the match...' },
-                { type: 'system', message: 'The battle has begun!' },
+                { type: 'referee', message: 'The judge has connected to the match. The battle has begun!' },
                 { type: 'narrative', message: data.introNarrative },
                 { type: 'narrative', message: data.leaderMoveNarrative }
             ]);
