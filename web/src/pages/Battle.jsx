@@ -258,7 +258,7 @@ function Battle() {
                 </div>
 
                 <div className="md:hidden mt-5">
-                  <h1 className="text-xl font-bold text-[#FAFAFA]">Battle</h1>
+                  <h1 className="text-lg font-semibold text-[#FAFAFA]">Battle</h1>
                 </div>
 
                 <div className="mt-5 w-full pl-0">
