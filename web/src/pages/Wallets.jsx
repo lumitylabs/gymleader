@@ -283,10 +283,10 @@ function Wallets() {
 
                 {/* Texto */}
                 <div className="flex flex-col gap-1">
-                  <h2 className="font-medium text-[#FFF1E0] text-[17px] tracking-wider">
+                  <h2 className="font-medium text-[#FFF1E0] text-md">
                     Ask Professor OAK for 3 free cards
                   </h2>
-                  <div className="flex flex-col text-[#FFDBAF] font-regular text-[15px] tracking-tight leading-snug">
+                  <div className="flex flex-col text-[#FFDBAF] font-regular text-sm leading-snug">
                     <span>No Pokémon yet?</span>
                     <span>You can redeem 3 free cards for now.</span>
                   </div>
@@ -307,9 +307,9 @@ function Wallets() {
             {/* --- Seção Beezie (Flow EVM) --- */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isEvmConnected ? 'bg-green-400 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-[#3F3F46]'}`}></div>
+                <div className={`w-1.5 h-1.5 rounded-full ${isEvmConnected ? 'bg-green-400 shadow-[0_0_5px_rgba(168,85,247,0.5)]' : 'bg-[#3F3F46]'}`}></div>
                 <label className="text-sm font-medium text-[#FAFAFA]">Beezie</label>
-                <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-2 leading-3">Flow EVM</span>
+                <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-1.5 leading-3">Flow EVM</span>
               </div>
 
               {!isEvmConnected ? (
@@ -333,9 +333,9 @@ function Wallets() {
             {/* --- Seção Collectorcrypt (Solana) --- */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isSolanaConnected ? 'bg-[#22C55E]' : 'bg-[#3F3F46]'}`}></div>
-                <label className="text-sm font-medium text-[#FAFAFA]">Collectorcrypt</label>
-                <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-2 leading-3">Solana</span>
+                <div className={`w-1.5 h-1.5 rounded-full ${isSolanaConnected ? 'bg-[#22C55E]' : 'bg-[#3F3F46]'}`}></div>
+                <label className="text-sm font-medium text-[#FAFAFA]">Collector</label>
+                <span className="text-xs font-medium text-[#52525B] border-l border-[#3F3F46] pl-1.5 leading-3">Solana</span>
               </div>
 
               {!isSolanaConnected ? (
