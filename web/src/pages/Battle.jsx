@@ -407,7 +407,12 @@ function Battle() {
                               <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
                               <div className="flex items-center gap-1">
                                 <MapPin color="#FFADAD" size={12} strokeWidth={2} />
-                                <span>{gym.location || 'Leaders'}</span>
+                                <span>
+                                  {gym.location
+                                    ? `${gym.location}${gym.region ? `, ${gym.region}` : ''}`
+                                    : 'Leaders'
+                                  }
+                                </span>
                               </div>
                             </div>
                           </div>
