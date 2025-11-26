@@ -128,7 +128,7 @@ function FilterBar({ activeCategory, onCategorySelect, categories }) {
         <div className="absolute top-0 left-[-2px] bottom-0 w-20 bg-gradient-to-r from-[#18181B] via-[#18181B]/90 to-transparent pointer-events-none flex items-center justify-start z-10 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
           <button
             onClick={() => handleScrollByButton('left')}
-            className="pointer-events-auto pl-1 pr-4 h-full flex items-center text-white/60 hover:text-white transition-colors outline-none"
+            className="pointer-events-auto pl-1 pr-4 h-full flex items-center text-white/60 hover:text-white transition-colors outline-none cursor-pointer"
           >
             <ChevronLeft size={24} />
           </button>
@@ -139,7 +139,7 @@ function FilterBar({ activeCategory, onCategorySelect, categories }) {
         <div className="absolute top-0 right-[-2px] bottom-0 w-20 bg-gradient-to-l from-[#18181B] via-[#18181B]/90 to-transparent pointer-events-none flex items-center justify-end z-10 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
           <button
             onClick={() => handleScrollByButton('right')}
-            className="pointer-events-auto pr-1 pl-4 h-full flex items-center text-white/60 hover:text-white transition-colors outline-none"
+            className="pointer-events-auto pr-1 pl-4 h-full flex items-center text-white/60 hover:text-white transition-colors outline-none cursor-pointer"
           >
             <ChevronRight size={24} />
           </button>
