@@ -320,7 +320,7 @@ function BattleGym() {
                         <div className="flex flex-col md:flex-row items-center gap-6 z-10 relative">
                             {/* Leader Avatar */}
                             <div className="w-24 h-24 rounded-full border-2 border-[#26272B] overflow-hidden bg-black">
-                                <img src={gymData?.leaderImage || '/placeholder-leader.png'} alt={gymData?.leaderName} className="w-full h-full object-cover" />
+                                <img src={gymData?.leaderImage || '/placeholder-leader.png'} alt={gymData?.leaderName} className="w-full h-full object-cover bg-[#202024]" />
                             </div>
 
                             {/* Info */}

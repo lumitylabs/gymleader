@@ -205,9 +205,9 @@ function Battle() {
     const loc = location.toLowerCase().trim();
 
     if (loc === 'leaders') return 5;
-    if (loc === 'gym challenge') return 4;
     if (loc === 'elite four') return 3;
     if (loc === 'victory road') return 2;
+    if (loc === 'gym challenge') return 1;
 
     // Qualquer outra região (Kanto, Johto, etc) vem primeiro
     return 1;
@@ -215,7 +215,7 @@ function Battle() {
 
   // Gera as categorias dinamicamente baseadas nos dados existentes
   const dynamicCategories = useMemo(() => {
-    const fixedCategories = ["Victory Road", "Elite Four", "Gym Challenge", "Leaders"];
+    const fixedCategories = ["Gym Challenge", "Victory Road", "Elite Four", "Leaders"];
     const locations = new Set();
 
     gyms.forEach(gym => {
@@ -227,6 +227,21 @@ function Battle() {
     // Retorna: All + Regiões (alfabético) + Fixos
     return ["All", ...Array.from(locations).sort(), ...fixedCategories];
   }, [gyms]);
+
+  const kantoOrder = [
+    "brock",
+    "misty",
+    "ltsurge", // Irá corresponder a "Lt. Surge" ou "Lt Surge" após normalização
+    "erika",
+    "koga",
+    "sabrina",
+    "blaine",
+    "giovanni"
+  ];
+
+  // Helper para normalizar o nome (remove pontuação, espaços e deixa minúsculo)
+  // Ex: "Lt. Surge" vira "ltsurge"
+  const normalizeName = (name) => name ? name.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
 
   const filteredGyms = gyms
     .filter(gym => {
@@ -242,16 +257,14 @@ function Battle() {
 
       const gymLocation = gym.location || "";
 
-      // Se a aba for "Leaders", inclui quem tem location "Leaders" OU quem não tem location
       if (activeTab === "Leaders") {
         return gymLocation === "Leaders" || gymLocation === "";
       }
 
-      // Para as outras abas, tem que ser match exato
       return gymLocation === activeTab;
     })
     .sort((a, b) => {
-      // 3. Ordenação: Região -> Victory Road -> Elite Four -> Leaders
+      // A. Prioridade de Localização (Region/Gym Challenge primeiro, Leaders por último)
       const priorityA = getLocationPriority(a.location);
       const priorityB = getLocationPriority(b.location);
 
@@ -259,7 +272,26 @@ function Battle() {
         return priorityA - priorityB;
       }
 
-      // Desempate por nome do ginásio (opcional)
+      // B. Prioridade Específica dos Líderes (Kanto Order)
+      // Só aplicamos se eles estiverem na mesma "location priority" (ex: ambos Gym Challenge)
+      const nameA = normalizeName(a.leaderName);
+      const nameB = normalizeName(b.leaderName);
+
+      const indexA = kantoOrder.indexOf(nameA);
+      const indexB = kantoOrder.indexOf(nameB);
+
+      // Se ambos estão na lista personalizada, ordena pelo índice da lista
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+
+      // Se apenas A está na lista, A vem primeiro
+      if (indexA !== -1) return -1;
+
+      // Se apenas B está na lista, B vem primeiro
+      if (indexB !== -1) return 1;
+
+      // C. Desempate padrão (alfabético por nome do ginásio)
       return (a.gymName || "").localeCompare(b.gymName || "");
     });
 
@@ -332,13 +364,25 @@ function Battle() {
                   filteredGyms.map((gym, index) => (
                     <div key={index}
                       onClick={() => navigate(`/battle/${gym.userId}`)}
-                      className="bg-[#202024] hover:bg-[#232326] rounded-3xl p-6 flex flex-col md:flex-row gap-6 transition-all duration-200 cursor-pointer group min-h-[200px]"
+                      className="bg-[#202024] hover:bg-[#232326] rounded-3xl p-6 flex flex-col md:flex-row gap-6 transition-all duration-200 cursor-pointer group min-h-[200px] "
                     >
-                      <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0">
+                      <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0 bg-[#26272B] rounded-[32px] overflow-hidden">
                         {gym.badgeImage ? (
-                          <img src={gym.badgeImage} alt="Badge" className="w-full h-full object-cover rounded-[32px] shadow-lg group-hover:scale-[1.02] transition-transform duration-300" />
+                          <img
+                            src={gym.badgeImage}
+                            alt="Badge"
+                            className={`
+        w-full h-full transition-transform duration-300 group-hover:scale-[1.02]
+        ${gym.badgeImage.endsWith('.png')
+                                ? 'object-contain drop-shadow-2xl p-4'   // PNG transparente → sombra + não cortar
+                                : 'object-cover'                        // Imagem com fundo → ocupar tudo
+                              }
+      `}
+                          />
                         ) : (
-                          <div className="w-full h-full bg-[#26272B] rounded-[32px] flex items-center justify-center text-gray-600 text-xs font-medium">No Badge</div>
+                          <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs font-medium">
+                            No Badge
+                          </div>
                         )}
                       </div>
 
