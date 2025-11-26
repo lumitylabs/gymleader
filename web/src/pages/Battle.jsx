@@ -118,7 +118,7 @@ function FilterBar({ activeCategory, onCategorySelect, categories }) {
         className="w-full overflow-x-auto no-scrollbar cursor-grab active:cursor-grabbing"
         style={{ scrollBehavior: 'auto' }}
       >
-        <div className="flex gap-3 py-1 px-1">
+        <div className="flex gap-2 py-1 px-1">
           {categories.map((category) => (
             <div key={category} className="flex-shrink-0">
               <FilterTag name={category} isActive={activeCategory === category} onClick={onCategorySelect} />
@@ -239,7 +239,7 @@ function Battle() {
             */}
             <div className="max-w-4xl mx-auto pb-20">
 
-              <div className="flex flex-col mb-6">
+              <div className="flex flex-col mb-2.5">
                 <div className="flex justify-end md:justify-between items-center w-full gap-4 select-none">
                   <h1 className="hidden md:block text-2xl font-bold text-white whitespace-nowrap">
                     Battle
@@ -271,7 +271,7 @@ function Battle() {
               </div>
 
               {/* LISTA DE GINÁSIOS */}
-              <div className="space-y-4">
+              <div className="space-y-4.5">
                 {loading ? (
                   <>
                     <GymCardSkeleton /><GymCardSkeleton /><GymCardSkeleton />
