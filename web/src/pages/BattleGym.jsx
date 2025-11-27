@@ -43,7 +43,6 @@ const getPokemonDataByName = (tagName, userTeam, gymTeam) => {
 };
 
 // --- COMPONENT: Message Renderer (Text -> GIFs) ---
-// ALTERAÇÃO: Adicionado prop 'onPlaySound' para tocar o som ao clicar no GIF do chat
 const MessageRenderer = ({ text, userTeam, gymTeam, onPlaySound }) => {
     if (!text) return null;
 
@@ -73,9 +72,8 @@ const MessageRenderer = ({ text, userTeam, gymTeam, onPlaySound }) => {
                                     src={`https://sweet-cendol-f4d090.netlify.app/${pokeData.pokedexId}.gif`}
                                     onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${pokeData.pokedexId}.png`}
                                     alt={pokeData.name}
-                                    // ALTERAÇÃO: Evento de clique para tocar o som
                                     onClick={(e) => {
-                                        e.stopPropagation(); // Evita disparar outros cliques se houver
+                                        e.stopPropagation();
                                         if (onPlaySound) onPlaySound(pokeData.pokedexId);
                                     }}
                                     className="w-7 h-7 object-contain select-none cursor-pointer hover:scale-125 transition-transform"
@@ -147,54 +145,45 @@ function BattleGym() {
     const [userGym, setUserGym] = useState(null);
 
     // --- AUDIO LOGIC START ---
-    const audioCache = useRef({}); // Armazena os objetos de áudio pré-carregados
+    const audioCache = useRef({});
 
-    // Função para tocar o som
     const playPokemonSound = (pokedexId) => {
         if (!pokedexId) return;
 
-        // Tenta pegar do cache
         let audio = audioCache.current[pokedexId];
 
-        // Se não estiver no cache (fallback), cria um novo
         if (!audio) {
             audio = new Audio(`https://mellifluous-gecko-cbaceb.netlify.app/${pokedexId}.ogg`);
             audio.volume = 0.3;
             audioCache.current[pokedexId] = audio;
         }
 
-        // Reinicia o áudio se já estiver tocando (permite spam de cliques)
         audio.currentTime = 0;
         audio.play().catch(err => console.error("Erro ao reproduzir som:", err));
     };
 
-    // Effect para PRE-CARREGAR os sons
     useEffect(() => {
         const preloadList = [];
 
-        // Adiciona time do usuário
         if (userTeam && userTeam.length > 0) {
             preloadList.push(...userTeam);
         }
 
-        // Adiciona time do ginásio
         if (gymData && gymData.team) {
             preloadList.push(...gymData.team);
         }
 
-        // Itera e cria os objetos de áudio
         preloadList.forEach(poke => {
             if (poke && poke.pokedexId && !audioCache.current[poke.pokedexId]) {
                 const audio = new Audio(`https://mellifluous-gecko-cbaceb.netlify.app/${poke.pokedexId}.ogg`);
-                audio.volume = 0.3; // Volume confortável
-                audio.preload = 'auto'; // Força o navegador a baixar
+                audio.volume = 0.3;
+                audio.preload = 'auto';
                 audioCache.current[poke.pokedexId] = audio;
             }
         });
     }, [userTeam, gymData]);
     // --- AUDIO LOGIC END ---
 
-    // Helper to find mentioned pokemon in text
     const getMentionedPokemon = (text) => {
         if (!text || !userTeam.length) return userTeam;
         const normalizedText = text.toLowerCase();
@@ -210,7 +199,6 @@ function BattleGym() {
         return getMentionedPokemon(lastNarrative?.message);
     })();
 
-    // Load Data
     useEffect(() => {
         const gymRef = ref(db, `gyms/${gymId}`);
         const unsubscribe = onValue(gymRef, (snapshot) => {
@@ -239,7 +227,6 @@ function BattleGym() {
         return () => unsubscribe();
     }, [currentUser]);
 
-    // Auto-scroll
     useEffect(() => {
         if (messagesEndRef.current) {
             setTimeout(() => {
@@ -256,7 +243,6 @@ function BattleGym() {
     const [gameOverState, setGameOverState] = useState(null);
     const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
-    // Process Message Queue
     useEffect(() => {
         if (messageQueue.length > 0 && !isProcessingQueue && !waitingForInteraction) {
             setIsProcessingQueue(true);
@@ -288,8 +274,6 @@ function BattleGym() {
 
     const handleContinue = () => setWaitingForInteraction(false);
     const queueMessages = (messages) => setMessageQueue(prev => [...prev, ...messages]);
-
-    // --- MENTION LOGIC ---
 
     const getMentionList = () => {
         const enemies = (gymData?.team || []).map(p => ({ ...p, isEnemy: true }));
@@ -383,7 +367,6 @@ function BattleGym() {
         if (textareaRef.current) textareaRef.current.focus();
     };
 
-    // --- HIGHLIGHTER LOGIC ---
     const renderHighlightedText = () => {
         if (!playerInput) return null;
         const parts = playerInput.split(/(@[\w_']+|\s+)/g);
@@ -395,8 +378,6 @@ function BattleGym() {
             return <span key={index} className="text-white">{part}</span>;
         });
     };
-
-    // --- BATTLE LOGIC ---
 
     const startBattle = async () => {
         if (!currentUser) return toast.error("You must be logged in to battle");
@@ -529,16 +510,13 @@ function BattleGym() {
 
                     {/* Header Card */}
                     <div className="bg-[#202024] rounded-2xl p-6 relative overflow-hidden">
-                        <button onClick={() => navigate(-1)} className="absolute top-4 right-4 text-gray-400 hover:text-white">
-                            <ArrowLeft size={24} />
-                        </button>
 
                         <div className="flex flex-col md:flex-row items-center gap-6 z-10 relative">
                             <div className="w-24 h-24 rounded-full border-2 border-[#26272B] overflow-hidden bg-black">
                                 <img src={gymData?.leaderImage || '/placeholder-leader.png'} alt={gymData?.leaderName} className="w-full h-full object-cover bg-[#202024]" />
                             </div>
                             <div className="flex-1 text-center md:text-left">
-                                <h1 className="text-3xl font-bold">{gymData?.gymName || 'Gym Name'}</h1>
+                                <h1 className="text-xl font-semibold">{gymData?.gymName || 'Gym Name'}</h1>
                                 <div className="flex items-center justify-center md:justify-start gap-2 text-gray-400 text-sm mt-1">
                                     <span>By @{gymData?.leaderName}</span>
                                     <span>•</span>
@@ -549,10 +527,9 @@ function BattleGym() {
                                         <span className="text-sm font-bold">Difficult</span>
                                         <div className="flex">{[1, 2, 3].map(i => <Zap key={i} size={12} fill="currentColor" />)}</div>
                                     </div>
-                                    <div className="text-sm text-gray-400">
-                                        <span className="text-green-400 font-bold">{gymData?.stats?.wins || 0} Wins</span>
-                                        <span className="mx-2">|</span>
-                                        <span className="text-red-400 font-bold">{gymData?.stats?.losses || 0} Losses</span>
+                                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                                        <span className="text-green-400 font-md">{gymData?.stats?.wins || 0} Wins</span>
+                                        <span className="text-red-400 font-md">{gymData?.stats?.losses || 0} Losses</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-center md:justify-start gap-2 mt-3">
@@ -560,7 +537,6 @@ function BattleGym() {
                                         <div
                                             key={i}
                                             className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform"
-                                            // ALTERAÇÃO: Toca o som E prepara a menção
                                             onClick={() => {
                                                 playPokemonSound(poke.pokedexId);
                                                 handleMentionClick(poke.name, true);
@@ -582,7 +558,7 @@ function BattleGym() {
                                     <img src={gymData?.badgeImage || '/placeholder-badge.png'} alt="Badge" className="w-full h-full object-contain drop-shadow-lg" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg">Badge Reward</h3>
+                                    <h3 className="font-bold text-sm">Badge Reward</h3>
                                     <p className="text-[10px] text-gray-400 max-w-[150px]">This Badge is an NFT and will be sent to your connected wallet upon victory!</p>
                                 </div>
                             </div>
@@ -647,7 +623,6 @@ function BattleGym() {
                                                                             <button key={option.id} onClick={() => sendInstruction(option.id)} className="w-full text-left bg-[#3E3D3E] hover:bg-[#4E4D4E] p-4 rounded-lg transition-all flex items-center gap-3 group">
                                                                                 <div className="w-6 h-6 rounded-full border border-gray-500 flex items-center justify-center text-xs text-gray-400 group-hover:border-white group-hover:text-white flex-shrink-0">{option.id}</div>
                                                                                 <span className="text-sm text-gray-200 group-hover:text-white w-full">
-                                                                                    {/* ALTERAÇÃO: Passando onPlaySound */}
                                                                                     <MessageRenderer text={option.text} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} />
                                                                                 </span>
                                                                             </button>
@@ -675,7 +650,6 @@ function BattleGym() {
                                                             className={`p-4 rounded-xl backdrop-blur-md ${containerStyle}`}
                                                         >
                                                             <p className="text-sm md:text-base">
-                                                                {/* ALTERAÇÃO: Passando onPlaySound */}
                                                                 <MessageRenderer text={log.message} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} />
                                                             </p>
                                                         </motion.div>
@@ -698,7 +672,6 @@ function BattleGym() {
                                                             <div className="flex gap-2">
                                                                 {relevantPokemon.map((poke, i) => (
                                                                     <div key={i} className="w-17 h-17 cursor-pointer hover:scale-110 transition-transform"
-                                                                        // ALTERAÇÃO: Toca som e prepara menção
                                                                         onClick={() => {
                                                                             playPokemonSound(poke.pokedexId);
                                                                             handleMentionClick(poke.name);
@@ -816,7 +789,6 @@ function BattleGym() {
                                             <div key={i} className="group relative w-20 cursor-pointer"
                                                 onMouseEnter={() => !isHidden && setHoveredCard(card)}
                                                 onMouseLeave={() => setHoveredCard(null)}
-                                                // ALTERAÇÃO: Toca som e prepara menção
                                                 onClick={() => {
                                                     if (!isHidden) {
                                                         playPokemonSound(card.pokedexId);
