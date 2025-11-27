@@ -187,7 +187,7 @@ function Badges() {
 
     if (filter === 'All') return matchesSearch;
     if (filter === 'Kanto') return matchesSearch && badge.location === 'Kanto';
-    if (filter === 'Leaders') return matchesSearch;
+    if (filter === 'PvP') return matchesSearch;
     return matchesSearch;
   });
 
@@ -241,7 +241,7 @@ function Badges() {
                   <FilterBar
                     activeCategory={filter}
                     onCategorySelect={setFilter}
-                    categories={['All', 'Kanto', 'Leaders']}
+                    categories={['All', 'Kanto', 'PvP']}
                   />
                 </div>
               </div>
@@ -310,7 +310,7 @@ function Badges() {
                           {badge.location ? <div className="flex items-center gap-1 text-[#A1A1AA] text-xs"><MapPin color="#FFADAD" size={12} strokeWidth={2} />
                             <span>{badge.location
                               ? `${badge.location}${badge.region ? `, ${badge.region}` : ''}`
-                              : 'Leaders'
+                              : 'PvP'
                             }</span></div> : <> </>}
 
 

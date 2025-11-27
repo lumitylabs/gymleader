@@ -202,11 +202,11 @@ function Battle() {
 
   // Função auxiliar para definir a prioridade de ordenação
   const getLocationPriority = (location) => {
-    if (!location) return 5; // Sem localização -> Leaders (Último)
+    if (!location) return 5; // Sem localização -> PvP (Último)
 
     const loc = location.toLowerCase().trim();
 
-    if (loc === 'leaders') return 5;
+    if (loc === 'PvP') return 5;
     if (loc === 'elite four') return 3;
     if (loc === 'victory road') return 2;
     if (loc === 'gym challenge') return 1;
@@ -217,7 +217,7 @@ function Battle() {
 
   // Gera as categorias dinamicamente baseadas nos dados existentes
   const dynamicCategories = useMemo(() => {
-    const fixedCategories = ["Gym Challenge", "Victory Road", "Elite Four", "Leaders"];
+    const fixedCategories = ["Gym Challenge", "Victory Road", "Elite Four", "PvP"];
     const locations = new Set();
 
     gyms.forEach(gym => {
@@ -258,8 +258,8 @@ function Battle() {
 
       const gymLocation = gym.location || "";
 
-      if (activeTab === "Leaders") {
-        return gymLocation === "Leaders" || gymLocation === "";
+      if (activeTab === "PvP") {
+        return gymLocation === "PvP" || gymLocation === "";
       }
 
       return gymLocation === activeTab;
@@ -398,7 +398,7 @@ function Battle() {
                                   <span>
                                     {gym.location
                                       ? `${gym.location}${gym.region ? `, ${gym.region}` : ''}`
-                                      : 'Leaders'
+                                      : 'PvP'
                                     }
                                   </span>
                                 </div>

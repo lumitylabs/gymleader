@@ -542,7 +542,7 @@ function BattleGym() {
                                 <div className="flex items-center justify-center md:justify-start gap-2 text-gray-400 text-sm mt-1">
                                     <span>By @{gymData?.leaderName}</span>
                                     <span>•</span>
-                                    <span>{gymData.location ? `${gymData.location}${gymData.region ? `, ${gymData.region}` : ''}` : 'Leaders'}</span>
+                                    <span>{gymData.location ? `${gymData.location}${gymData.region ? `, ${gymData.region}` : ''}` : 'PvP'}</span>
                                 </div>
                                 <div className="flex items-center justify-center md:justify-start gap-4 mt-3">
                                     <div className="flex items-center gap-1 text-yellow-500">
