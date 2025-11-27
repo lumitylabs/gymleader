@@ -391,16 +391,19 @@ function Battle() {
                               ) : (
                                 <span className="text-[#A2A2AB]">{gym.leaderName || 'Unknown'}</span>
                               )}</span>
-                              <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
-                              <div className="flex items-center gap-1">
-                                <MapPin color="#FFADAD" size={12} strokeWidth={2} />
-                                <span>
-                                  {gym.location
-                                    ? `${gym.location}${gym.region ? `, ${gym.region}` : ''}`
-                                    : 'Leaders'
-                                  }
-                                </span>
-                              </div>
+                              {gym.location ? <div className="">
+                                <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
+                                <div className="flex items-center gap-1">
+                                  <MapPin color="#FFADAD" size={12} strokeWidth={2} />
+                                  <span>
+                                    {gym.location
+                                      ? `${gym.location}${gym.region ? `, ${gym.region}` : ''}`
+                                      : 'Leaders'
+                                    }
+                                  </span>
+                                </div>
+                              </div> : <></>}
+
                             </div>
                           </div>
                           <p className="text-sm text-[#F3F7FA] leading-relaxed line-clamp-2 md:line-clamp-3 max-w-2xl">
