@@ -184,7 +184,7 @@ function Badges() {
 
       <button
         onClick={() => setIsNavbarOpen(true)}
-        className={`fixed top-5 left-2 z-30 p-2 rounded-full hover:bg-[#1F1F22] cursor-pointer transition-all duration-300 ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`fixed top-5 left-2 z-30 p-2 rounded-full hover:bg-black/40 cursor-pointer transition-all duration-300 ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
         aria-label="Open navigation menu"
       >
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
