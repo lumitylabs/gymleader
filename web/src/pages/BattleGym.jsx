@@ -813,7 +813,7 @@ function BattleGym() {
                                     {gymData?.team?.map((card, i) => {
                                         const isHidden = battleStatus === 'idle';
                                         return card ? (
-                                            <div key={i} className="group relative w-20 aspect-[3/4] cursor-pointer"
+                                            <div key={i} className="group relative w-20 cursor-pointer"
                                                 onMouseEnter={() => !isHidden && setHoveredCard(card)}
                                                 onMouseLeave={() => setHoveredCard(null)}
                                                 // ALTERAÇÃO: Toca som e prepara menção
@@ -827,13 +827,13 @@ function BattleGym() {
                                             >
                                                 <img src={isHidden ? BattleCardBack : (card.original ? `${card.original}/high.png` : card.image)} alt={isHidden ? "Hidden Card" : card.name} className={`w-full h-full object-cover rounded-lg transition-transform ${!isHidden ? 'group-hover:scale-105' : ''}`} style={{ imageRendering: 'auto' }} onError={(e) => { if (!isHidden && e.target.src !== card.image) e.target.src = card.image; else if (!isHidden) e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`; }} />
                                             </div>
-                                        ) : <div key={i} className="w-20 aspect-[3/4] bg-[#18181B] rounded-lg flex items-center justify-center"><img src={BattleCardBack} className="w-10 opacity-20" alt="Empty Slot" /></div>;
+                                        ) : <div key={i} className="w-20 bg-[#18181B] rounded-lg flex items-center justify-center"><img src={BattleCardBack} className="w-10 opacity-20" alt="Empty Slot" /></div>;
                                     })}
                                     <AnimatePresence>
                                         {hoveredCard && (
                                             <motion.div initial={{ opacity: 0, y: 10, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.9 }} className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-[100] pointer-events-none origin-bottom" style={{ width: '400px', maxWidth: '90vw' }}>
                                                 <div className="relative w-full rounded-2xl shadow-2xl bg-[#18181B] p-2">
-                                                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#131316]"><img src={hoveredCard.image} alt={hoveredCard.name} className="w-full h-full object-contain" onError={(e) => e.target.src = hoveredCard.original ? `${hoveredCard.original}/high.png` : `http://steady-gaufre-1267b2.netlify.app/${hoveredCard.pokedexId}.png`} /></div>
+                                                    <div className="relative w-full overflow-hidden rounded-xl bg-[#131316]"><img src={hoveredCard.image} alt={hoveredCard.name} className="w-full h-full object-contain" onError={(e) => e.target.src = hoveredCard.original ? `${hoveredCard.original}/high.png` : `http://steady-gaufre-1267b2.netlify.app/${hoveredCard.pokedexId}.png`} /></div>
                                                     <div className="mt-3 px-1 pb-1"><p className="text-white font-bold text-lg leading-tight">{hoveredCard.name}</p><p className="text-gray-500 text-sm">{hoveredCard.fullName?.split('#')[0] || hoveredCard.name}</p></div>
                                                 </div>
                                             </motion.div>
