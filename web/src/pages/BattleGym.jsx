@@ -633,19 +633,21 @@ function BattleGym() {
                                                         <div className="relative w-full">
                                                             {showMentions && (
                                                                 <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#27272A] rounded-lg shadow-xl overflow-hidden z-50 max-h-48 overflow-y-auto">
-                                                                    {getMentionList().length > 0 ? (
-                                                                        getMentionList().map((poke, idx) => (
-                                                                            <button
-                                                                                key={idx}
-                                                                                onClick={() => addMention(poke)}
-                                                                                className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors ${idx === mentionCursorIndex ? 'bg-[#3F3F46]' : 'hover:bg-[#3F3F46]'}`}
-                                                                            >
-                                                                                <img src={`http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-6 h-6 object-contain" alt="" />
-                                                                                <span className={`text-sm font-medium ${poke.isEnemy ? 'text-red-400' : 'text-gray-200'}`}>{poke.name.replace(/ /g, '_')}</span>
-                                                                                {poke.isEnemy && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 rounded ml-auto">Enemy</span>}
-                                                                            </button>
-                                                                        ))
-                                                                    ) : <div className="px-4 py-2 text-sm text-gray-500">No Pokemon found</div>}
+                                                                    <SimpleBar style={{ maxHeight: '192px' }}> {/* 192px equivale ao max-h-48 */}
+                                                                        {getMentionList().length > 0 ? (
+                                                                            getMentionList().map((poke, idx) => (
+                                                                                <button
+                                                                                    key={idx}
+                                                                                    onClick={() => addMention(poke)}
+                                                                                    className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors ${idx === mentionCursorIndex ? 'bg-[#3F3F46]' : 'hover:bg-[#3F3F46]'}`}
+                                                                                >
+                                                                                    <img src={`http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-6 h-6 object-contain" alt="" />
+                                                                                    <span className={`text-sm font-medium ${poke.isEnemy ? 'text-red-400' : 'text-gray-200'}`}>{poke.name.replace(/ /g, '_')}</span>
+                                                                                    {poke.isEnemy && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 rounded ml-auto">Enemy</span>}
+                                                                                </button>
+                                                                            ))
+                                                                        ) : <div className="px-4 py-2 text-sm text-gray-500">No Pokemon found</div>}
+                                                                    </SimpleBar>
                                                                 </div>
                                                             )}
 
