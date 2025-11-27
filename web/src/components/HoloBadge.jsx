@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 
-// --- SHADERS (MANTIDOS IGUAIS) ---
+// --- SHADERS ---
 const vertexShader = `
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -71,7 +71,8 @@ const fragmentShader = `
     holoColor = rainbowColor * (reflectedIllumination + glow);
     holoColor *= a; 
 
-    finalColor = finalColor * 0.9 + holoColor;
+    // Soma simples para manter o brilho original + o brilho do foil
+    finalColor = finalColor + holoColor;
     
     gl_FragColor = vec4(finalColor, a);
   }
@@ -89,7 +90,6 @@ const HoloBadge = ({ imageUrl, holo }) => {
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        // Debounce para evitar carregar durante scroll rápido
                         timeoutRef.current = setTimeout(() => {
                             setShouldLoad3D(true);
                         }, 200);
@@ -120,18 +120,12 @@ const HoloBadge = ({ imageUrl, holo }) => {
             onMouseEnter={() => { isHoveringRef.current = true; }}
             onMouseLeave={() => { isHoveringRef.current = false; }}
         >
-            {/* 
-               IMAGEM ESTÁTICA 
-               Alteração: Adicionei transition-opacity e a lógica is3DReady ? 'opacity-0' : 'opacity-100'
-               Isso faz ela sumir suavemente assim que o 3D aparece.
-            */}
             <img
                 src={imageUrl}
                 alt="Badge"
                 className={`absolute inset-0 w-full h-full object-contain z-0 transition-opacity duration-500 ${is3DReady ? 'opacity-0' : 'opacity-100'}`}
             />
 
-            {/* CANVAS 3D */}
             {shouldLoad3D && (
                 <div
                     className={`absolute inset-0 z-10 transition-opacity duration-500 ease-out ${is3DReady ? 'opacity-100' : 'opacity-0'}`}
@@ -167,15 +161,19 @@ const HoloCanvas = ({ imageUrl, holo, isHoveringRef, onReady }) => {
         const currentMount = mountRef.current;
 
         const scene = new THREE.Scene();
-
-        // Câmera ajustada para bater com o tamanho da div (Z=2.15)
         const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
         camera.position.z = 2.15;
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(currentMount.clientWidth, currentMount.clientHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // --- CORREÇÃO DE CORES ---
+        // Mantemos o output em sRGB para o navegador entender
         renderer.outputColorSpace = THREE.SRGBColorSpace;
+        // Desativamos o ToneMapping para não alterar o contraste da imagem original
+        renderer.toneMapping = THREE.NoToneMapping;
+
         currentMount.appendChild(renderer.domElement);
 
         const textureLoader = new THREE.TextureLoader();
@@ -187,7 +185,11 @@ const HoloCanvas = ({ imageUrl, holo, isHoveringRef, onReady }) => {
 
             cardTexture.minFilter = THREE.LinearFilter;
             cardTexture.magFilter = THREE.LinearFilter;
-            cardTexture.colorSpace = THREE.SRGBColorSpace;
+
+            // --- CORREÇÃO AQUI ---
+            // Removi a linha: cardTexture.colorSpace = THREE.SRGBColorSpace;
+            // Ao carregar como Linear e sair como sRGB, a imagem ganha um "boost" de gama
+            // que compensa o escurecimento natural do WebGL.
             cardTexture.wrapS = THREE.ClampToEdgeWrapping;
             cardTexture.wrapT = THREE.ClampToEdgeWrapping;
 
@@ -251,7 +253,6 @@ const HoloCanvas = ({ imageUrl, holo, isHoveringRef, onReady }) => {
             };
             animate();
 
-            // Avisa que está pronto para mostrar o 3D e esconder a imagem
             setTimeout(() => onReady(), 50);
         });
 
