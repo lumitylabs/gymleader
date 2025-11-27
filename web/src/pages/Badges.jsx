@@ -116,27 +116,13 @@ function FilterBar({ activeCategory, onCategorySelect, categories }) {
 }
 
 /* =========================================================================
-   COMPONENTE: BADGE CARD SKELETON (Corrigido: Tamanho exato e sem pulos)
+   COMPONENTE: BADGE CARD SKELETON
    ========================================================================= */
 const BadgeCardSkeleton = () => (
-  // 1. Sem borda.
-  // 2. rounded-[20px] e overflow-hidden para match exato do container real.
-  // 3. bg-black na base.
   <div className="border border-[#202024] rounded-[20px] overflow-hidden flex flex-col h-full">
-
-    {/* 
-       Topo: bg-[#202024] (igual ao card real).
-       p-8 (igual ao card real).
-       O inner div tem rounded-[32px] para simular a imagem arredondada.
-    */}
     <div className="aspect-square p-7.5 flex items-center justify-center">
       <div className="w-full h-full bg-[#2A2A2E] rounded-[32px] animate-pulse"></div>
     </div>
-
-    {/* 
-       Base: padding e background iguais ao real.
-       Barras de loading em cinza escuro sutil.
-    */}
     <div className="p-5 bg-[#1C1C1F] space-y-2 flex-1">
       <div className="h-5 bg-[#242427] rounded w-3/4 animate-pulse"></div>
       <div className="space-y-2 pt-1">
@@ -249,7 +235,6 @@ function Badges() {
               {/* GRID DE BADGES */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
                 {loading ? (
-                  // Renderiza 8 Skeletons
                   Array.from({ length: 8 }).map((_, index) => (
                     <BadgeCardSkeleton key={index} />
                   ))
@@ -257,32 +242,36 @@ function Badges() {
                   filteredBadges.map((badge) => (
                     <motion.div
                       key={badge.gymId}
-                      // CORREÇÃO: Removi o "y: 20" do initial.
-                      // Agora ele faz apenas Fade In (Opacity). Isso elimina o "pulo" visual.
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.4 }}
-                      className="bg-black rounded-[20px] overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all flex flex-col h-full"
+                      // 1. Removemos overflow-hidden do pai para a sombra vazar
+                      // 2. Adicionamos rounded-[20px] e relative
+                      // 3. Adicionamos z-index no hover para sobrepor os vizinhos
+                      className="bg-black rounded-[20px] group cursor-pointer shadow-sm relative hover:z-20 flex flex-col h-full"
                     >
                       {/* 
-                          PARTE SUPERIOR (IMAGEM / HOLO) 
-                          Alterado para usar HoloBadge
+                          PARTE SUPERIOR (IMAGEM) 
+                          - rounded-t-[20px] e overflow-hidden: Mantém o aspecto arredondado e corta a imagem interna.
+                          - shadow e transition: Adicionados aqui. Como box-shadow é renderizado fora da borda, o overflow-hidden não o corta.
                       */}
-                      <div className="aspect-square bg-[#202024] relative flex items-center justify-center transition-colors">
-                        {/* Container para o HoloBadge ocupar 100% */}
+                      <div className="aspect-square bg-[#202024] rounded-t-[20px] overflow-hidden relative flex items-center justify-center 
+                                      shadow-[0_0px_40px_1px_rgba(255,230,195,0)] group-hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] 
+                                      transition-all duration-500 ease-out group-hover:duration-200">
+
                         <div className="w-full h-full relative z-10 ">
                           <HoloBadge imageUrl={badge.badgeImage} holo={badge.holo || 1} />
                         </div>
 
-                        {/* 
-                           Opcional: Glow estático atrás da badge para dar profundidade 
-                           (já que o canvas é transparente)
-                        */}
+                        {/* Glow estático interno */}
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
                       </div>
 
-                      {/* PARTE INFERIOR (TEXTO E LINKS) - Mantém igual */}
-                      <div className="p-5 bg-black flex-1">
+                      {/* 
+                          PARTE INFERIOR (TEXTO) 
+                          - rounded-b-[20px]: Garante que o fundo do card também seja arredondado
+                      */}
+                      <div className="p-5 bg-black flex-1 rounded-b-[20px]">
                         <h3 className="font-semibold text-[#FAFAFA] text-base leading-tight truncate mb-1">
                           {badge.gymName}
                         </h3>
