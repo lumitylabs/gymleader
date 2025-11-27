@@ -13,48 +13,76 @@ import BattlePokeball from "../assets/battle-pokeball.png";
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 import BattleCardBack from "../assets/battle-cardback.png";
 
-// --- HELPER: Get Pokemon Data for GIFs ---
-const getPokemonDataByName = (name, userTeam, gymTeam) => {
-    if (!name) return null;
-    const cleanName = name.replace(/_/g, ' ').toLowerCase();
+// --- HELPER: Get Pokemon Data for GIFs (NORMALIZED MATCHING) ---
+const getPokemonDataByName = (tagName, userTeam, gymTeam) => {
+    if (!tagName) return null;
 
-    // Search in user team
-    const userPoke = userTeam.find(p => p.name.toLowerCase() === cleanName);
+    let processedTag = tagName;
+
+    if (processedTag.endsWith("'s")) {
+        processedTag = processedTag.slice(0, -2);
+    }
+
+    const cleanTag = processedTag.replace(/[@_ \-']/g, '').toLowerCase();
+
+    const findInList = (list) => {
+        return list?.find(p => {
+            if (!p.name) return false;
+            const cleanName = p.name.replace(/[@_ \-']/g, '').toLowerCase();
+            return cleanName === cleanTag;
+        });
+    };
+
+    const userPoke = findInList(userTeam);
     if (userPoke) return { ...userPoke, isEnemy: false };
 
-    // Search in gym team
-    const gymPoke = gymTeam?.find(p => p.name.toLowerCase() === cleanName);
+    const gymPoke = findInList(gymTeam);
     if (gymPoke) return { ...gymPoke, isEnemy: true };
 
     return null;
 };
 
 // --- COMPONENT: Message Renderer (Text -> GIFs) ---
-const MessageRenderer = ({ text, userTeam, gymTeam }) => {
+// ALTERAÇÃO: Adicionado prop 'onPlaySound' para tocar o som ao clicar no GIF do chat
+const MessageRenderer = ({ text, userTeam, gymTeam, onPlaySound }) => {
     if (!text) return null;
 
-    const parts = text.split(/(@(?:Enemy_)?[\w\u00C0-\u00FF]+)/g);
+    const parts = text.split(/(@(?:Enemy_)?[\w\u00C0-\u00FF']+)/g);
 
     return (
-        // ALTERAÇÃO AQUI: Removido 'inline-flex' e 'flex-wrap'. 
-        // Usamos apenas span normal para fluxo de texto natural.
-        <span className="break-words leading-relaxed">
+        <span className="break-words leading-loose">
             {parts.map((part, index) => {
                 if (part.startsWith('@')) {
                     const isEnemyMention = part.startsWith('@Enemy_');
                     const rawName = isEnemyMention ? part.replace('@Enemy_', '') : part.replace('@', '');
+
                     const pokeData = getPokemonDataByName(rawName, userTeam, gymTeam);
 
                     if (pokeData) {
+                        const badgeStyle = pokeData.isEnemy
+                            ? "bg-red-500/10 border-red-500/20 text-red-300"
+                            : "bg-green-500/10 border-green-500/20 text-green-200";
+
                         return (
-                            // ALTERAÇÃO AQUI: inline-block e align-middle para fluir com o texto
-                            <span key={index} className="inline-block align-middle mx-0.5 select-none" title={pokeData.name}>
+                            <span
+                                key={index}
+                                className={`inline-flex items-center gap-1.5 align-middle mx-1 my-1 px-1.5 py-0.5 rounded-md border ${badgeStyle} transition-colors hover:bg-opacity-20`}
+                                title={pokeData.name}
+                            >
                                 <img
                                     src={`https://sweet-cendol-f4d090.netlify.app/${pokeData.pokedexId}.gif`}
                                     onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${pokeData.pokedexId}.png`}
                                     alt={pokeData.name}
-                                    className="w-8 h-8 object-contain pixelated"
+                                    // ALTERAÇÃO: Evento de clique para tocar o som
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Evita disparar outros cliques se houver
+                                        if (onPlaySound) onPlaySound(pokeData.pokedexId);
+                                    }}
+                                    className="w-7 h-7 object-contain select-none cursor-pointer hover:scale-125 transition-transform"
                                 />
+                                <span className="text-xs font-bold tracking-wide">
+                                    {pokeData.name}
+                                </span>
                             </span>
                         );
                     }
@@ -117,6 +145,54 @@ function BattleGym() {
 
     const [userTeam, setUserTeam] = useState([]);
     const [userGym, setUserGym] = useState(null);
+
+    // --- AUDIO LOGIC START ---
+    const audioCache = useRef({}); // Armazena os objetos de áudio pré-carregados
+
+    // Função para tocar o som
+    const playPokemonSound = (pokedexId) => {
+        if (!pokedexId) return;
+
+        // Tenta pegar do cache
+        let audio = audioCache.current[pokedexId];
+
+        // Se não estiver no cache (fallback), cria um novo
+        if (!audio) {
+            audio = new Audio(`https://mellifluous-gecko-cbaceb.netlify.app/${pokedexId}.ogg`);
+            audio.volume = 0.3;
+            audioCache.current[pokedexId] = audio;
+        }
+
+        // Reinicia o áudio se já estiver tocando (permite spam de cliques)
+        audio.currentTime = 0;
+        audio.play().catch(err => console.error("Erro ao reproduzir som:", err));
+    };
+
+    // Effect para PRE-CARREGAR os sons
+    useEffect(() => {
+        const preloadList = [];
+
+        // Adiciona time do usuário
+        if (userTeam && userTeam.length > 0) {
+            preloadList.push(...userTeam);
+        }
+
+        // Adiciona time do ginásio
+        if (gymData && gymData.team) {
+            preloadList.push(...gymData.team);
+        }
+
+        // Itera e cria os objetos de áudio
+        preloadList.forEach(poke => {
+            if (poke && poke.pokedexId && !audioCache.current[poke.pokedexId]) {
+                const audio = new Audio(`https://mellifluous-gecko-cbaceb.netlify.app/${poke.pokedexId}.ogg`);
+                audio.volume = 0.3; // Volume confortável
+                audio.preload = 'auto'; // Força o navegador a baixar
+                audioCache.current[poke.pokedexId] = audio;
+            }
+        });
+    }, [userTeam, gymData]);
+    // --- AUDIO LOGIC END ---
 
     // Helper to find mentioned pokemon in text
     const getMentionedPokemon = (text) => {
@@ -310,11 +386,11 @@ function BattleGym() {
     // --- HIGHLIGHTER LOGIC ---
     const renderHighlightedText = () => {
         if (!playerInput) return null;
-        const parts = playerInput.split(/(@[\w_]+|\s+)/g);
+        const parts = playerInput.split(/(@[\w_']+|\s+)/g);
         return parts.map((part, index) => {
             if (part.startsWith('@')) {
                 if (part.startsWith('@Enemy_')) return <span key={index} className="text-red-400">{part}</span>;
-                return <span key={index} className="text-white">{part}</span>;
+                return <span key={index} className="text-green-400">{part}</span>;
             }
             return <span key={index} className="text-white">{part}</span>;
         });
@@ -484,7 +560,11 @@ function BattleGym() {
                                         <div
                                             key={i}
                                             className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform"
-                                            onClick={() => handleMentionClick(poke.name, true)}
+                                            // ALTERAÇÃO: Toca o som E prepara a menção
+                                            onClick={() => {
+                                                playPokemonSound(poke.pokedexId);
+                                                handleMentionClick(poke.name, true);
+                                            }}
                                             title={`Click to mention @${poke.name}`}
                                         >
                                             <img
@@ -540,16 +620,7 @@ function BattleGym() {
                                             <Zap size={32} fill="currentColor" />
                                             FIGHT!
                                         </motion.button>
-                                        <div className="flex flex-col items-center gap-2">
-                                            <span className="text-sm font-bold text-white drop-shadow-md">Your team</span>
-                                            <div className="flex items-center gap-2">
-                                                {userTeam.length > 0 ? userTeam.map((poke, i) => (
-                                                    <div key={i} className="w-12 h-12">
-                                                        <img src={`http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-full h-full object-contain pixelated drop-shadow-md" alt={poke.name || 'Pokemon'} />
-                                                    </div>
-                                                )) : <span className="text-xs text-gray-400">No team found</span>}
-                                            </div>
-                                        </div>
+
                                     </div>
                                 ) : (
                                     <div className="flex-1 relative min-h-0">
@@ -564,7 +635,7 @@ function BattleGym() {
                                                                         <h3 className="font-bold text-white">{relevantPokemon.length === 1 ? `Command ${relevantPokemon[0].name}` : "Command your Team"}</h3>
                                                                         <div className="flex gap-2">
                                                                             {relevantPokemon.map((poke, i) => (
-                                                                                <div key={i} className="w-12 h-12">
+                                                                                <div key={i} className="w-17 h-17 cursor-pointer" onClick={() => playPokemonSound(poke.pokedexId)}>
                                                                                     <img src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`} onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-full h-full object-contain" alt={poke.name} />
                                                                                 </div>
                                                                             ))}
@@ -574,8 +645,11 @@ function BattleGym() {
                                                                     <div className="space-y-2">
                                                                         {log.options.map((option) => (
                                                                             <button key={option.id} onClick={() => sendInstruction(option.id)} className="w-full text-left bg-[#3E3D3E] hover:bg-[#4E4D4E] p-4 rounded-lg transition-all flex items-center gap-3 group">
-                                                                                <div className="w-6 h-6 rounded-full border border-gray-500 flex items-center justify-center text-xs text-gray-400 group-hover:border-white group-hover:text-white">{option.id}</div>
-                                                                                <span className="text-sm text-gray-200 group-hover:text-white">{option.text}</span>
+                                                                                <div className="w-6 h-6 rounded-full border border-gray-500 flex items-center justify-center text-xs text-gray-400 group-hover:border-white group-hover:text-white flex-shrink-0">{option.id}</div>
+                                                                                <span className="text-sm text-gray-200 group-hover:text-white w-full">
+                                                                                    {/* ALTERAÇÃO: Passando onPlaySound */}
+                                                                                    <MessageRenderer text={option.text} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} />
+                                                                                </span>
                                                                             </button>
                                                                         ))}
                                                                     </div>
@@ -601,7 +675,8 @@ function BattleGym() {
                                                             className={`p-4 rounded-xl backdrop-blur-md ${containerStyle}`}
                                                         >
                                                             <p className="text-sm md:text-base">
-                                                                <MessageRenderer text={log.message} userTeam={userTeam} gymTeam={gymData?.team} />
+                                                                {/* ALTERAÇÃO: Passando onPlaySound */}
+                                                                <MessageRenderer text={log.message} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} />
                                                             </p>
                                                         </motion.div>
                                                     );
@@ -619,21 +694,28 @@ function BattleGym() {
                                                 {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && !waitingForInteraction && (
                                                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-black/60 backdrop-blur-md rounded-xl p-6 mt-4 relative">
                                                         <div className="flex items-center justify-between mb-4">
-                                                            <h3 className="font-bold text-white">{relevantPokemon.length === 1 ? `Emergency instruction for ${relevantPokemon[0].name}` : "Command your Team"}</h3>
+                                                            <h3 className=" text-[#fafafa] font-semibold">{relevantPokemon.length === 1 ? `Emergency instruction for ${relevantPokemon[0].name}` : "Command your Team"}</h3>
                                                             <div className="flex gap-2">
                                                                 {relevantPokemon.map((poke, i) => (
-                                                                    <div key={i} className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform" onClick={() => handleMentionClick(poke.name)} title={`Click to mention @${poke.name}`}>
+                                                                    <div key={i} className="w-17 h-17 cursor-pointer hover:scale-110 transition-transform"
+                                                                        // ALTERAÇÃO: Toca som e prepara menção
+                                                                        onClick={() => {
+                                                                            playPokemonSound(poke.pokedexId);
+                                                                            handleMentionClick(poke.name);
+                                                                        }}
+                                                                        title={`Click to mention @${poke.name}`}
+                                                                    >
                                                                         <img src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`} onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-full h-full object-contain" title={poke.name} alt={poke.name} />
                                                                     </div>
                                                                 ))}
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-gray-400 mb-3">Describe your instruction (Type @ to mention)</p>
+                                                        <p className="text-sm text-gray-400 mb-3"></p>
 
                                                         <div className="relative w-full">
                                                             {showMentions && (
-                                                                <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#27272A] rounded-lg shadow-xl overflow-hidden z-50 max-h-48 overflow-y-auto">
-                                                                    <SimpleBar style={{ maxHeight: '192px' }}> {/* 192px equivale ao max-h-48 */}
+                                                                <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#27272A] rounded-lg shadow-xl overflow-hidden z-50">
+                                                                    <SimpleBar style={{ maxHeight: '192px' }}>
                                                                         {getMentionList().length > 0 ? (
                                                                             getMentionList().map((poke, idx) => (
                                                                                 <button
@@ -642,7 +724,7 @@ function BattleGym() {
                                                                                     className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors ${idx === mentionCursorIndex ? 'bg-[#3F3F46]' : 'hover:bg-[#3F3F46]'}`}
                                                                                 >
                                                                                     <img src={`http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-6 h-6 object-contain" alt="" />
-                                                                                    <span className={`text-sm font-medium ${poke.isEnemy ? 'text-red-400' : 'text-gray-200'}`}>{poke.name.replace(/ /g, '_')}</span>
+                                                                                    <span className={`text-sm font-medium ${poke.isEnemy ? 'text-red-400' : 'text-green-200'}`}>{poke.name.replace(/ /g, '_')}</span>
                                                                                     {poke.isEnemy && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 rounded ml-auto">Enemy</span>}
                                                                                 </button>
                                                                             ))
@@ -651,7 +733,7 @@ function BattleGym() {
                                                                 </div>
                                                             )}
 
-                                                            <div className="relative h-24 w-full bg-[#18181B] rounded-lg overflow-hidden">
+                                                            <div className="relative h-24 w-full bg-[#18181B]/80 rounded-lg overflow-hidden">
                                                                 <div ref={backdropRef} className="absolute inset-0 p-3 whitespace-pre-wrap break-words overflow-hidden text-sm font-sans pointer-events-none" aria-hidden="true">
                                                                     {renderHighlightedText()}
                                                                     <span className="opacity-0">.</span>
@@ -662,15 +744,15 @@ function BattleGym() {
                                                                     onChange={handleInputChange}
                                                                     onKeyDown={handleKeyDown}
                                                                     onScroll={handleScroll}
-                                                                    placeholder={`Ex: Use Waterfall on @Onix!`}
-                                                                    className="absolute inset-0 w-full h-full bg-transparent text-transparent caret-white p-3 text-sm font-sans resize-none focus:outline-none"
+                                                                    placeholder={`Describe your instruction (Type @ to mention)`}
+                                                                    className="absolute inset-0 w-full h-full bg-transparent text-transparent caret-white p-3 text-sm font-sans resize-none focus:outline-none placeholder-gray-500"
                                                                     style={{ color: 'transparent' }}
                                                                 />
                                                             </div>
                                                         </div>
 
                                                         <div className="flex justify-end mt-3">
-                                                            <button onClick={() => sendInstruction()} className="bg-white text-black font-bold px-6 py-2 rounded-full hover:bg-gray-200 transition-colors text-sm">Send</button>
+                                                            <button onClick={() => sendInstruction()} className="bg-white text-black px-6 py-2 rounded-full hover:bg-gray-200 transition-colors text-sm">Send</button>
                                                         </div>
                                                     </motion.div>
                                                 )}
@@ -731,10 +813,21 @@ function BattleGym() {
                                     {gymData?.team?.map((card, i) => {
                                         const isHidden = battleStatus === 'idle';
                                         return card ? (
-                                            <div key={i} className="group relative w-24   cursor-pointer" onMouseEnter={() => !isHidden && setHoveredCard(card)} onMouseLeave={() => setHoveredCard(null)} onClick={() => !isHidden && handleMentionClick(card.name, true)} title={!isHidden ? `Click to mention @${card.name}` : ''}>
+                                            <div key={i} className="group relative w-20 aspect-[3/4] cursor-pointer"
+                                                onMouseEnter={() => !isHidden && setHoveredCard(card)}
+                                                onMouseLeave={() => setHoveredCard(null)}
+                                                // ALTERAÇÃO: Toca som e prepara menção
+                                                onClick={() => {
+                                                    if (!isHidden) {
+                                                        playPokemonSound(card.pokedexId);
+                                                        handleMentionClick(card.name, true);
+                                                    }
+                                                }}
+                                                title={!isHidden ? `Click to mention @${card.name}` : ''}
+                                            >
                                                 <img src={isHidden ? BattleCardBack : (card.original ? `${card.original}/high.png` : card.image)} alt={isHidden ? "Hidden Card" : card.name} className={`w-full h-full object-cover rounded-lg transition-transform ${!isHidden ? 'group-hover:scale-105' : ''}`} style={{ imageRendering: 'auto' }} onError={(e) => { if (!isHidden && e.target.src !== card.image) e.target.src = card.image; else if (!isHidden) e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`; }} />
                                             </div>
-                                        ) : <div key={i} className="w-24 bg-[#18181B] rounded-lg flex items-center justify-center"><img src={BattleCardBack} className="w-10 opacity-20" alt="Empty Slot" /></div>;
+                                        ) : <div key={i} className="w-20 aspect-[3/4] bg-[#18181B] rounded-lg flex items-center justify-center"><img src={BattleCardBack} className="w-10 opacity-20" alt="Empty Slot" /></div>;
                                     })}
                                     <AnimatePresence>
                                         {hoveredCard && (

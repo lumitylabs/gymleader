@@ -9,7 +9,6 @@ function shuffleArray(array) {
     }
 }
 
-
 const handler = async (req, res) => {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -35,13 +34,24 @@ const handler = async (req, res) => {
         if (battle.status !== 'active') return res.status(400).json({ error: 'Battle is not active' });
 
         console.log(`[Battle ${battleId}] Turn ${battle.turn} Start | Score: ${battle.score}`);
-        console.log(" Teams: ", battle.challengerTeam, battle.leaderTeam);
 
         // Fetch Gym for context
         const gymSnapshot = await db.ref(`gyms/${battle.gymId}`).once('value');
         const gym = gymSnapshot.val();
         const gymDesc = gym.description || '';
         const leaderName = gym.leaderName || 'Leader';
+
+        // --- FORMATTING RULES (UPDATED) ---
+        const formattingRules = `
+            IMPORTANT FORMATTING RULES FOR POKEMON NAMES:
+            1. When mentioning a Pokemon from the LEADER'S team (${battle.leaderTeam}), YOU MUST use the format: @Enemy_PokemonName.
+            2. When mentioning a Pokemon from the CHALLENGER'S team (${battle.challengerTeam}), YOU MUST use the format: @PokemonName.
+            3. CRITICAL: REPLACE ALL SPACES WITH UNDERSCORES inside the tag.
+               - Example: "Tapu Koko" -> "@Tapu_Koko" (or "@Enemy_Tapu_Koko").
+               - Example: "Mr. Mime" -> "@Mr_Mime" (Remove dots, use underscores).
+            4. Do NOT use bold or markdown for names, just the @ tag.
+            5. Even if the user input uses "enemy Charizard", you must convert it to @Enemy_Charizard in your narrative.
+        `;
 
         // --- PHASE 1: PLAYER TURN ---
         let playerNarrative = "";
@@ -51,12 +61,9 @@ const handler = async (req, res) => {
             // OPTION A: Player chose a pre-generated option
             const selectedOption = battle.playerOptions.find(o => o.id === choiceId);
             if (selectedOption) {
-                // Use 'text' as the narrative since we removed the separate 'narrative' field
                 playerNarrative = selectedOption.text || selectedOption.narrative || `Player chose option ${choiceId}`;
-                // Score: Direct mapping. Negative = Good for Player. Positive = Good for Leader.
                 scoreChange = selectedOption.score || 0;
             } else {
-                // Fallback if option not found
                 playerNarrative = `Player chose option ${choiceId}`;
             }
         } else {
@@ -66,27 +73,19 @@ const handler = async (req, res) => {
                 Gym: ${gymDesc}
                 Challenger Team: ${battle.challengerTeam || 'Unknown'}
                 Leader Team: ${battle.leaderTeam || 'Unknown'}
-                Challanger general strategy: ${battle.challengerStrategy || 'Unknown'}
-                Leader general strategy: ${battle.leaderStrategy || 'Unknown'}
                 Player Action: "${action}"
                 
+                ${formattingRules}
+
                 Task:
                 1. Verify if the action is feasible.
-                   - SPELLING LENIENCY: Be very forgiving with Pokemon names (e.g. "Squartle" -> "Squirtle"). If you can understand the intent, accept it.
-                   - LOGIC CHECK: Pokemon must be in Challenger Team. Action must be physically possible.
+                   - SPELLING LENIENCY: Be very forgiving with Pokemon names.
                 2. Evaluate the STRATEGY and EFFECTIVENESS.
-                   - Type Matchups: Fire vs Water? Electric vs Ground?
-                   - Move Utility: Status effects, environment usage.
-                   - Risk vs Reward.
-                   - Narrative
-                   - Creativity
                 3. Narrate the outcome (VERY CONCISE, max 1 sentence).
-                   - If VALID: Narrate the action dynamically.
-                   - If INVALID (e.g. wrong Pokemon, impossible move): Narrate the failure energetically.
+                   - USE THE @ TAGS for all Pokemon names (with underscores).
                 4. Determine score change (-3 to +3).
-                   - Negative Score (-1 to -3): Good for Player (Effective move, super effective, good strategy).
-                   - Positive Score (+1 to +3): Bad for Player (Ineffective, bad type matchup, missed attack, invalid move).
-                   - Zero (0): Neutral exchange.
+                   - Negative Score (-1 to -3): Good for Player.
+                   - Positive Score (+1 to +3): Bad for Player.
                 5. Explain the reasoning for the score (1 sentence).
                 
                 Return JSON: { "narrative": "string", "scoreChange": number, "scoreReasoning": "string" }
@@ -95,7 +94,7 @@ const handler = async (req, res) => {
             const playerResult = await generateJSON(playerMovePrompt);
             playerNarrative = playerResult.narrative;
             scoreChange = playerResult.scoreChange;
-            console.log(`[Battle ${battleId}] Player Turn | Score Change: ${scoreChange} | Reasoning: ${playerResult.scoreReasoning}`);
+            console.log(`[Battle ${battleId}] Player Turn | Score Change: ${scoreChange}`);
         }
 
         // Update Score after Player Move
@@ -106,12 +105,13 @@ const handler = async (req, res) => {
             console.log(`[Battle ${battleId}] Player Win | Score: ${currentScore}`);
             const endPrompt = `
                 Battle Ended. Challenger Wins! 
-                Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION).
+                Final Score: ${currentScore}.
                 Last Action: ${playerNarrative}.
+                ${formattingRules}
                 
                 Task: Narrate the conclusion of the battle.
-                - Summarize the Challenger's victory and team dominance.
-                - Do NOT focus only on the last move. Describe the overall triumph.
+                - Summarize the Challenger's victory.
+                - USE @ TAGS for Pokemon names (with underscores).
                 - Max 2 sentences.
                 
                 Return JSON: { "narrative": "string" }
@@ -125,31 +125,28 @@ const handler = async (req, res) => {
                 history: [...battle.history, { role: 'player_move', text: playerNarrative }, { role: 'end', text: endResult.narrative }]
             });
 
-            // Increment Gym Losses
+            // Increment Gym Losses & Award Badge
             await db.ref(`gyms/${battle.gymId}/stats/losses`).transaction((current) => (current || 0) + 1);
-
-            // Award Badge
             await db.ref(`users/${playerId}/badges/${battle.gymId}`).set({
                 earnedAt: Date.now(),
                 gymName: gym.gymName || 'Unknown Gym',
                 badgeImage: gym.badgeImage || '',
                 leaderName: gym.leaderName || 'Unknown Leader',
                 twitter: gym.twitter || '',
-                location: gym.location || 'Kanto' // Default to Kanto if not set
+                location: gym.location || 'Kanto'
             });
 
             return res.status(200).json({
                 playerNarrative,
-                leaderNarrative: endResult.narrative, // Use leader field for end message
+                leaderNarrative: endResult.narrative,
                 gameOver: true,
                 winner: playerId,
-                challengerId: playerId  // Player won, so winner IS the challenger
+                challengerId: playerId
             });
         }
 
         // --- PHASE 2: LEADER TURN (Combined AI Call) ---
 
-        // Format recent history for context
         const historyText = battle.history ? battle.history.slice(-4).map(h => `${h.role}: ${h.text}`).join('\n') : "No history";
 
         const combinedTurnPrompt = `
@@ -160,6 +157,8 @@ const handler = async (req, res) => {
             Challenger Team: ${battle.challengerTeam || 'Unknown'}
             Current Score: ${currentScore} (Positive=Leader Advantage, Negative=Challenger Advantage)
             
+            ${formattingRules}
+
             Recent Battle History:
             ${historyText}
             
@@ -167,33 +166,20 @@ const handler = async (req, res) => {
             
             Task:
             1. Determine the Leader's counter-move based on strategy.
-               - VARIETY RULE: Do not repeat the same move or idea as the last turns. Be dynamic.
-               - NO SWITCHING: The Leader fights with the active Pokemon or the whole team as a unit.
-            2. Narrate the Leader's move (VERY CONCISE, max 1 sentence).
+               - TEAMWORK RULE: The Leader MUST use their team as a COHESIVE UNIT. Combine abilities.
+               - Example: "@Enemy_Blastoise creates a rain dance while @Enemy_Raichu prepares thunder".
+               - Do not treat this as 1v1. Use the whole team to counter the player.
+            2. Narrate the Leader's move (VERY CONCISE, max 1 sentence). USE @ TAGS WITH UNDERSCORES.
             3. Calculate the score impact of this move (-2 to +2, Positive helps Leader).
             4. Explain the reasoning for the score (1 sentence).
             5. Generate 3 strategic options for the Challenger (Player) to respond.
-               - STYLE: TRAINER COMMANDS. Write them as if the Trainer is shouting orders to their Pokemon.
-               - USE IMPERATIVE MOOD: "Charizard, fly up and melt the rocks!", "Team, combine your power to push them back!"
-               - AVOID MOVE NAMES: Do not say "Use Flamethrower". Say "Unleash a stream of fire". Do not say "Use Psychic". Say "Grip them with your mind".
-               - FOCUS ON ACTION & INTENT: Describe WHAT they should do and WHY (briefly).
-               - KEEP IT CONCISE: Max 20 words per option.
-               - Examples: "Charizards, melt the gym floor to trap them! Mewtwo, levitate above the lava!", "Pikachu, use your speed to confuse them, then strike their blind spot!"
-
-               - OPTION 1 (GOOD): A creative, effective strategy. Score: -3 to -2 (Negative favors Player).
-               - OPTION 2 (NEUTRAL/RISKY): Standard or risky. Score: -1 to 1.
-               - OPTION 3 (BAD/MISTAKE): Poor choice, bad matchup. Score: 2 to 3 (Positive favors Leader).
-               
+               - STYLE: TRAINER COMMANDS.
+               - USE @ TAGS for player's own Pokemon (e.g., "@Charizard, dodge!").
                - "text": The concise Trainer Command (Max 15 words).
-               - "reasoning": Brief explanation of why this option has this score.
-               - "score": The score value defined above.
+               - "reasoning": Brief explanation.
+               - "score": The score value (-3 to +3).
                - "id": 1, 2, or 3.
-               - NO SWITCHING: Do not offer "Switch Pokemon" as an option.
             
-            IMPORTANT: 
-            - Use ONLY the Pokemon listed in the teams above. Do not invent Pokemon.
-            - Ensure all keys are double-quoted. Return ONLY the JSON object.
-
             Return JSON: {
                 "leaderNarrative": "string",
                 "leaderScoreChange": number,
@@ -205,22 +191,13 @@ const handler = async (req, res) => {
         const turnResult = await generateJSON(combinedTurnPrompt);
         if (Array.isArray(turnResult.playerOptions)) {
             shuffleArray(turnResult.playerOptions);
-
-            // REASSIGN IDS
             turnResult.playerOptions = turnResult.playerOptions.map((opt, index) => ({
                 ...opt,
                 id: index + 1
             }));
         }
 
-        console.log(`[Battle ${battleId}] Leader Turn | Score Change: ${turnResult.leaderScoreChange} | Reasoning: ${turnResult.leaderMoveReasoning}`);
-
-        if (turnResult.playerOptions) {
-            console.log(`[Battle ${battleId}] Generated Options:`);
-            turnResult.playerOptions.forEach(o => {
-                console.log(`  ${o.id}: ${o.text} (Score: ${o.score}) | Reasoning: ${o.reasoning}`);
-            });
-        }
+        console.log(`[Battle ${battleId}] Leader Turn | Score Change: ${turnResult.leaderScoreChange}`);
 
         // Update Score after Leader Move
         currentScore += turnResult.leaderScoreChange;
@@ -230,12 +207,13 @@ const handler = async (req, res) => {
             console.log(`[Battle ${battleId}] Leader Win | Score: ${currentScore}`);
             const endPrompt = `
                 Battle Ended. Leader Wins! 
-                Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION).
+                Final Score: ${currentScore}.
                 Last Action: ${turnResult.leaderNarrative}.
+                ${formattingRules}
                 
                 Task: Narrate the conclusion of the battle.
-                - Summarize the Leader's victory and team dominance.
-                - Do NOT focus only on the last move. Describe the overall triumph.
+                - Summarize the Leader's victory.
+                - USE @ TAGS WITH UNDERSCORES.
                 - Max 2 sentences.
                 
                 Return JSON: { "narrative": "string" }
@@ -249,15 +227,14 @@ const handler = async (req, res) => {
                 history: [...battle.history, { role: 'player_move', text: playerNarrative }, { role: 'leader_move', text: turnResult.leaderNarrative }, { role: 'end', text: endResult.narrative }]
             });
 
-            // Increment Gym Wins
             await db.ref(`gyms/${battle.gymId}/stats/wins`).transaction((current) => (current || 0) + 1);
 
             return res.status(200).json({
                 playerNarrative,
                 leaderNarrative: turnResult.leaderNarrative + " " + endResult.narrative,
                 gameOver: true,
-                winner: battle.gymId,  // Leader won, so winner is NOT the challenger
-                challengerId: battle.challengerId  // Send challengerId so frontend can properly check
+                winner: battle.gymId,
+                challengerId: battle.challengerId
             });
         }
 
