@@ -24,7 +24,7 @@ const handler = async (req, res) => {
         const description = gymData.description || '';
         const strategy = gymData.strategy || '';
 
-        const hasForbiddenContent = forbiddenWords.some(word => 
+        const hasForbiddenContent = forbiddenWords.some(word =>
             description.toLowerCase().includes(word) || strategy.toLowerCase().includes(word)
         );
 
@@ -40,6 +40,7 @@ const handler = async (req, res) => {
             description: gymData.description || '',
             badgeId: gymData.badgeId || 'boulder', // Default to a basic badge if not set
             badgeImage: gymData.badgeImage || '',
+            holo: Math.floor(Math.random() * 5) + 1,
             leaderName: gymData.leaderName || '',
             leaderImage: gymData.leaderImage || '', // URL or base64? Assuming URL for now
             gymImage: gymData.gymImage || '',

@@ -9,6 +9,8 @@ import { animate } from 'framer-motion';
 
 import "simplebar-react/dist/simplebar.min.css";
 import SimpleBar from 'simplebar-react';
+import HoloBadge from "../components/HoloBadge";
+
 
 /* =========================================================================
    COMPONENTE: FILTER TAG
@@ -368,17 +370,7 @@ function Battle() {
                     >
                       <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0 bg-[#26272B] rounded-[32px] overflow-hidden">
                         {gym.badgeImage ? (
-                          <img
-                            src={gym.badgeImage}
-                            alt="Badge"
-                            className={`
-        w-full h-full transition-transform duration-300 
-        ${gym.badgeImage.endsWith('.png')
-                                ? 'object-contain drop-shadow-2xl p-4'   // PNG transparente → sombra + não cortar
-                                : 'object-cover'                        // Imagem com fundo → ocupar tudo
-                              }
-      `}
-                          />
+                          <HoloBadge imageUrl={gym.badgeImage} holo={gym.holo || 1} />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs font-medium">
                             No Badge

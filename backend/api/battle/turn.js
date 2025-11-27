@@ -73,6 +73,8 @@ const handler = async (req, res) => {
                 Gym: ${gymDesc}
                 Challenger Team: ${battle.challengerTeam || 'Unknown'}
                 Leader Team: ${battle.leaderTeam || 'Unknown'}
+                Challenger general strategy: ${battle.challengerStrategy || 'Unknown'}
+                Leader general strategy: ${battle.leaderStrategy || 'Unknown'}
                 Player Action: "${action}"
                 
                 ${formattingRules}
@@ -81,11 +83,17 @@ const handler = async (req, res) => {
                 1. Verify if the action is feasible.
                    - SPELLING LENIENCY: Be very forgiving with Pokemon names.
                 2. Evaluate the STRATEGY and EFFECTIVENESS.
+                   - Type Matchups: Fire vs Water? Electric vs Ground?
+                   - Move Utility: Status effects, environment usage.
+                   - Risk vs Reward.
+                   - Narrative
+                   - Creativity
                 3. Narrate the outcome (VERY CONCISE, max 1 sentence).
                    - USE THE @ TAGS for all Pokemon names (with underscores).
                 4. Determine score change (-3 to +3).
-                   - Negative Score (-1 to -3): Good for Player.
-                   - Positive Score (+1 to +3): Bad for Player.
+                   - Negative Score (-1 to -3): Good for Player (Effective move, super effective, good strategy).
+                   - Positive Score (+1 to +3): Bad for Player (Ineffective, bad type matchup, missed attack, invalid move).
+                   - Zero (0): Neutral exchange.
                 5. Explain the reasoning for the score (1 sentence).
                 
                 Return JSON: { "narrative": "string", "scoreChange": number, "scoreReasoning": "string" }
@@ -94,7 +102,7 @@ const handler = async (req, res) => {
             const playerResult = await generateJSON(playerMovePrompt);
             playerNarrative = playerResult.narrative;
             scoreChange = playerResult.scoreChange;
-            console.log(`[Battle ${battleId}] Player Turn | Score Change: ${scoreChange}`);
+            console.log(`[Battle ${battleId}] Player Turn | Score Change: ${scoreChange} | Reasoning: ${playerResult.scoreReasoning}`);
         }
 
         // Update Score after Player Move
@@ -134,7 +142,8 @@ const handler = async (req, res) => {
                 leaderName: gym.leaderName || 'Unknown Leader',
                 twitter: gym.twitter || '',
                 location: gym.location || 'Kanto',
-                region: gym.region || 'Kanto'
+                region: gym.region || 'Kanto',
+                holo: gym.holo || 1,
             });
 
             return res.status(200).json({
@@ -180,7 +189,16 @@ const handler = async (req, res) => {
                - "reasoning": Brief explanation.
                - "score": The score value (-3 to +3).
                - "id": 1, 2, or 3.
-            
+               - STYLE: TRAINER COMMANDS. Write them as if the Trainer is shouting orders to their Pokemon.
+               - USE IMPERATIVE MOOD: "@Enemy_Charizard, fly up and melt the rocks!", "Team, combine your power to push them back!"
+               - AVOID MOVE NAMES: Do not say "Use Flamethrower". Say "Unleash a stream of fire". Do not say "Use Psychic". Say "Grip them with your mind".
+               - FOCUS ON ACTION & INTENT: Describe WHAT they should do and WHY (briefly).
+               - KEEP IT CONCISE: Max 20 words per option.
+               - Examples: "@Enemy_Charizard, melt the gym floor to trap them! @Enemy_Mewtwo, levitate above the lava!", "@Enemy_Pikachu, use your speed to confuse them, then strike their blind spot!"
+
+               - OPTION 1 (GOOD): A creative, effective strategy. Score: -3 to -2 (Negative favors Player).
+               - OPTION 2 (NEUTRAL/RISKY): Standard or risky. Score: -1 to 1.
+               - OPTION 3 (BAD/MISTAKE): Poor choice, bad matchup. Score: 2 to 3 (Positive favors Leader).
             Return JSON: {
                 "leaderNarrative": "string",
                 "leaderScoreChange": number,
@@ -198,8 +216,14 @@ const handler = async (req, res) => {
             }));
         }
 
-        console.log(`[Battle ${battleId}] Leader Turn | Score Change: ${turnResult.leaderScoreChange}`);
+        console.log(`[Battle ${battleId}] Leader Turn | Score Change: ${turnResult.leaderScoreChange} | Reasoning: ${turnResult.leaderMoveReasoning}`);
 
+        if (turnResult.playerOptions) {
+            console.log(`[Battle ${battleId}] Generated Options:`);
+            turnResult.playerOptions.forEach(o => {
+                console.log(`  ${o.id}: ${o.text} (Score: ${o.score}) | Reasoning: ${o.reasoning}`);
+            });
+        }
         // Update Score after Leader Move
         currentScore += turnResult.leaderScoreChange;
 

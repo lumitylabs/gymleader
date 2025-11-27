@@ -117,6 +117,7 @@ const handler = async (req, res) => {
         // 7. Save Battle State
         const battleId = db.ref('battles').push().key;
         console.log(`[Battle Start] ID: ${battleId} | Gym: ${gymName} | Leader: ${leaderName} | Challenger: ${challengerId}`);
+        console.log(`[Battle Start] Leader Score: ${logicData.leaderMoveScore} | Reasoning: ${logicData.leaderMoveReasoning}`);
 
         const battleState = {
             gymId,

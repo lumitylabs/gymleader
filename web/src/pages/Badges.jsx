@@ -8,6 +8,7 @@ import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 // --- IMPORTAÇÃO DO SIMPLEBAR E CSS ---
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
+import HoloBadge from '../components/HoloBadge';
 
 /* =========================================================================
    COMPONENTE: FILTER TAG
@@ -263,16 +264,24 @@ function Badges() {
                       transition={{ duration: 0.4 }}
                       className="bg-black rounded-[20px] overflow-hidden group cursor-pointer shadow-sm hover:shadow-md transition-all flex flex-col h-full"
                     >
-                      {/* PARTE SUPERIOR (IMAGEM) */}
-                      <div className="aspect-square bg-[#202024] relative p-8 flex items-center justify-center transition-colors">
-                        <img
-                          src={badge.badgeImage}
-                          alt={badge.gymName}
-                          className="w-full h-full object-contain rounded-[32px] shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] transition-transform duration-300 group-hover:scale-110"
-                        />
+                      {/* 
+                          PARTE SUPERIOR (IMAGEM / HOLO) 
+                          Alterado para usar HoloBadge
+                      */}
+                      <div className="aspect-square bg-[#202024] relative flex items-center justify-center transition-colors">
+                        {/* Container para o HoloBadge ocupar 100% */}
+                        <div className="w-full h-full relative z-10 ">
+                          <HoloBadge imageUrl={badge.badgeImage} holo={badge.holo || 1} />
+                        </div>
+
+                        {/* 
+                           Opcional: Glow estático atrás da badge para dar profundidade 
+                           (já que o canvas é transparente)
+                        */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
                       </div>
 
-                      {/* PARTE INFERIOR (TEXTO E LINKS) */}
+                      {/* PARTE INFERIOR (TEXTO E LINKS) - Mantém igual */}
                       <div className="p-5 bg-black flex-1">
                         <h3 className="font-semibold text-[#FAFAFA] text-base leading-tight truncate mb-1">
                           {badge.gymName}
