@@ -5,14 +5,14 @@ const { db } = require('../lib/firebase-admin.js');
 const { withCors } = require('../lib/withCors.js');
 
 const GIFT_MINTS = [
- "3pZFcEpoc5ub6cNNfw8m92Kbi7AvGm4Y2QrfZEvoLoCA",
     "4fXMwuFVyENwtqzChyDEA4QWpJYVRUHBHe2gRXwvYKNS",
     "CcizkBD6iognwY3qqecthqnqMA7tcwmFwo4V2vzoWBRK",
     "A81y9XqYmhASEMgMkbWzvPZgSZUevPwtVGibuMDzVFT2",
     "ss4bn6r9wGmWBXwDLz3ikVtvCss6QD57dL5iKeJuPbx",
     "CViyvDfHccyj5Uw9mc4sngmCqbrbmP64YH4wRzBffviy",
     "CVamzfzZ3oQKyhpXcVh4tiYAudF1GTUnqT4MMmASRDBj",
-    "5SM8Qpu1qEtuRfCUYf7M3NgFPTEzDvkRNv7kfKvcf2Ej",
+    "2xHkpRUkAepj3UHuQF3nH6LkJB1tHEnb8mNH4GsxLo4d", //squirtle
+    "6GZu5t2asWpoxncKANDfZ4Wb9PEQYddoGkiYyRXNMTHo", //evee
     // "74QyGxUjcWnJoQicR3fVecQ1QkBk9X2KowGQUA2bXRiu", // persian
     // "41AudbcmhAg9ymd6pqvhKCtDpG4TB18hWn4DqkCJ26hn", // ninetales
     // "DMuYix69PtxZi9nX7MDSmgYWhXDV52BLcFH6Pd6gih7q", // drowzee
@@ -92,14 +92,14 @@ const handler = async (req, res) => {
         // Fetch from Cache (Optimized)
         const cacheSnapshot = await db.ref('system/gift_cards').once('value');
         const cachedCards = cacheSnapshot.val() || {};
-        
+
         const enrichedCards = selectedCardIds.map(id => cachedCards[id]).filter(Boolean);
 
         if (enrichedCards.length !== selectedCardIds.length) {
-             // Fallback: If cache is missing some cards (rare), fetch them
-             console.log("Cache miss during redeem, fetching from Solana...");
-             const rawCards = await fetchSolanaNftsByMints(selectedCardIds);
-             const formattedCards = rawCards.map(card => ({
+            // Fallback: If cache is missing some cards (rare), fetch them
+            console.log("Cache miss during redeem, fetching from Solana...");
+            const rawCards = await fetchSolanaNftsByMints(selectedCardIds);
+            const formattedCards = rawCards.map(card => ({
                 token_name: card.token_name,
                 nome: card.clean_name,
                 imagem: card.token_image,
@@ -122,7 +122,7 @@ const handler = async (req, res) => {
             if (!pokedexId) return;
 
             const uniqueKey = `${card.chain}_${card.token_address}_${card.numeracao}`.replace(/[.#$/[\]]/g, '_');
-            
+
             const cardData = {
                 name: card.nome,
                 fullName: card.nome,
@@ -142,7 +142,7 @@ const handler = async (req, res) => {
             };
 
             collectionUpdates[`users/${userId}/collection/${uniqueKey}`] = cardData;
-            
+
             // Also update global cards
             cardUpdates[`cards/${card.token_address}`] = {
                 ...card,

@@ -3,14 +3,14 @@ const { enrichAllCards } = require('../lib/tcgdex-enricher.js');
 const { withCors } = require('../lib/withCors.js');
 
 const GIFT_MINTS = [
-    "3pZFcEpoc5ub6cNNfw8m92Kbi7AvGm4Y2QrfZEvoLoCA",
     "4fXMwuFVyENwtqzChyDEA4QWpJYVRUHBHe2gRXwvYKNS",
     "CcizkBD6iognwY3qqecthqnqMA7tcwmFwo4V2vzoWBRK",
     "A81y9XqYmhASEMgMkbWzvPZgSZUevPwtVGibuMDzVFT2",
     "ss4bn6r9wGmWBXwDLz3ikVtvCss6QD57dL5iKeJuPbx",
     "CViyvDfHccyj5Uw9mc4sngmCqbrbmP64YH4wRzBffviy",
     "CVamzfzZ3oQKyhpXcVh4tiYAudF1GTUnqT4MMmASRDBj",
-    "5SM8Qpu1qEtuRfCUYf7M3NgFPTEzDvkRNv7kfKvcf2Ej",
+    "2xHkpRUkAepj3UHuQF3nH6LkJB1tHEnb8mNH4GsxLo4d", //squirtle
+    "6GZu5t2asWpoxncKANDfZ4Wb9PEQYddoGkiYyRXNMTHo", //evee
     // "74QyGxUjcWnJoQicR3fVecQ1QkBk9X2KowGQUA2bXRiu", // persian
     // "41AudbcmhAg9ymd6pqvhKCtDpG4TB18hWn4DqkCJ26hn", // ninetales
     // "DMuYix69PtxZi9nX7MDSmgYWhXDV52BLcFH6Pd6gih7q", // drowzee
