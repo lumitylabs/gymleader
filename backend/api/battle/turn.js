@@ -133,7 +133,8 @@ const handler = async (req, res) => {
                 badgeImage: gym.badgeImage || '',
                 leaderName: gym.leaderName || 'Unknown Leader',
                 twitter: gym.twitter || '',
-                location: gym.location || 'Kanto'
+                location: gym.location || 'Kanto',
+                region: gym.region || 'Kanto'
             });
 
             return res.status(200).json({
