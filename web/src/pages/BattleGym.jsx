@@ -49,10 +49,16 @@ function BattleGym() {
     const [sendingTurn, setSendingTurn] = useState(false);
     const [battleContext, setBattleContext] = useState(null);
     const [hoveredCard, setHoveredCard] = useState(null);
-    // Removed activePokemon state
+
+    // Mention Logic States
+    const [showMentions, setShowMentions] = useState(false);
+    const [mentionFilter, setMentionFilter] = useState("");
+
+    // Refs for Scroll Sync (Highlighter)
+    const textareaRef = useRef(null);
+    const backdropRef = useRef(null);
 
     const messagesEndRef = useRef(null);
-
     const scrollRef = useRef(null);
 
     const [userTeam, setUserTeam] = useState([]);
@@ -65,12 +71,10 @@ function BattleGym() {
         const normalizedText = text.toLowerCase();
         const mentioned = userTeam.filter(poke => {
             const name = (poke.name || '').toLowerCase();
-            // Simple check: is the name in the text?
-            // Also check for "EX", "V", etc if needed, but simple name check is a good start
-            return normalizedText.includes(name.split(' ')[0]); // Match first word of name (e.g. "Charizard" from "Charizard EX")
+            return normalizedText.includes(name.split(' ')[0]);
         });
 
-        return mentioned.length > 0 ? mentioned : userTeam; // Return all if none mentioned
+        return mentioned.length > 0 ? mentioned : userTeam;
     };
 
     // Get relevant pokemon for current state
@@ -104,7 +108,6 @@ function BattleGym() {
         const unsubscribe = onValue(userTeamRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // Convert object {0: {...}, 1: {...}} to array
                 const teamArray = Object.values(data);
                 setUserTeam(teamArray);
             }
@@ -123,10 +126,9 @@ function BattleGym() {
         return () => unsubscribe();
     }, [currentUser]);
 
-    // Auto-scroll battle log (CORRIGIDO)
+    // Auto-scroll battle log
     useEffect(() => {
         if (messagesEndRef.current) {
-            // Um pequeno delay garante que a animação de entrada não conflite com o scroll
             setTimeout(() => {
                 messagesEndRef.current.scrollIntoView({
                     behavior: 'smooth',
@@ -138,12 +140,10 @@ function BattleGym() {
 
     const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
-
-
     const [messageQueue, setMessageQueue] = useState([]);
     const [isProcessingQueue, setIsProcessingQueue] = useState(false);
     const [waitingForInteraction, setWaitingForInteraction] = useState(false);
-    const [gameOverState, setGameOverState] = useState(null); // { winner: string, type: 'win' | 'loss' }
+    const [gameOverState, setGameOverState] = useState(null);
     const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
     // Process Message Queue
@@ -152,12 +152,10 @@ function BattleGym() {
             setIsProcessingQueue(true);
             const nextMessage = messageQueue[0];
 
-            // Handle Game Over special message
             if (nextMessage.type === 'game_over') {
                 setGameOverState(nextMessage.data);
                 setIsGameOverModalOpen(true);
 
-                // Show toast here to prevent spoilers
                 if (nextMessage.data.type === 'win') {
                     toast.success("You won the badge!");
                 } else {
@@ -169,21 +167,15 @@ function BattleGym() {
                 return;
             }
 
-            // Add to battle log
             setBattleLog(prev => [...prev, nextMessage]);
-
-            // Remove from queue
             setMessageQueue(prev => prev.slice(1));
 
-            // If it's a narrative or referee message, wait for interaction
-            // BUT skip waiting if it's the "Judge has connected" message
             const isJudgeMessage = nextMessage.message && nextMessage.message.includes("The judge has connected");
 
             if ((nextMessage.type === 'narrative' || nextMessage.type === 'referee') && !isJudgeMessage) {
                 setWaitingForInteraction(true);
                 setIsProcessingQueue(false);
             } else {
-                // For other types, proceed automatically after a short delay
                 setTimeout(() => {
                     setIsProcessingQueue(false);
                 }, 500);
@@ -195,18 +187,102 @@ function BattleGym() {
         setWaitingForInteraction(false);
     };
 
-    // Debug: Log options to console
-    useEffect(() => {
-        const lastLog = battleLog[battleLog.length - 1];
-        if (lastLog?.type === 'options') {
-            console.log("Player Options & Scores:", lastLog.options);
-        }
-    }, [battleLog]);
-
-    // Helper to add messages to queue
     const queueMessages = (messages) => {
         setMessageQueue(prev => [...prev, ...messages]);
     };
+
+    // --- MENTION LOGIC ---
+
+    // Detect @ typing
+    const handleInputChange = (e) => {
+        const value = e.target.value;
+        setPlayerInput(value);
+
+        // Sync Scroll
+        if (backdropRef.current) {
+            backdropRef.current.scrollTop = e.target.scrollTop;
+        }
+
+        // Check if the last word starts with @
+        const lastWord = value.split(/[\s\n]+/).pop();
+        if (lastWord && lastWord.startsWith('@')) {
+            setShowMentions(true);
+            // Remove @ and replace underscores with spaces for filtering
+            setMentionFilter(lastWord.substring(1).replace(/_/g, ' ').toLowerCase());
+        } else {
+            setShowMentions(false);
+        }
+    };
+
+    const handleScroll = (e) => {
+        if (backdropRef.current) {
+            backdropRef.current.scrollTop = e.target.scrollTop;
+        }
+    };
+
+    // Add mention to input (replaces spaces with underscores)
+    const addMention = (poke) => {
+        // Determine the name to insert
+        // If enemy, prepend Enemy_ to the name
+        const rawName = poke.name.replace(/ /g, '_');
+        const finalName = poke.isEnemy ? `Enemy_${rawName}` : rawName;
+
+        const words = playerInput.split(/([\s\n]+)/);
+        const lastIndex = playerInput.lastIndexOf('@');
+        const prefix = playerInput.substring(0, lastIndex);
+
+        const newValue = prefix + `@${finalName} `;
+        setPlayerInput(newValue);
+        setShowMentions(false);
+
+        if (textareaRef.current) textareaRef.current.focus();
+    };
+
+    // Handle click on Pokemon images to add mention
+    const handleMentionClick = (name, isEnemy = false) => {
+        if (!name) return;
+
+        const rawName = name.replace(/ /g, '_');
+        const finalName = isEnemy ? `Enemy_${rawName}` : rawName;
+
+        setPlayerInput(prev => {
+            const prefix = prev.length > 0 && !prev.endsWith(' ') && !prev.endsWith('\n') ? ' ' : '';
+            return prev + prefix + `@${finalName} `;
+        });
+        if (textareaRef.current) textareaRef.current.focus();
+    };
+
+    // Get combined list for mentions
+    const getMentionList = () => {
+        const enemies = (gymData?.team || []).map(p => ({ ...p, isEnemy: true }));
+        const allies = (userTeam || []).map(p => ({ ...p, isEnemy: false }));
+        const all = [...enemies, ...allies];
+
+        if (!mentionFilter) return all;
+        return all.filter(p => p.name.toLowerCase().includes(mentionFilter));
+    };
+
+    // --- HIGHLIGHTER LOGIC ---
+    const renderHighlightedText = () => {
+        if (!playerInput) return null;
+
+        // Split by delimiters but keep them
+        const parts = playerInput.split(/(@[\w_]+|\s+)/g);
+
+        return parts.map((part, index) => {
+            if (part.startsWith('@')) {
+                // Check if it starts with @Enemy_
+                if (part.startsWith('@Enemy_')) {
+                    return <span key={index} className="text-red-400">{part}</span>;
+                }
+                // Otherwise it's an ally (or just a random mention)
+                return <span key={index} className="text-white">{part}</span>;
+            }
+            return <span key={index} className="text-white">{part}</span>;
+        });
+    };
+
+    // --- END MENTION LOGIC ---
 
     const startBattle = async () => {
         if (!currentUser) return toast.error("You must be logged in to battle");
@@ -217,7 +293,6 @@ function BattleGym() {
         }
 
         setBattleStatus('starting');
-        // Initial loading state
         setBattleLog([{
             type: 'loading',
             messages: [
@@ -243,11 +318,8 @@ function BattleGym() {
 
             setBattleContext(data.battleId);
             setBattleStatus('active');
-
-            // Clear loading log
             setBattleLog([]);
 
-            // Queue sequence
             queueMessages([
                 { type: 'referee', message: 'The judge has connected to the match. The battle has begun!' },
                 { type: 'narrative', message: data.introNarrative },
@@ -268,21 +340,40 @@ function BattleGym() {
     const sendInstruction = async (choiceId = null) => {
         if ((!playerInput.trim() && !choiceId) || sendingTurn) return;
 
-        const instruction = playerInput;
+        let instruction = playerInput;
+
+        // --- TRANSFORM INPUT (Process Mentions) ---
+        if (!choiceId && instruction) {
+            // 1. Replace Enemy Mentions: @Enemy_Name -> enemy Name
+            // We look for the pattern @Enemy_Something
+            instruction = instruction.replace(/@Enemy_([\w_]+)/g, (match, nameWithUnderscores) => {
+                const realName = nameWithUnderscores.replace(/_/g, ' ');
+                return `enemy ${realName}`;
+            });
+
+            // 2. Replace Ally Mentions: @Name -> Name
+            // We look for remaining @Something (that isn't Enemy_)
+            instruction = instruction.replace(/@([\w_]+)/g, (match, nameWithUnderscores) => {
+                const realName = nameWithUnderscores.replace(/_/g, ' ');
+                return realName;
+            });
+        }
+        // ------------------------------------------
+
         setPlayerInput("");
+        setShowMentions(false);
         setSendingTurn(true);
 
-        // Optimistic update (Immediate feedback)
         if (choiceId) {
             const lastOptionsLog = battleLog.slice().reverse().find(l => l.type === 'options');
             const selectedOption = lastOptionsLog?.options?.find(o => o.id === choiceId);
-            // Show the selected option TEXT as the player message (Blue)
             setBattleLog(prev => [...prev, { type: 'player', message: selectedOption?.text || "Player Action" }]);
         } else {
-            setBattleLog(prev => [...prev, { type: 'player', message: instruction }]);
+            // Show the raw input (with underscores) to the player, or the processed one?
+            // Usually showing what they typed is better UX.
+            setBattleLog(prev => [...prev, { type: 'player', message: playerInput }]);
         }
 
-        // Show dynamic loading message
         setBattleLog(prev => [...prev, {
             type: 'loading',
             messages: [
@@ -300,7 +391,7 @@ function BattleGym() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     battleId: battleContext,
-                    action: instruction,
+                    action: instruction, // Send the processed instruction (spaces restored, enemy prefix added)
                     choiceId: choiceId,
                     playerId: currentUser.uid
                 })
@@ -309,31 +400,24 @@ function BattleGym() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Failed to process turn');
 
-            // Remove the loading message immediately
             setBattleLog(prev => prev.filter(l => l.type !== 'loading'));
 
             const newMessages = [];
 
-            // 1. Add Player Narrative (Always add it, even if choiceId exists)
             if (data.playerNarrative) {
                 newMessages.push({ type: 'narrative', message: data.playerNarrative });
             }
 
-            // 2. Add Leader Narrative
             if (data.leaderNarrative) {
                 newMessages.push({ type: 'narrative', message: data.leaderNarrative });
             }
 
-            // 3. Queue messages
             queueMessages(newMessages);
 
-            // 4. Handle Game Over or Next Options
             if (data.gameOver) {
                 setBattleStatus('ended');
-                // Check if the challenger (player) won by comparing winner with challengerId
                 const isWin = data.winner === data.challengerId;
 
-                // Queue Game Over Event instead of setting state directly
                 queueMessages([{
                     type: 'game_over',
                     data: {
@@ -342,7 +426,6 @@ function BattleGym() {
                     }
                 }]);
 
-                // Queue end message
                 queueMessages([{ type: 'system', message: isWin ? 'Victory! You defeated the Gym Leader!' : 'Defeat! You were overwhelmed.' }]);
 
             } else if (data.playerOptions) {
@@ -415,15 +498,21 @@ function BattleGym() {
                                     </div>
                                 </div>
 
-                                {/* Pokemon Icons */}
+                                {/* Pokemon Icons (Header) - Clickable for Mention */}
+                                {/* Pokemon Icons (Header) */}
                                 <div className="flex items-center justify-center md:justify-start gap-2 mt-3">
                                     {gymData?.team?.map((poke, i) => poke && (
-                                        <div key={i} className="w-12 h-12">
+                                        <div
+                                            key={i}
+                                            className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform"
+                                            // ADICIONADO O TRUE AQUI
+                                            onClick={() => handleMentionClick(poke.name, true)}
+                                            title={`Click to mention @${poke.name}`}
+                                        >
                                             <img
                                                 src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId || 1}${battleStatus === 'idle' ? ".png" : ".gif"}`}
                                                 onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId || 1}.png`}
                                                 alt="poke"
-
                                                 className={`w-full h-full object-contain transition-all duration-1000 ${battleStatus === 'idle' ? 'brightness-0 opacity-70' : 'brightness-100 opacity-100'
                                                     }`}
                                             />
@@ -463,7 +552,6 @@ function BattleGym() {
                                         <img src={BattlePokeball} className="w-10 h-10" alt="Battle" />
                                         <h2 className="font-bold text-xl">Battle Log</h2>
                                     </div>
-                                    {/* Show Result Button (if game over but modal closed) */}
                                     {gameOverState && !isGameOverModalOpen && (
                                         <button
                                             onClick={() => setIsGameOverModalOpen(true)}
@@ -510,7 +598,6 @@ function BattleGym() {
                                             <div className="space-y-4 pb-4">
                                                 {battleLog.map((log, index) => {
                                                     if (log.type === 'options') {
-                                                        // Only render options if it's the last item in the log AND we are not currently sending a turn
                                                         if (index === battleLog.length - 1 && !sendingTurn && battleStatus !== 'ended') {
                                                             return (
                                                                 <motion.div
@@ -570,7 +657,7 @@ function BattleGym() {
                                                             initial={{ opacity: 0, y: 20 }}
                                                             animate={{ opacity: 1, y: 0 }}
                                                             transition={{ duration: 0.5, ease: "easeOut" }}
-                                                            className={`p-4 rounded-xl backdrop-blur-md border ${log.type === 'player' ? 'bg-blue-500/20 border-blue-500/50 ml-auto max-w-[80%]' :
+                                                            className={`p-4 rounded-xl backdrop-blur-md border ${log.type === 'player' ? 'bg-emerald-500/20 border-emerald-500/50 ml-auto max-w-[80%]' :
                                                                 log.type === 'narrative' ? 'bg-black/60 border-gray-700' :
                                                                     'bg-gray-800/40 border-gray-700'
                                                                 }`}
@@ -581,7 +668,6 @@ function BattleGym() {
                                                 })
                                                 }
 
-                                                {/* Waiting for Interaction Indicator */}
                                                 {waitingForInteraction && (
                                                     <motion.div
                                                         initial={{ opacity: 0 }}
@@ -599,12 +685,11 @@ function BattleGym() {
                                                 )}
 
                                                 {/* Turn 1 Input (Text) */}
-                                                {/* Show only if no options are present (meaning it's turn 1 or we are waiting for options) AND not sending AND not processing queue AND not waiting for interaction */}
                                                 {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && !waitingForInteraction && (
                                                     <motion.div
                                                         initial={{ opacity: 0, y: 20 }}
                                                         animate={{ opacity: 1, y: 0 }}
-                                                        className="bg-black/60 backdrop-blur-md border border-gray-700 rounded-xl p-6 mt-4"
+                                                        className="bg-black/60 backdrop-blur-md border border-gray-700 rounded-xl p-6 mt-4 relative"
                                                     >
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h3 className="font-bold text-white">
@@ -614,7 +699,12 @@ function BattleGym() {
                                                             </h3>
                                                             <div className="flex gap-2">
                                                                 {relevantPokemon.map((poke, i) => (
-                                                                    <div key={i} className="w-12 h-12">
+                                                                    <div
+                                                                        key={i}
+                                                                        className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform"
+                                                                        onClick={() => handleMentionClick(poke.name)}
+                                                                        title={`Click to mention @${poke.name}`}
+                                                                    >
                                                                         <img
                                                                             src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`}
                                                                             onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`}
@@ -626,22 +716,70 @@ function BattleGym() {
                                                                 ))}
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-gray-400 mb-3">Describe your instruction</p>
-                                                        <div className="space-y-3">
-                                                            <textarea
-                                                                value={playerInput}
-                                                                onChange={(e) => setPlayerInput(e.target.value)}
-                                                                placeholder={`Ex: Use Waterfall on Onix!`}
-                                                                className="w-full bg-[#18181B] border border-[#26272B] rounded-lg p-3 text-white text-sm focus:outline-none focus:border-gray-500 resize-none h-24"
-                                                            />
-                                                            <div className="flex justify-end">
-                                                                <button
-                                                                    onClick={() => sendInstruction()}
-                                                                    className="bg-white text-black font-bold px-6 py-2 rounded-full hover:bg-gray-200 transition-colors text-sm"
+                                                        <p className="text-sm text-gray-400 mb-3">Describe your instruction (Type @ to mention)</p>
+
+                                                        <div className="relative w-full">
+                                                            {/* Mention Dropdown */}
+                                                            {showMentions && (
+                                                                <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#27272A] border border-[#3F3F46] rounded-lg shadow-xl overflow-hidden z-50 max-h-48 overflow-y-auto">
+                                                                    {getMentionList().length > 0 ? (
+                                                                        getMentionList().map((poke, idx) => (
+                                                                            <button
+                                                                                key={idx}
+                                                                                onClick={() => addMention(poke)}
+                                                                                className="w-full text-left px-4 py-2 hover:bg-[#3F3F46] flex items-center gap-2 transition-colors"
+                                                                            >
+                                                                                <img
+                                                                                    src={`http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`}
+                                                                                    className="w-6 h-6 object-contain"
+                                                                                    alt=""
+                                                                                />
+                                                                                <span className={`text-sm font-medium ${poke.isEnemy ? 'text-red-400' : 'text-gray-200'}`}>
+                                                                                    {poke.name.replace(/ /g, '_')}
+                                                                                </span>
+                                                                                {poke.isEnemy && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 rounded ml-auto">Enemy</span>}
+                                                                            </button>
+                                                                        ))
+                                                                    ) : (
+                                                                        <div className="px-4 py-2 text-sm text-gray-500">No Pokemon found</div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Layered Input for Highlighting */}
+                                                            <div className="relative h-24 w-full bg-[#18181B] border border-[#26272B] rounded-lg overflow-hidden">
+
+                                                                {/* Backdrop (Highlighter) */}
+                                                                <div
+                                                                    ref={backdropRef}
+                                                                    className="absolute inset-0 p-3 whitespace-pre-wrap break-words overflow-hidden text-sm font-sans pointer-events-none"
+                                                                    aria-hidden="true"
                                                                 >
-                                                                    Send
-                                                                </button>
+                                                                    {renderHighlightedText()}
+                                                                    {/* Add a space at the end to ensure cursor visibility at end of line */}
+                                                                    <span className="opacity-0">.</span>
+                                                                </div>
+
+                                                                {/* Actual Input (Transparent) */}
+                                                                <textarea
+                                                                    ref={textareaRef}
+                                                                    value={playerInput}
+                                                                    onChange={handleInputChange}
+                                                                    onScroll={handleScroll}
+                                                                    placeholder={`Ex: Use Waterfall on @Onix!`}
+                                                                    className="absolute inset-0 w-full h-full bg-transparent text-transparent caret-white p-3 text-sm font-sans resize-none focus:outline-none focus:border-gray-500"
+                                                                    style={{ color: 'transparent' }}
+                                                                />
                                                             </div>
+                                                        </div>
+
+                                                        <div className="flex justify-end mt-3">
+                                                            <button
+                                                                onClick={() => sendInstruction()}
+                                                                className="bg-white text-black font-bold px-6 py-2 rounded-full hover:bg-gray-200 transition-colors text-sm"
+                                                            >
+                                                                Send
+                                                            </button>
                                                         </div>
                                                     </motion.div>
                                                 )}
@@ -760,19 +898,18 @@ function BattleGym() {
                                 <h3 className="font-bold text-lg mb-4">Opponent's Team</h3>
                                 <div className="flex gap-4 justify-center relative">
                                     {gymData?.team?.map((card, i) => {
-                                        // Verifica se a batalha ainda não começou
                                         const isHidden = battleStatus === 'idle';
 
                                         return card ? (
                                             <div
                                                 key={i}
                                                 className="group relative w-20 aspect-[3/4] cursor-pointer"
-                                                // ALTERAÇÃO 1: Só permite o hover se a carta não estiver escondida
                                                 onMouseEnter={() => !isHidden && setHoveredCard(card)}
                                                 onMouseLeave={() => setHoveredCard(null)}
+                                                onClick={() => !isHidden && handleMentionClick(card.name, true)}
+                                                title={!isHidden ? `Click to mention @${card.name}` : ''}
                                             >
                                                 <img
-                                                    // ALTERAÇÃO 2: Se estiver escondida (idle), mostra o verso. Se não, mostra a carta.
                                                     src={isHidden
                                                         ? BattleCardBack
                                                         : (card.original ? `${card.original}/high.png` : card.image)
@@ -781,7 +918,6 @@ function BattleGym() {
                                                     className={`w-full h-full object-cover rounded-lg border border-[#26272B] transition-transform ${!isHidden ? 'group-hover:scale-105' : ''}`}
                                                     style={{ imageRendering: 'auto' }}
                                                     onError={(e) => {
-                                                        // Fallback de erro apenas se não estivermos mostrando o verso
                                                         if (!isHidden && e.target.src !== card.image) {
                                                             e.target.src = card.image;
                                                         } else if (!isHidden) {
@@ -797,7 +933,7 @@ function BattleGym() {
                                         );
                                     })}
 
-                                    {/* Large Card Preview - Mantém igual, pois o hover está bloqueado acima */}
+                                    {/* Large Card Preview */}
                                     <AnimatePresence>
                                         {hoveredCard && (
                                             <motion.div
