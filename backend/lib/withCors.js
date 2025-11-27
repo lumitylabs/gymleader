@@ -2,16 +2,13 @@
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000', // Adicionei caso use porta 3000 localmente
-  'https://chaplin-xlb1.onrender.com',
-  'https://chaplin.lumitylabs.com',
-  'https://web3museum.lumitylabs.com',
-  'https://web3museum.onrender.com'
+  "https://gymleader.lumitylabs.com"
 ];
 
 const withCors = (handler) => {
   return async (req, res) => {
     const origin = req.headers.origin;
-    
+
     // Verifica se a origem está na lista branca
     if (allowedOrigins.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
