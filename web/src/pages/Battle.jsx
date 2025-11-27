@@ -233,7 +233,7 @@ function Battle() {
   const kantoOrder = [
     "brock",
     "misty",
-    "ltsurge", // Irá corresponder a "Lt. Surge" ou "Lt Surge" após normalização
+    "ltsurge",
     "erika",
     "koga",
     "sabrina",
@@ -241,8 +241,7 @@ function Battle() {
     "giovanni"
   ];
 
-  // Helper para normalizar o nome (remove pontuação, espaços e deixa minúsculo)
-  // Ex: "Lt. Surge" vira "ltsurge"
+  // Helper para normalizar o nome
   const normalizeName = (name) => name ? name.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
 
   const filteredGyms = gyms
@@ -266,7 +265,7 @@ function Battle() {
       return gymLocation === activeTab;
     })
     .sort((a, b) => {
-      // A. Prioridade de Localização (Region/Gym Challenge primeiro, Leaders por último)
+      // A. Prioridade de Localização
       const priorityA = getLocationPriority(a.location);
       const priorityB = getLocationPriority(b.location);
 
@@ -275,25 +274,20 @@ function Battle() {
       }
 
       // B. Prioridade Específica dos Líderes (Kanto Order)
-      // Só aplicamos se eles estiverem na mesma "location priority" (ex: ambos Gym Challenge)
       const nameA = normalizeName(a.leaderName);
       const nameB = normalizeName(b.leaderName);
 
       const indexA = kantoOrder.indexOf(nameA);
       const indexB = kantoOrder.indexOf(nameB);
 
-      // Se ambos estão na lista personalizada, ordena pelo índice da lista
       if (indexA !== -1 && indexB !== -1) {
         return indexA - indexB;
       }
 
-      // Se apenas A está na lista, A vem primeiro
       if (indexA !== -1) return -1;
-
-      // Se apenas B está na lista, B vem primeiro
       if (indexB !== -1) return 1;
 
-      // C. Desempate padrão (alfabético por nome do ginásio)
+      // C. Desempate padrão
       return (a.gymName || "").localeCompare(b.gymName || "");
     });
 
@@ -368,7 +362,8 @@ function Battle() {
                       onClick={() => navigate(`/battle/${gym.userId}`)}
                       className="bg-[#202024] hover:bg-[#232326] rounded-3xl p-6 flex flex-col md:flex-row gap-6 transition-all duration-200 cursor-pointer group min-h-[200px] "
                     >
-                      <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0 bg-[#26272B] hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] rounded-[32px] overflow-hidden">
+                      {/* ALTERAÇÕES FEITAS AQUI NA CLASSE DA DIV ABAIXO */}
+                      <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0 bg-[#26272B] shadow-[0_0px_40px_1px_rgba(255,230,195,0)] group-hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] transition-all duration-500 ease-out group-hover:duration-200 rounded-[32px] overflow-hidden">
                         {gym.badgeImage ? (
                           <HoloBadge imageUrl={gym.badgeImage} holo={gym.holo || 1} />
                         ) : (
