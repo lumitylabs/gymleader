@@ -53,6 +53,14 @@ function Gym() {
     if (!formData.description.trim()) missing.push("Description");
     if (!formData.leaderName.trim()) missing.push("Leader Name");
     if (!formData.strategy.trim()) missing.push("Strategy");
+
+    if (!formData.gymImage) missing.push("Gym Image");
+    if (!formData.leaderImage) missing.push("Leader Image");
+    if (!formData.badgeImage) missing.push("Badge Image");
+
+    const teamCount = formData.team.filter(p => p !== null).length;
+    if (teamCount < 3) missing.push(`Team (${teamCount}/3 Pokemon)`);
+
     return missing;
   };
 

@@ -5,13 +5,15 @@ import { Wallet, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from "../../../contexts/AuthContext";
 import { useAccount } from 'wagmi';
 import { useWallet } from '@solana/wallet-adapter-react';
-import Avatar from "../../../assets/avatar.png";
+import { db } from "../../../firebase/config";
+import { ref, onValue } from "firebase/database";
 
 export function UserAccount() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const menuRef = useRef(null);
+  const [gymData, setGymData] = useState(null);
 
   const { address: evmAddress, isConnected: isEvmConnected } = useAccount();
   const { publicKey, connected: isSolanaConnected } = useWallet();
@@ -39,6 +41,18 @@ export function UserAccount() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [menuRef]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const gymRef = ref(db, `users/${currentUser.uid}/gym`);
+    const unsubscribe = onValue(gymRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setGymData(data);
+      }
+    });
+    return () => unsubscribe();
+  }, [currentUser]);
 
   return (
     <div className="pl-4 pr-6 py-2 relative" ref={menuRef}>
@@ -103,11 +117,15 @@ export function UserAccount() {
         className={`flex items-center gap-3 w-full p-2 px-3 rounded-xl transition-colors cursor-pointer ${!isOpen ? 'hover:bg-[#202024] group' : ''}`}
       >
         <div className="relative">
-          <img
-            className={`w-10 h-10 rounded-full object-cover border border-[#26272B] transition-colors ${!isOpen ? 'group-hover:border-gray-500' : ''}`}
-            src={Avatar}
-            alt="User"
-          />
+          {gymData?.leaderImage ? (
+            <img
+              className={`w-10 h-10 rounded-full object-cover border border-[#26272B] transition-colors ${!isOpen ? 'group-hover:border-gray-500' : ''}`}
+              src={gymData.leaderImage}
+              alt="User"
+            />
+          ) : (
+            <div className={`w-10 h-10 rounded-full border border-[#26272B] transition-colors bg-gradient-to-br from-purple-500 to-blue-500 ${!isOpen ? 'group-hover:border-gray-500' : ''}`}></div>
+          )}
           <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-[#131316] rounded-full ${isEvmConnected || isSolanaConnected ? 'bg-green-500' : 'bg-gray-500'}`}></div>
         </div>
 

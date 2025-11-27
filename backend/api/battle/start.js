@@ -77,10 +77,15 @@ const handler = async (req, res) => {
                - NO SWITCHING: The Leader fights with the active Pokemon or the whole team as a unit. Do not suggest switching out.
             2. Select the BEST option based on the Leader's strategy.
             3. Narrate the Leader's move based on that choice (VERY CONCISE, max 1 sentence).
+            4. Determine the initial advantage/disadvantage score (-2 to +2).
+               - If Leader has type advantage or better position: Positive score.
+               - If Challenger has type advantage: Negative score.
+            5. Explain the reasoning for the score (1 sentence).
             
             Return JSON: { 
                 "leaderMoveNarrative": "string", 
-                "leaderMoveScore": number // -2 to +2 (Positive = Good for Leader)
+                "leaderMoveScore": number, // -2 to +2
+                "leaderMoveReasoning": "string"
             }
             IMPORTANT: Ensure all keys are double-quoted. Return ONLY the JSON object.
         `;
@@ -96,6 +101,7 @@ const handler = async (req, res) => {
         // 7. Save Battle State
         const battleId = db.ref('battles').push().key;
         console.log(`[Battle Start] ID: ${battleId} | Gym: ${gymName} | Leader: ${leaderName} | Challenger: ${challengerId}`);
+        console.log(`[Battle Start] Leader Score: ${logicData.leaderMoveScore} | Reasoning: ${logicData.leaderMoveReasoning}`);
         
         const battleState = {
             gymId,
