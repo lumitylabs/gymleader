@@ -299,7 +299,10 @@ function Badges() {
 
                           <div className="flex items-center gap-1 text-[#A1A1AA] text-xs">
                             <MapPin color="#FFADAD" size={12} strokeWidth={2} />
-                            <span>{badge.location || 'Unknown'}</span>
+                            <span>{badge.location
+                              ? `${badge.location}${badge.region ? `, ${badge.region}` : ''}`
+                              : 'Leaders'
+                            }</span>
                           </div>
                         </div>
                       </div>

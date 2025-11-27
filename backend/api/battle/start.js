@@ -22,12 +22,13 @@ const handler = async (req, res) => {
         const user = userSnapshot.val();
 
         if (!gym) return res.status(404).json({ error: 'Gym not found' });
-        
+
         // 2. Prepare Context
         const leaderName = gym.leaderName || 'Leader';
         const gymName = gym.gymName || 'Gym';
         const gymDesc = gym.description || 'A standard battle arena.';
-        // Helper to parse team data (handles both array and object structures)
+
+        // Helper to parse team data
         const parseTeam = (teamData) => {
             if (!teamData) return 'Unknown Pokemon';
             const teamArray = Array.isArray(teamData) ? teamData : Object.values(teamData);
@@ -35,14 +36,25 @@ const handler = async (req, res) => {
         };
 
         const leaderTeam = parseTeam(gym.team);
-        
+
         // Fetch user's gym team specifically
         const userGymTeamSnapshot = await db.ref(`users/${challengerId}/gym/team`).once('value');
         const userGymTeam = userGymTeamSnapshot.val();
         const challengerTeam = parseTeam(userGymTeam);
-        
+
+        // --- FORMATTING RULES (UPDATED) ---
+        const formattingRules = `
+            IMPORTANT FORMATTING RULES FOR POKEMON NAMES:
+            1. When mentioning a Pokemon from the LEADER'S team (${leaderTeam}), YOU MUST use the format: @Enemy_PokemonName.
+            2. When mentioning a Pokemon from the CHALLENGER'S team (${challengerTeam}), YOU MUST use the format: @PokemonName.
+            3. CRITICAL: REPLACE ALL SPACES WITH UNDERSCORES inside the tag.
+               - Example: "Tapu Koko" -> "@Tapu_Koko" (or "@Enemy_Tapu_Koko").
+               - Example: "Mr. Mime" -> "@Mr_Mime" (Remove dots, use underscores).
+            4. Do NOT use bold or markdown for names, just the @ tag.
+        `;
+
         // --- PARALLEL EXECUTION START ---
-        
+
         // Task A: Intro Narrative
         const introPrompt = `
             You are the Judge of a Pokemon Gym Battle.
@@ -50,10 +62,12 @@ const handler = async (req, res) => {
             Leader: ${leaderName} (Team: ${leaderTeam})
             Challenger: Challenger (Team: ${challengerTeam})
             
+            ${formattingRules}
+
             Task: Create a VERY SHORT, DIRECT, single-sentence introduction for the battle.
             Focus on the ATMOSPHERE and the TENSION between the Leader and the Challenger.
-            MENTION BOTH SIDES (Leader/Team AND Challenger/Team).
-            Example: "The air crackles as Lt. Surge's electric team faces off against the Challenger's squad, sparks flying between them."
+            MENTION BOTH SIDES (Leader/Team AND Challenger/Team) using the @ tags correctly (with underscores).
+            Example: "The air crackles as @Enemy_Raichu sparks with energy, staring down the challenger's @Gengar."
             Do NOT focus on just one Pokemon. Do NOT describe an attack yet. Set the scene.
             
             Return JSON: { "narrative": "string" }
@@ -69,14 +83,16 @@ const handler = async (req, res) => {
             Leader Team: ${leaderTeam}
             Challenger Team: ${challengerTeam}
             
+            ${formattingRules}
+
             Task: Simulate the first turn of the battle internally and return the result.
             
             Steps (INTERNAL THINKING):
             1. Generate 3 strategic options for the Gym Leader using their team (${leaderTeam}).
+               - TEAMWORK RULE: The Leader should use their team as a COHESIVE UNIT. Suggest combos or coordinated positioning.
                - VARIETY RULE: Do not always start with the strongest move. Use status moves, environment, or setup moves.
-               - NO SWITCHING: The Leader fights with the active Pokemon or the whole team as a unit. Do not suggest switching out.
             2. Select the BEST option based on the Leader's strategy.
-            3. Narrate the Leader's move based on that choice (VERY CONCISE, max 1 sentence).
+            3. Narrate the Leader's move based on that choice (VERY CONCISE, max 1 sentence). USE THE @ TAGS WITH UNDERSCORES.
             4. Determine the initial advantage/disadvantage score (-2 to +2).
                - If Leader has type advantage or better position: Positive score.
                - If Challenger has type advantage: Negative score.
@@ -101,8 +117,7 @@ const handler = async (req, res) => {
         // 7. Save Battle State
         const battleId = db.ref('battles').push().key;
         console.log(`[Battle Start] ID: ${battleId} | Gym: ${gymName} | Leader: ${leaderName} | Challenger: ${challengerId}`);
-        console.log(`[Battle Start] Leader Score: ${logicData.leaderMoveScore} | Reasoning: ${logicData.leaderMoveReasoning}`);
-        
+
         const battleState = {
             gymId,
             challengerId,
