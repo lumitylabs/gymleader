@@ -99,6 +99,39 @@
   right: 0;
 }
 
+/* ===== 3. MODAL SCROLLBAR (Para o Modal de Resgate) ===== */
+#modal-scrollbar .simplebar-track.simplebar-vertical {
+  background-color: transparent;
+  width: 5px !important;
+  /* AQUI ESTÁ A CORREÇÃO: Right positivo para ficar dentro da caixa */
+  right: 2px !important;
+  top: 0 !important;
+  height: 100% !important;
+  border-radius: 0px;
+}
+
+#modal-scrollbar .simplebar-track.simplebar-vertical .simplebar-scrollbar::before {
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0;
+  right: 0;
+  border-radius: 4px;
+  /* Mesma cor cinza do seu tema */
+  background-color: rgb(63, 63, 70) !important;
+  opacity: 1 !important;
+}
+
+#modal-scrollbar .simplebar-content-wrapper {
+  height: 100% !important;
+}
+
+/* Transforma o container de conteúdo em Flex para permitir centralização */
+#modal-scrollbar .simplebar-content {
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Base reset para garantir altura total */
 html,
 body,

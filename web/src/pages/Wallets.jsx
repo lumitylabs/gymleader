@@ -20,7 +20,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 
 // --- UTILS E ICONS ---
 import { toast } from 'sonner';
-import { X, Check } from 'lucide-react';
+import { X } from 'lucide-react';
 
 // --- FIREBASE ---
 import { db } from "../firebase/config";
@@ -38,19 +38,17 @@ import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 
 
-// --- COMPONENTE DE PREVIEW FLUTUANTE (PORTAL) ---
+// --- COMPONENTE DE PREVIEW FLUTUANTE ---
 const FloatingPreview = ({ hoveredData }) => {
   if (!hoveredData) return null;
 
   const { card, rect, showOnRight } = hoveredData;
 
-  // AJUSTES DE TAMANHO (Mantido grande conforme pedido anterior)
   const PREVIEW_HEIGHT = 580;
   const PREVIEW_WIDTH = 420;
-  const GAP = 8;
+  const GAP = 4;
   const SCREEN_PADDING = 15;
 
-  // CÁLCULO VERTICAL COM TRAVA (CLAMP)
   const windowHeight = window.innerHeight;
   let topPosition = rect.top + (rect.height / 2) - (PREVIEW_HEIGHT / 2);
 
@@ -61,7 +59,6 @@ const FloatingPreview = ({ hoveredData }) => {
     topPosition = SCREEN_PADDING;
   }
 
-  // CÁLCULO HORIZONTAL
   const leftPosition = showOnRight
     ? rect.right + GAP
     : rect.left - PREVIEW_WIDTH - GAP;
@@ -86,7 +83,11 @@ const FloatingPreview = ({ hoveredData }) => {
         className="flex items-center justify-center"
       >
         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.95)] border-[3px] border-[#202024] bg-[#18181B]">
-          <img src={card.imagem} alt="Preview" className="w-full h-full object-contain bg-[#131316]" />
+          <img
+            src={card.imagem}
+            alt="Preview"
+            className="w-full h-full object-contain bg-[#131316]"
+          />
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/30 mix-blend-overlay"></div>
         </div>
       </motion.div>
@@ -98,45 +99,38 @@ const FloatingPreview = ({ hoveredData }) => {
 // --- COMPONENTE DE CARTA INDIVIDUAL ---
 const PokemonCardItem = ({ card, index, isSelected, onToggle, onHoverStart, onHoverEnd }) => {
   const handleMouseEnter = (e) => {
+    // Desabilita hover em telas touch/mobile para evitar bugs visuais
+    if (window.innerWidth < 768) return;
+
     const rect = e.currentTarget.getBoundingClientRect();
     onHoverStart(card, rect, index);
   };
 
   return (
     <motion.div
-      layout
       onClick={() => onToggle(card.token_address)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={onHoverEnd}
       whileHover={{ scale: !isSelected ? 1.03 : 1 }}
-      animate={{ y: isSelected ? -8 : 0 }}
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      animate={{ y: isSelected ? -10 : 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
       className={`
-        relative cursor-pointer rounded-xl bg-[#131316] group
+        relative cursor-pointer rounded-xl group
         ${isSelected ? '' : 'hover:brightness-110'}
       `}
       style={{
         boxShadow: isSelected
-          ? "0px 0px 15px rgba(234, 179, 8, 0.5), 0 0 0 2px rgba(234, 179, 8, 1)"
-          : "0px 2px 5px rgba(0,0,0,0.4)"
+          ? "0px 15px 40px -5px rgba(234, 179, 8, 0.35)"
+          : "0px 5px 15px -2px rgba(0,0,0,0.5)"
       }}
     >
-      <div className="aspect-[3/4] rounded-xl overflow-hidden transition-colors group-hover:border-[#3F3F46]">
-        <img src={card.details?.image + "/high.png"} alt={card.nome} className="w-full h-full object-contain bg-[#131316]" />
+      <div className="aspect-[3/4] rounded-xl overflow-hidden">
+        <img
+          src={card.details?.image ? (card.details.image + "/high.png") : card.imagem}
+          alt={card.nome}
+          className="w-full h-full object-contain"
+        />
       </div>
-
-      <AnimatePresence>
-        {isSelected && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            className="absolute -top-2 -right-2 bg-yellow-500 text-black rounded-full p-1 shadow-md z-20 border-2 border-[#18181B]"
-          >
-            <Check size={12} strokeWidth={4} />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };
@@ -181,7 +175,11 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
   };
 
   const handleRedeem = async () => {
-    if (selectedCards.length === 0) return;
+    if (selectedCards.length !== 3) {
+      toast.warning("Please select exactly 3 cards.");
+      return;
+    }
+
     setRedeeming(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/redeem-gift`, {
@@ -206,13 +204,13 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
 
   const onHoverStart = (card, rect, index) => {
     const isMobile = window.innerWidth < 640;
-    let showOnRight = true;
 
-    if (isMobile) {
-      showOnRight = index % 2 === 0;
-    } else {
-      showOnRight = (index % 4) < 2;
-    }
+    // Em mobile, não mostramos o preview flutuante
+    if (isMobile) return;
+
+    let showOnRight = true;
+    // Lógica para 4 colunas (Desktop)
+    showOnRight = (index % 4) < 2;
 
     setHoveredData({ card, rect, showOnRight });
   };
@@ -225,96 +223,120 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 md:p-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          // ALTERAÇÃO 1: max-w-4xl (antes era 5xl) para estreitar o modal e diminuir as cartas naturalmente
-          className="bg-[#18181B] w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] border border-[#26272B] relative overflow-hidden"
+          // RESPONSIVIDADE AQUI:
+          // Mobile: h-[85vh] (flexível)
+          className="bg-[#18181B] w-full max-w-5xl h-[85vh] md:h-[800px] max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative overflow-hidden"
           onScroll={() => setHoveredData(null)}
         >
+          {/* Botão Fechar - Ajustado levemente para mobile */}
+          <button
+            onClick={onClose}
+            className="absolute top-6 right-4 md:top-5 md:right-6 z-50 backdrop-blur-sm transition-colors text-gray-400 hover:text-white cursor-pointer"
+          >
+            <X size={18} />
+          </button>
 
-          {/* Header Mais Compacto */}
-          <div className="px-5 py-3 border-b border-[#26272B] flex justify-between items-center bg-[#18181B] shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border border-[#26272B] overflow-hidden shrink-0">
-                <img src={Oak} alt="Professor Oak" className="w-full h-full object-cover" />
+          {/* Header - Padding Responsivo (px-4 no mobile, px-8 no desktop) */}
+          <div className='flex justify-between items-center px-4 md:px-8 mt-6 md:mt-8 mb-4 md:mb-5'>
+            <div className='text-sm text-[#FFF1E0] font-medium text-white'>Select your Pokémons</div>
+          </div>
+
+          {/* Professor Oak Area */}
+          <div className="px-4 md:px-8 flex flex-col bg-[#18181B] shrink-0 border-b border-[#26272B]/50 md:border-none">
+            <div className="flex gap-2">
+              <div className="ml-0 md:ml-5 w-10 h-10 rounded-full overflow-hidden shrink-0 shadow-sm">
+                <img src={Oak} alt="Professor Oak" className="w-full h-full object-cover select-none" />
               </div>
-              <div>
-                <h2 className="text-md font-bold text-white leading-tight">Professor OAK</h2>
-                <p className="text-xs text-gray-400">Select <span className="text-yellow-500 font-bold">3 Pokémons</span> </p>
+              <div className="flex flex-col bg-[#282828] px-4 py-2 mt-4 rounded-r-xl rounded-bl-xl select-none max-w-full mb-2 md:mb-0">
+                <h2 className="text-xs text-[#FFF1E0] font-medium text-white leading-tight">Professor OAK</h2>
+                <p className="text-xs text-[#FFDBAF] leading-snug">Welcome, Leader! Choose <span className="text-yellow-500 font-bold">3 Pokémons</span> to begin your journey. </p>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-full hover:bg-[#26272B] transition-colors text-gray-400 hover:text-white cursor-pointer"
-            >
-              <X size={18} />
-            </button>
           </div>
 
-          {/* Grid Area - Padding e Gap ajustados */}
-          <div
-            // ALTERAÇÃO 2: p-4 (antes era p-6) para ganhar espaço
-            className="flex-1 overflow-y-auto custom-scrollbar bg-[#131316]/50 p-4 flex flex-col justify-center"
-            onScroll={() => setHoveredData(null)}
+          {/* Grid Area */}
+          <SimpleBar
+            style={{ height: '100%' }}
+            className="flex-1 min-h-0 w-full"
+            id="modal-scrollbar"
+            autoHide={false}
+            scrollableNodeProps={{
+              onScroll: () => setHoveredData(null)
+            }}
           >
-            {loading ? (
-              <div className="flex flex-col items-center justify-center h-full gap-4">
-                <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-500 text-sm">Opening packs...</p>
-              </div>
-            ) : (
-              // ALTERAÇÃO 3: gap-3 (antes era gap-4) para aproximar um pouco mais e evitar scroll
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full content-center">
-                {cards.map((card, index) => (
-                  <PokemonCardItem
-                    key={card.token_address}
-                    card={card}
-                    index={index}
-                    isSelected={selectedCards.includes(card.token_address)}
-                    onToggle={toggleCardSelection}
-                    onHoverStart={onHoverStart}
-                    onHoverEnd={onHoverEnd}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+            {/* 
+                AQUI MUDOU: 
+                Adicionamos 'flex-1' para esta div crescer e ocupar os 100% definidos no CSS.
+                Mantivemos o padding aqui.
+            */}
+            <div className="flex-1 flex flex-col w-full bg-[#18181B] px-4 md:px-8 pt-6 md:pt-10 pb-8 md:pb-12">
 
-          {/* Footer Mais Compacto */}
-          <div className="px-5 py-3 border-t border-[#26272B] bg-[#18181B] flex justify-between items-center shrink-0">
-            <div className="text-sm font-medium">
-              <span className={selectedCards.length === 3 ? "text-yellow-500 font-bold" : "text-gray-400"}>
-                {selectedCards.length} / 3 Selected
+              {loading ? (
+                /* 
+                   AQUI MUDOU: 
+                   'm-auto' (margin auto) é o jeito mais seguro de centralizar 
+                   em um flex-container vertical que tem altura total.
+                */
+                <div className="m-auto flex flex-col items-center justify-center gap-4">
+                  <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-gray-500 text-sm">Opening packs...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8 w-full max-w-3xl mx-auto content-start">
+                  {cards.map((card, index) => (
+                    <PokemonCardItem
+                      key={card.token_address}
+                      card={card}
+                      index={index}
+                      isSelected={selectedCards.includes(card.token_address)}
+                      onToggle={toggleCardSelection}
+                      onHoverStart={onHoverStart}
+                      onHoverEnd={onHoverEnd}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </SimpleBar>
+
+          {/* Footer - Padding Responsivo */}
+          <div className="px-4 md:px-8 py-4 md:py-8 bg-[#18181B] flex justify-between items-center shrink-0 border-t border-[#26272B]/50 md:border-none">
+            <div className="text-sm">
+              <span className={selectedCards.length === 3 ? "text-yellow-500 font-medium" : "text-gray-400"}>
+                {selectedCards.length} of 3 Selected
               </span>
             </div>
 
             <button
               onClick={handleRedeem}
-              disabled={redeeming || selectedCards.length === 0}
+              disabled={redeeming || selectedCards.length !== 3}
               className={`
-                px-8 py-2 rounded-full font-bold text-xs sm:text-sm transition-all transform
-                ${redeeming || selectedCards.length === 0
-                  ? 'bg-[#26272B] text-gray-500 cursor-not-allowed'
-                  : 'bg-[#FAFAFA] text-black hover:bg-white hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.15)]'
+                px-8 md:px-10 py-2.5 rounded-full text-xs sm:text-sm transition-all transform
+                ${redeeming || selectedCards.length !== 3
+                  ? 'bg-[#89898A] text-[#232325] cursor-ignore'
+                  : 'bg-[#FAFAFA] text-[#2D2D2D] font-regular hover:bg-white active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.15)] cursor-pointer'
                 }
               `}
             >
-              {redeeming ? 'Claiming...' : 'Claim Cards'}
+              {redeeming ? 'Claiming...' : 'Claim'}
             </button>
           </div>
 
-        </motion.div>
-      </div>
+        </motion.div >
+      </div >
 
+      {/* Preview Flutuante (Lógica de exibição controlada dentro do componente e no hoverStart) */}
       <FloatingPreview hoveredData={hoveredData} />
     </>
   );
 };
 
-// --- PÁGINA WALLETS ---
+// --- PÁGINA WALLETS (INALTERADA) ---
 function Wallets() {
   const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth >= 1024);
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
