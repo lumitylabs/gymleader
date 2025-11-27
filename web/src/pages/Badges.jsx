@@ -184,10 +184,12 @@ function Badges() {
   const filteredBadges = badges.filter(badge => {
     const matchesSearch = badge.gymName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       badge.leaderName.toLowerCase().includes(searchTerm.toLowerCase());
-
     if (filter === 'All') return matchesSearch;
-    if (filter === 'Kanto') return matchesSearch && badge.location === 'Kanto';
-    if (filter === 'PvP') return matchesSearch;
+    if (filter === 'Gym Challenge') return matchesSearch && badge.location === 'Gym Challenge';
+    if (filter === 'Victory Road') return matchesSearch && badge.location === 'Victory Road';
+    if (filter === 'Elite Four') return matchesSearch && badge.location === 'Elite Four';
+    // when filter is pvp or does not have the variable location
+    if (filter === 'PvP') return matchesSearch && (badge.location === 'PvP' || !badge.location);
     return matchesSearch;
   });
 
@@ -241,7 +243,7 @@ function Badges() {
                   <FilterBar
                     activeCategory={filter}
                     onCategorySelect={setFilter}
-                    categories={['All', 'Kanto', 'PvP']}
+                    categories={['All', "Gym Challenge", "Victory Road", "Elite Four", "PvP"]}
                   />
                 </div>
               </div>
