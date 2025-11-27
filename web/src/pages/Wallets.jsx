@@ -236,7 +236,7 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
           {/* Botão Fechar - Ajustado levemente para mobile */}
           <button
             onClick={onClose}
-            className="absolute top-6 right-4 md:top-5 md:right-6 z-50 backdrop-blur-sm transition-colors text-gray-400 hover:text-white cursor-pointer"
+            className="absolute top-6 right-4 md:top-6 md:right-6 z-50 backdrop-blur-sm transition-colors text-gray-400 hover:text-white cursor-pointer"
           >
             <X size={18} />
           </button>
