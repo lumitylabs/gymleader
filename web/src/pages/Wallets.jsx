@@ -1,5 +1,6 @@
 // pages/Wallets.jsx
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Sidebar from '../components/ui/general/Sidebar';
 
 // --- IMPORTAR O CONTEXTO DE AUTH ---
@@ -16,24 +17,137 @@ import CollectorLogo from "../assets/collector_logo.svg";
 // --- HOOKS PARA A SESSÃO SOLANA (VIA SOLANA WALLET ADAPTER) ---
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+
+// --- UTILS E ICONS ---
 import { toast } from 'sonner';
 import { X, Check } from 'lucide-react';
+
+// --- FIREBASE ---
 import { db } from "../firebase/config";
 import { ref, onValue } from "firebase/database";
+
+// --- ASSETS ---
 import Oak from '../assets/oak.png';
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
+
+// --- FRAMER MOTION ---
+import { motion, AnimatePresence } from "framer-motion";
 
 // --- IMPORTAÇÃO DO SIMPLEBAR E CSS ---
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
 
-// Modal Component (Mantido idêntico)
+
+// --- COMPONENTE DE PREVIEW FLUTUANTE (PORTAL) ---
+const FloatingPreview = ({ hoveredData }) => {
+  if (!hoveredData) return null;
+
+  const { card, rect, showOnRight } = hoveredData;
+
+  // AJUSTES DE TAMANHO (Mantido grande conforme pedido anterior)
+  const PREVIEW_HEIGHT = 580;
+  const PREVIEW_WIDTH = 420;
+  const GAP = 8;
+  const SCREEN_PADDING = 15;
+
+  // CÁLCULO VERTICAL COM TRAVA (CLAMP)
+  const windowHeight = window.innerHeight;
+  let topPosition = rect.top + (rect.height / 2) - (PREVIEW_HEIGHT / 2);
+
+  if (topPosition + PREVIEW_HEIGHT > windowHeight - SCREEN_PADDING) {
+    topPosition = windowHeight - PREVIEW_HEIGHT - SCREEN_PADDING;
+  }
+  if (topPosition < SCREEN_PADDING) {
+    topPosition = SCREEN_PADDING;
+  }
+
+  // CÁLCULO HORIZONTAL
+  const leftPosition = showOnRight
+    ? rect.right + GAP
+    : rect.left - PREVIEW_WIDTH - GAP;
+
+  return createPortal(
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={card.token_address}
+        initial={{ opacity: 0, scale: 0.9, x: showOnRight ? -20 : 20 }}
+        animate={{ opacity: 1, scale: 1, x: 0 }}
+        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.08 } }}
+        transition={{ type: "spring", stiffness: 450, damping: 30 }}
+        style={{
+          position: 'fixed',
+          top: topPosition,
+          left: leftPosition,
+          width: PREVIEW_WIDTH,
+          height: PREVIEW_HEIGHT,
+          zIndex: 9999,
+          pointerEvents: 'none'
+        }}
+        className="flex items-center justify-center"
+      >
+        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.95)] border-[3px] border-[#202024] bg-[#18181B]">
+          <img src={card.imagem} alt="Preview" className="w-full h-full object-contain bg-[#131316]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/30 mix-blend-overlay"></div>
+        </div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  );
+};
+
+// --- COMPONENTE DE CARTA INDIVIDUAL ---
+const PokemonCardItem = ({ card, index, isSelected, onToggle, onHoverStart, onHoverEnd }) => {
+  const handleMouseEnter = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    onHoverStart(card, rect, index);
+  };
+
+  return (
+    <motion.div
+      layout
+      onClick={() => onToggle(card.token_address)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={onHoverEnd}
+      whileHover={{ scale: !isSelected ? 1.03 : 1 }}
+      animate={{ y: isSelected ? -8 : 0 }}
+      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      className={`
+        relative cursor-pointer rounded-xl bg-[#131316] group
+        ${isSelected ? '' : 'hover:brightness-110'}
+      `}
+      style={{
+        boxShadow: isSelected
+          ? "0px 0px 15px rgba(234, 179, 8, 0.5), 0 0 0 2px rgba(234, 179, 8, 1)"
+          : "0px 2px 5px rgba(0,0,0,0.4)"
+      }}
+    >
+      <div className="aspect-[3/4] rounded-xl overflow-hidden transition-colors group-hover:border-[#3F3F46]">
+        <img src={card.details?.image + "/high.png"} alt={card.nome} className="w-full h-full object-contain bg-[#131316]" />
+      </div>
+
+      <AnimatePresence>
+        {isSelected && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            className="absolute -top-2 -right-2 bg-yellow-500 text-black rounded-full p-1 shadow-md z-20 border-2 border-[#18181B]"
+          >
+            <Check size={12} strokeWidth={4} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+// --- MODAL DE RESGATE ---
 const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
   const [cards, setCards] = useState([]);
   const [selectedCards, setSelectedCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState(false);
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const [hoveredData, setHoveredData] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,9 +159,7 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
     try {
       const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/gift-options`);
       const data = await response.json();
-      if (data.cards) {
-        setCards(data.cards);
-      }
+      if (data.cards) setCards(data.cards);
     } catch (error) {
       console.error("Error fetching gift options:", error);
       toast.error("Failed to load gift options");
@@ -69,22 +181,14 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
   };
 
   const handleRedeem = async () => {
-    if (selectedCards.length === 0) {
-      toast.warning("Please select at least one card.");
-      return;
-    }
-
+    if (selectedCards.length === 0) return;
     setRedeeming(true);
     try {
       const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/redeem-gift`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          selectedCardIds: selectedCards
-        })
+        body: JSON.stringify({ userId, selectedCardIds: selectedCards })
       });
-
       if (response.ok) {
         toast.success("Gift redeemed successfully!");
         onRedeemSuccess();
@@ -94,126 +198,132 @@ const RedeemModal = ({ isOpen, onClose, userId, onRedeemSuccess }) => {
         toast.error(errorData.error || "Failed to redeem gift");
       }
     } catch (error) {
-      console.error("Redeem error:", error);
       toast.error("An error occurred while redeeming.");
     } finally {
       setRedeeming(false);
     }
   };
 
+  const onHoverStart = (card, rect, index) => {
+    const isMobile = window.innerWidth < 640;
+    let showOnRight = true;
+
+    if (isMobile) {
+      showOnRight = index % 2 === 0;
+    } else {
+      showOnRight = (index % 4) < 2;
+    }
+
+    setHoveredData({ card, rect, showOnRight });
+  };
+
+  const onHoverEnd = () => {
+    setHoveredData(null);
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 h-full lg:h-[800px] max-h-[90vh] w-full max-w-7xl justify-center">
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          // ALTERAÇÃO 1: max-w-4xl (antes era 5xl) para estreitar o modal e diminuir as cartas naturalmente
+          className="bg-[#18181B] w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] border border-[#26272B] relative overflow-hidden"
+          onScroll={() => setHoveredData(null)}
+        >
 
-        {/* Main Modal Content */}
-        <div className="bg-[#18181B] w-full lg:flex-1 max-w-4xl rounded-2xl border border-[#26272B] shadow-2xl overflow-hidden flex flex-col h-full">
-          {/* Header */}
-          <div className="p-4 sm:p-6 border-b border-[#26272B] flex justify-between items-start shrink-0">
-            <div className="flex-1 mr-4">
-              <h2 className="text-xl font-bold text-white mb-2">Select your Pokémons</h2>
-              <div className="flex items-center gap-3 bg-[#202024] p-3 rounded-lg border border-[#26272B]">
-                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden shrink-0">
-                  <img src={Oak} alt="Professor Oak" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">Professor OAK</p>
-                  <p className="text-xs text-gray-400 line-clamp-2 sm:line-clamp-none">Select three Pokémon gift cards to start your journey.</p>
-                </div>
+          {/* Header Mais Compacto */}
+          <div className="px-5 py-3 border-b border-[#26272B] flex justify-between items-center bg-[#18181B] shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full border border-[#26272B] overflow-hidden shrink-0">
+                <img src={Oak} alt="Professor Oak" className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <h2 className="text-md font-bold text-white leading-tight">Professor OAK</h2>
+                <p className="text-xs text-gray-400">Select <span className="text-yellow-500 font-bold">3 Pokémons</span> </p>
               </div>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-1">
-              <X size={24} />
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full hover:bg-[#26272B] transition-colors text-gray-400 hover:text-white cursor-pointer"
+            >
+              <X size={18} />
             </button>
           </div>
 
-          {/* Content Area (Grid Only) */}
-          <div className="flex-1 overflow-hidden">
-            {/* Nota: Aqui mantive o scroll padrão do SimpleBar para o modal, conforme seu código original */}
-            <SimpleBar style={{ height: '100%' }} className="p-4 sm:p-6">
-              {loading ? (
-                <div className="flex justify-center items-center h-40 text-gray-400">Loading cards...</div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                  {cards.map((card) => {
-                    const isSelected = selectedCards.includes(card.token_address);
-                    return (
-                      <div key={card.token_address} className="flex flex-col gap-2 sm:gap-3">
-                        <div
-                          className={`relative aspect-[3/4] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 border-2 ${isSelected ? 'border-yellow-500 ring-2 ring-yellow-500/20' : 'border-transparent hover:border-gray-600'}`}
-                          onClick={() => toggleCardSelection(card.token_address)}
-                          onMouseEnter={() => setHoveredCard(card)}
-                          onMouseLeave={() => setHoveredCard(null)}
-                        >
-                          <img src={card.imagem} alt={card.nome} className="w-full h-full object-contain bg-[#131316]" />
-                          {isSelected && (
-                            <div className="absolute top-2 right-2 bg-yellow-500 text-black rounded-full p-1">
-                              <Check size={12} strokeWidth={3} />
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => toggleCardSelection(card.token_address)}
-                          className={`w-full py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${isSelected
-                            ? 'bg-[#202024] text-white border border-[#26272B] flex items-center justify-center gap-2'
-                            : 'bg-[#202024] text-gray-400 border border-[#26272B] hover:bg-[#2A2A2E] hover:text-white'
-                            }`}
-                        >
-                          {isSelected ? <><Check size={14} /> Selected</> : 'Select'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </SimpleBar>
+          {/* Grid Area - Padding e Gap ajustados */}
+          <div
+            // ALTERAÇÃO 2: p-4 (antes era p-6) para ganhar espaço
+            className="flex-1 overflow-y-auto custom-scrollbar bg-[#131316]/50 p-4 flex flex-col justify-center"
+            onScroll={() => setHoveredData(null)}
+          >
+            {loading ? (
+              <div className="flex flex-col items-center justify-center h-full gap-4">
+                <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-gray-500 text-sm">Opening packs...</p>
+              </div>
+            ) : (
+              // ALTERAÇÃO 3: gap-3 (antes era gap-4) para aproximar um pouco mais e evitar scroll
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full content-center">
+                {cards.map((card, index) => (
+                  <PokemonCardItem
+                    key={card.token_address}
+                    card={card}
+                    index={index}
+                    isSelected={selectedCards.includes(card.token_address)}
+                    onToggle={toggleCardSelection}
+                    onHoverStart={onHoverStart}
+                    onHoverEnd={onHoverEnd}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Footer */}
-          <div className="p-4 sm:p-6 border-t border-[#26272B] flex justify-end shrink-0 bg-[#18181B]">
+          {/* Footer Mais Compacto */}
+          <div className="px-5 py-3 border-t border-[#26272B] bg-[#18181B] flex justify-between items-center shrink-0">
+            <div className="text-sm font-medium">
+              <span className={selectedCards.length === 3 ? "text-yellow-500 font-bold" : "text-gray-400"}>
+                {selectedCards.length} / 3 Selected
+              </span>
+            </div>
+
             <button
               onClick={handleRedeem}
               disabled={redeeming || selectedCards.length === 0}
-              className={`w-full sm:w-auto px-8 py-3 rounded-full font-bold text-black transition-all ${redeeming || selectedCards.length === 0
-                ? 'bg-gray-600 cursor-not-allowed opacity-50'
-                : 'bg-white hover:bg-gray-200 active:scale-95'
-                }`}
+              className={`
+                px-8 py-2 rounded-full font-bold text-xs sm:text-sm transition-all transform
+                ${redeeming || selectedCards.length === 0
+                  ? 'bg-[#26272B] text-gray-500 cursor-not-allowed'
+                  : 'bg-[#FAFAFA] text-black hover:bg-white hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(255,255,255,0.15)]'
+                }
+              `}
             >
-              {redeeming ? 'Redeeming...' : 'Redeem'}
+              {redeeming ? 'Claiming...' : 'Claim Cards'}
             </button>
           </div>
-        </div>
 
-        {/* Right: Preview Panel (Outside) */}
-        <div className={`hidden lg:flex w-[350px] transition-opacity duration-200 ${hoveredCard ? 'opacity-100' : 'opacity-0 pointer-events-none'} bg-[#18181B] rounded-2xl border border-[#26272B] shadow-2xl p-6 flex-col items-center justify-center h-full shrink-0`}>
-          {hoveredCard && (
-            <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300 w-full h-full justify-center">
-              <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden shadow-2xl border border-[#26272B]">
-                <img src={hoveredCard.imagem} alt={hoveredCard.nome} className="w-full h-full object-contain bg-[#09090B]" />
-              </div>
-            </div>
-          )}
-        </div>
-
+        </motion.div>
       </div>
-    </div>
+
+      <FloatingPreview hoveredData={hoveredData} />
+    </>
   );
 };
 
+// --- PÁGINA WALLETS ---
 function Wallets() {
   const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth >= 1024);
   const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
   const [giftRedeemed, setGiftRedeemed] = useState(false);
 
   const { currentUser } = useAuth();
-
-  // --- SESSÃO 1: EVM (Beezie / Flow) ---
   const { open: openReownModal } = useAppKit();
   const { address: evmWalletAddress, isConnected: isEvmConnected } = useAccount();
   const { disconnect: disconnectEvm } = useDisconnect();
-
-  // --- SESSÃO 2: SOLANA (Collectorcrypt) ---
   const { publicKey, connected: isSolanaConnected, disconnect: disconnectSolana } = useWallet();
   const { setVisible: setSolanaModalVisible } = useWalletModal();
   const solanaWalletAddress = publicKey ? publicKey.toBase58() : null;
@@ -254,14 +364,28 @@ function Wallets() {
 
   const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
-  // Estilos reutilizáveis
   const connectButtonStyle = "flex items-center gap-1 px-6 py-3.5 bg-transparent border border-[#3A3A3A] text-sm text-[#D9D3D3] font-semibold rounded-full cursor-pointer hover:bg-[#1F1F22] transition duration-200 active:scale-95 select-none disabled:cursor-not-allowed";
   const disconnectButtonStyle = "h-full flex items-center justify-center gap-2 px-6 py-3.5 border border-[#3F3F46] text-sm text-[#D9D3D3] font-semibold rounded-full cursor-pointer hover:bg-[#2A2A2E] hover:text-white transition duration-200 active:scale-95";
   const inputStyle = "w-full text-sm bg-transparent border border-[#3F3F46] rounded-xl px-4 py-3.5 text-white focus:outline-none transition-colors placeholder:text-[#9DA3AE]";
 
   return (
-    // FIX 1: Container travado com h-screen e overflow-hidden
     <div className="bg-[#18181B] h-screen w-full font-inter text-white flex overflow-hidden">
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(0, 0, 0, 0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #3F3F46;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #52525B;
+        }
+      `}</style>
 
       <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
 
@@ -273,18 +397,13 @@ function Wallets() {
         <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
       </button>
 
-      {/* FIX 2: Spacer fantasma para layout Flexbox */}
       <div
         className={`hidden lg:block flex-shrink-0 bg-transparent transition-[width] duration-300 ease-in-out h-full ${isNavbarOpen ? 'w-[260px]' : 'w-0'}`}
         aria-hidden="true"
       />
 
-      {/* FIX 3: Área de conteúdo Flexível */}
       <div className="flex-1 min-w-0 h-full relative flex flex-col">
-
-        {/* FIX 4: SimpleBar com a classe login-page-scrollbar */}
         <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
-
           <main className="p-4 sm:p-8 w-full min-h-full">
             <div className="max-w-4xl mx-auto space-y-8 pb-20">
 
