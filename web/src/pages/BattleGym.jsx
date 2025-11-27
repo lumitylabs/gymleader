@@ -13,6 +13,28 @@ import BattlePokeball from "../assets/battle-pokeball.png";
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 import BattleCardBack from "../assets/battle-cardback.png";
 
+const LoadingLog = ({ messages }) => {
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex(prev => (prev + 1) % messages.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [messages]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-xl backdrop-blur-md border bg-gray-800/40 border-gray-700 flex items-center gap-3"
+        >
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <p className="text-sm md:text-base text-gray-300">{messages[index]}</p>
+        </motion.div>
+    );
+};
+
 function BattleGym() {
     const { gymId } = useParams();
     const { currentUser } = useAuth();
@@ -28,6 +50,8 @@ function BattleGym() {
     const [battleContext, setBattleContext] = useState(null);
     const [hoveredCard, setHoveredCard] = useState(null);
     // Removed activePokemon state
+
+    const messagesEndRef = useRef(null);
 
     const scrollRef = useRef(null);
 
@@ -99,57 +123,77 @@ function BattleGym() {
         return () => unsubscribe();
     }, [currentUser]);
 
-    // Auto-scroll battle log
+    // Auto-scroll battle log (CORRIGIDO)
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        if (messagesEndRef.current) {
+            // Um pequeno delay garante que a animação de entrada não conflite com o scroll
+            setTimeout(() => {
+                messagesEndRef.current.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'end'
+                });
+            }, 100);
         }
-    }, [battleLog]);
+    }, [battleLog, playerInput, sendingTurn, battleStatus]);
 
     const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
-    const LoadingLog = ({ messages }) => {
-        const [index, setIndex] = useState(0);
 
-        useEffect(() => {
-            const interval = setInterval(() => {
-                setIndex(prev => (prev + 1) % messages.length);
-            }, 5000);
-            return () => clearInterval(interval);
-        }, [messages]);
-
-        return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 rounded-xl backdrop-blur-md border bg-gray-800/40 border-gray-700 flex items-center gap-3"
-            >
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <p className="text-sm md:text-base text-gray-300">{messages[index]}</p>
-            </motion.div>
-        );
-    };
 
     const [messageQueue, setMessageQueue] = useState([]);
     const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+    const [waitingForInteraction, setWaitingForInteraction] = useState(false);
     const [gameOverState, setGameOverState] = useState(null); // { winner: string, type: 'win' | 'loss' }
+    const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
     // Process Message Queue
     useEffect(() => {
-        if (messageQueue.length > 0 && !isProcessingQueue) {
+        if (messageQueue.length > 0 && !isProcessingQueue && !waitingForInteraction) {
             setIsProcessingQueue(true);
             const nextMessage = messageQueue[0];
+
+            // Handle Game Over special message
+            if (nextMessage.type === 'game_over') {
+                setGameOverState(nextMessage.data);
+                setIsGameOverModalOpen(true);
+
+                // Show toast here to prevent spoilers
+                if (nextMessage.data.type === 'win') {
+                    toast.success("You won the badge!");
+                } else {
+                    toast.error("You were defeated!");
+                }
+
+                setMessageQueue(prev => prev.slice(1));
+                setIsProcessingQueue(false);
+                return;
+            }
 
             // Add to battle log
             setBattleLog(prev => [...prev, nextMessage]);
 
-            // Remove from queue after delay
-            setTimeout(() => {
-                setMessageQueue(prev => prev.slice(1));
+            // Remove from queue
+            setMessageQueue(prev => prev.slice(1));
+
+            // If it's a narrative or referee message, wait for interaction
+            // BUT skip waiting if it's the "Judge has connected" message
+            const isJudgeMessage = nextMessage.message && nextMessage.message.includes("The judge has connected");
+
+            if ((nextMessage.type === 'narrative' || nextMessage.type === 'referee') && !isJudgeMessage) {
+                setWaitingForInteraction(true);
                 setIsProcessingQueue(false);
-            }, 1500); // 1.5s delay between messages
+            } else {
+                // For other types, proceed automatically after a short delay
+                setTimeout(() => {
+                    setIsProcessingQueue(false);
+                }, 500);
+            }
         }
-    }, [messageQueue, isProcessingQueue]);
+    }, [messageQueue, isProcessingQueue, waitingForInteraction]);
+
+    const handleContinue = () => {
+        setWaitingForInteraction(false);
+    };
 
     // Debug: Log options to console
     useEffect(() => {
@@ -210,11 +254,6 @@ function BattleGym() {
                 { type: 'narrative', message: data.leaderMoveNarrative }
             ]);
 
-            // Add options immediately after the last narrative (or queue them too if we want delay)
-            // For options, it's better to show them after the narrative is done.
-            // But since our queue logic adds to battleLog one by one, we can just queue the options too?
-            // The current UI renders options only if it's the last item. 
-            // So we should queue options as a special log type.
             if (data.playerOptions) {
                 queueMessages([{ type: 'options', options: data.playerOptions }]);
             }
@@ -293,19 +332,19 @@ function BattleGym() {
                 setBattleStatus('ended');
                 // Check if the challenger (player) won by comparing winner with challengerId
                 const isWin = data.winner === data.challengerId;
-                setGameOverState({
-                    type: isWin ? 'win' : 'loss',
-                    winner: data.winner
-                });
+
+                // Queue Game Over Event instead of setting state directly
+                queueMessages([{
+                    type: 'game_over',
+                    data: {
+                        type: isWin ? 'win' : 'loss',
+                        winner: data.winner
+                    }
+                }]);
 
                 // Queue end message
                 queueMessages([{ type: 'system', message: isWin ? 'Victory! You defeated the Gym Leader!' : 'Defeat! You were overwhelmed.' }]);
 
-                if (isWin) {
-                    toast.success("You won the badge!");
-                } else {
-                    toast.error("You were defeated!");
-                }
             } else if (data.playerOptions) {
                 queueMessages([{ type: 'options', options: data.playerOptions }]);
             }
@@ -419,9 +458,20 @@ function BattleGym() {
 
                             {/* Battle Content */}
                             <div className="relative z-10 flex-1 flex flex-col p-6">
-                                <div className="flex items-center gap-2 mb-4">
-                                    <img src={BattlePokeball} className="w-10 h-10" alt="Battle" />
-                                    <h2 className="font-bold text-xl">Battle Log</h2>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <img src={BattlePokeball} className="w-10 h-10" alt="Battle" />
+                                        <h2 className="font-bold text-xl">Battle Log</h2>
+                                    </div>
+                                    {/* Show Result Button (if game over but modal closed) */}
+                                    {gameOverState && !isGameOverModalOpen && (
+                                        <button
+                                            onClick={() => setIsGameOverModalOpen(true)}
+                                            className="text-xs bg-white/10 hover:bg-white/20 border border-white/20 px-3 py-1 rounded-full transition-colors"
+                                        >
+                                            Show Result
+                                        </button>
+                                    )}
                                 </div>
 
                                 {battleStatus === 'idle' ? (
@@ -467,7 +517,7 @@ function BattleGym() {
                                                                     key={index}
                                                                     initial={{ opacity: 0, y: 20 }}
                                                                     animate={{ opacity: 1, y: 0 }}
-                                                                    className="bg-[#202024]/90 backdrop-blur-md border border-[#26272B] rounded-xl p-6 mt-4"
+                                                                    className="bg-black/60 backdrop-blur-md border border-gray-700 rounded-xl p-6 mt-4"
                                                                 >
                                                                     <div className="flex items-center justify-between mb-4">
                                                                         <h3 className="font-bold text-white">
@@ -519,6 +569,7 @@ function BattleGym() {
                                                             key={index}
                                                             initial={{ opacity: 0, y: 20 }}
                                                             animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ duration: 0.5, ease: "easeOut" }}
                                                             className={`p-4 rounded-xl backdrop-blur-md border ${log.type === 'player' ? 'bg-blue-500/20 border-blue-500/50 ml-auto max-w-[80%]' :
                                                                 log.type === 'narrative' ? 'bg-black/60 border-gray-700' :
                                                                     'bg-gray-800/40 border-gray-700'
@@ -530,13 +581,30 @@ function BattleGym() {
                                                 })
                                                 }
 
+                                                {/* Waiting for Interaction Indicator */}
+                                                {waitingForInteraction && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        className="flex justify-center w-full py-2"
+                                                    >
+                                                        <button
+                                                            onClick={handleContinue}
+                                                            className="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white text-xs px-4 py-2 rounded-full flex items-center gap-2 transition-all animate-pulse cursor-pointer"
+                                                        >
+                                                            <span>Click to continue</span>
+                                                            <ArrowLeft className="-rotate-90" size={12} />
+                                                        </button>
+                                                    </motion.div>
+                                                )}
+
                                                 {/* Turn 1 Input (Text) */}
-                                                {/* Show only if no options are present (meaning it's turn 1 or we are waiting for options) AND not sending AND not processing queue */}
-                                                {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && (
+                                                {/* Show only if no options are present (meaning it's turn 1 or we are waiting for options) AND not sending AND not processing queue AND not waiting for interaction */}
+                                                {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && !waitingForInteraction && (
                                                     <motion.div
                                                         initial={{ opacity: 0, y: 20 }}
                                                         animate={{ opacity: 1, y: 0 }}
-                                                        className="bg-[#202024]/90 backdrop-blur-md border border-[#26272B] rounded-xl p-6 mt-4"
+                                                        className="bg-black/60 backdrop-blur-md border border-gray-700 rounded-xl p-6 mt-4"
                                                     >
                                                         <div className="flex items-center justify-between mb-4">
                                                             <h3 className="font-bold text-white">
@@ -580,13 +648,14 @@ function BattleGym() {
 
 
                                             </div>
+                                            <div ref={messagesEndRef} />
                                         </SimpleBar>
                                     </div>
                                 )}
 
                                 {/* Game Over Overlay */}
                                 <AnimatePresence>
-                                    {gameOverState && (
+                                    {gameOverState && isGameOverModalOpen && (
                                         <motion.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
@@ -599,6 +668,17 @@ function BattleGym() {
                                                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                                                 className="relative bg-[#18181B] border border-[#27272A] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl overflow-hidden"
                                             >
+                                                {/* Close Button */}
+                                                <button
+                                                    onClick={() => setIsGameOverModalOpen(false)}
+                                                    className="absolute top-4 right-4 text-gray-400 hover:text-white z-20"
+                                                >
+                                                    <div className="relative w-6 h-6">
+                                                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-current rotate-45 transform -translate-y-1/2"></div>
+                                                        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-current -rotate-45 transform -translate-y-1/2"></div>
+                                                    </div>
+                                                </button>
+
                                                 {/* Background Glow */}
                                                 <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-gradient-to-b ${gameOverState.type === 'win' ? 'from-yellow-500/20' : 'from-red-500/20'} to-transparent opacity-50 blur-3xl pointer-events-none`} />
 
