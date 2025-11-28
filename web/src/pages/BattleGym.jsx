@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Trophy, Zap } from 'lucide-react';
+// 1. ADICIONADO: MapPin e Swords nos imports
+import { ArrowLeft, Shield, Trophy, Zap, MapPin, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
@@ -14,7 +15,7 @@ import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 import BattleCardBack from "../assets/battle-cardback.png";
 import HoloBadge from "../components/HoloBadge";
 
-// --- IMPORTS DE ASSETS (PREVIEW E LOGOS) ---
+// ... (Logos e Assets) ...
 import PsaLogo from "../assets/graders/psa.png";
 import CgcLogo from "../assets/graders/cgc.png";
 import SgcLogo from "../assets/graders/sgc.png";
@@ -28,9 +29,7 @@ const GRADER_IMAGES = {
     psa: PsaLogo, cgc: CgcLogo, sgc: SgcLogo, tag: TagLogo
 };
 
-/* =========================================================================
-   HELPER: NORMALIZAÇÃO E BUSCA DE DADOS
-   ========================================================================= */
+// ... (Funções auxiliares mantidas iguais) ...
 const getPokemonDataByName = (tagName, userTeam, gymTeam) => {
     if (!tagName) return null;
     let processedTag = tagName.endsWith("'s") ? tagName.slice(0, -2) : tagName;
@@ -48,9 +47,6 @@ const getPokemonDataByName = (tagName, userTeam, gymTeam) => {
     return null;
 };
 
-/* =========================================================================
-   COMPONENTE: MESSAGE RENDERER
-   ========================================================================= */
 const MessageRenderer = ({ text, userTeam, gymTeam, onPlaySound }) => {
     if (!text) return null;
     const parts = text.split(/(@(?:Enemy_)?[\w\u00C0-\u00FF']+)/g);
@@ -98,9 +94,6 @@ const MessageRenderer = ({ text, userTeam, gymTeam, onPlaySound }) => {
     );
 };
 
-/* =========================================================================
-   COMPONENTE: LOADING LOG
-   ========================================================================= */
 const LoadingLog = ({ messages }) => {
     const [index, setIndex] = useState(0);
     useEffect(() => {
@@ -120,53 +113,37 @@ const LoadingLog = ({ messages }) => {
     );
 };
 
-/* =========================================================================
-   COMPONENTE PRINCIPAL: BATTLE GYM
-   ========================================================================= */
 function BattleGym() {
     const { gymId } = useParams();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    // Layout State
     const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth >= 1024);
-
-    // Data State
     const [gymData, setGymData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [userTeam, setUserTeam] = useState([]);
     const [userGym, setUserGym] = useState(null);
-
-    // Battle State
     const [battleStatus, setBattleStatus] = useState('idle');
     const [battleLog, setBattleLog] = useState([]);
     const [battleContext, setBattleContext] = useState(null);
     const [sendingTurn, setSendingTurn] = useState(false);
-
-    // Interaction State
     const [playerInput, setPlayerInput] = useState("");
     const [hoveredIndex, setHoveredIndex] = useState(null);
-
-    // Mention State
     const [showMentions, setShowMentions] = useState(false);
     const [mentionFilter, setMentionFilter] = useState("");
     const [mentionCursorIndex, setMentionCursorIndex] = useState(0);
-
-    // Refs
     const textareaRef = useRef(null);
     const backdropRef = useRef(null);
     const messagesEndRef = useRef(null);
     const scrollRef = useRef(null);
     const audioCache = useRef({});
-
-    // Queue State
     const [messageQueue, setMessageQueue] = useState([]);
     const [isProcessingQueue, setIsProcessingQueue] = useState(false);
     const [waitingForInteraction, setWaitingForInteraction] = useState(false);
     const [gameOverState, setGameOverState] = useState(null);
     const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
-    /* --- AUDIO --- */
+    // ... (Efeitos e lógica de áudio/queue mantidos) ...
     const playPokemonSound = (pokedexId) => {
         if (!pokedexId) return;
         let audio = audioCache.current[pokedexId];
@@ -191,7 +168,6 @@ function BattleGym() {
         });
     }, [userTeam, gymData]);
 
-    /* --- DATA FETCHING --- */
     useEffect(() => {
         const gymRef = ref(db, `gyms/${gymId}`);
         const unsubscribe = onValue(gymRef, (snapshot) => {
@@ -220,7 +196,6 @@ function BattleGym() {
         return () => unsubscribe();
     }, [currentUser]);
 
-    /* --- QUEUE & SCROLL --- */
     useEffect(() => {
         if (messagesEndRef.current) {
             setTimeout(() => messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
@@ -255,7 +230,6 @@ function BattleGym() {
         }
     }, [messageQueue, isProcessingQueue, waitingForInteraction]);
 
-    /* --- HELPERS --- */
     const getMentionedPokemon = (text) => {
         if (!text || !userTeam.length) return userTeam;
         const normalizedText = text.toLowerCase();
@@ -278,7 +252,6 @@ function BattleGym() {
         return getMentionedPokemon(lastNarrative?.message);
     })();
 
-    /* --- INPUT HANDLERS --- */
     const handleInputChange = (e) => {
         const value = e.target.value;
         const selectionStart = e.target.selectionStart;
@@ -350,7 +323,6 @@ function BattleGym() {
         if (textareaRef.current) textareaRef.current.focus();
     };
 
-    /* --- BATTLE LOGIC --- */
     const startBattle = async () => {
         if (!currentUser) return toast.error("You must be logged in");
         if (!userGym || !userGym.gymName) {
@@ -457,13 +429,11 @@ function BattleGym() {
                 <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
             </button>
 
-            {/* --- CORREÇÃO DO LAYOUT SHIFT --- */}
             <div
                 className={`hidden lg:block flex-shrink-0 bg-transparent transition-[width] duration-300 ease-in-out h-full ${isNavbarOpen ? 'w-[260px]' : 'w-0'}`}
                 aria-hidden="true"
             />
 
-            {/* Container Principal */}
             <div className="flex-1 min-w-0 h-full relative flex flex-col">
                 <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
                     <main className="p-4 sm:p-8 flex flex-col items-center">
@@ -477,11 +447,45 @@ function BattleGym() {
                                     </div>
                                     <div className="flex-1 text-center md:text-left">
                                         <h1 className="text-xl font-semibold">{gymData?.gymName || 'Gym Name'}</h1>
-                                        <div className="flex justify-center md:justify-start gap-2 text-gray-400 text-sm mt-1">
-                                            <span>By @{gymData?.leaderName}</span>
-                                            <span>•</span>
-                                            <span>{gymData?.location || 'PvP'}</span>
+
+                                        {/* --- LÓGICA DE LOCALIZAÇÃO E TWITTER ATUALIZADA --- */}
+                                        <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 text-gray-400 text-sm mt-1">
+                                            {/* USER/TWITTER */}
+                                            <span>
+                                                By{' '}
+                                                {gymData?.twitter ? (
+                                                    <a
+                                                        href={`https://x.com/${gymData.twitter.replace(/^@/, '')}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="hover:underline hover:underline-offset-2 text-blue-400 transition-colors"
+                                                    >
+                                                        @{gymData?.leaderName}
+                                                    </a>
+                                                ) : (
+                                                    <span>@{gymData?.leaderName}</span>
+                                                )}
+                                            </span>
+
+                                            <span className="hidden md:inline text-gray-400">•</span>
+
+                                            {/* LOCATION (MapPin) OR PVP (Swords) */}
+                                            <div className="flex items-center gap-1">
+                                                {gymData?.location && gymData?.location !== 'PvP' ? (
+                                                    <MapPin color="#FFADAD" size={14} strokeWidth={2} />
+                                                ) : (
+                                                    <Swords color="#FFADAD" size={14} strokeWidth={2} />
+                                                )}
+                                                <span>
+                                                    {gymData?.location && gymData?.location !== 'PvP'
+                                                        ? `${gymData.location}${gymData.region ? `, ${gymData.region}` : ''}`
+                                                        : 'PvP'
+                                                    }
+                                                </span>
+                                            </div>
                                         </div>
+                                        {/* -------------------------------------------------- */}
+
                                         <div className="flex justify-center md:justify-start gap-4 mt-3">
                                             <div className="flex items-center gap-1 text-yellow-500">
                                                 <span className="text-sm font-bold">Difficult</span>
@@ -493,9 +497,7 @@ function BattleGym() {
                                             </div>
                                         </div>
 
-                                        {/* --- POKEMON DO LÍDER NO HEADER (VERSÃO CLÁSSICA RESTAURADA) --- */}
-                                        {/* Sem bg rounded, com silhueta quando idle, revela quando ativo */}
-                                        <div className="flex items-center justify-center md:justify-start gap-2 mt-4">
+                                        <div className="flex items-center justify-center md:justify-start gap-2 mt-3">
                                             {gymData?.team?.map((poke, i) => (
                                                 <div
                                                     key={i}
@@ -517,11 +519,9 @@ function BattleGym() {
                                                 </div>
                                             ))}
                                         </div>
-                                        {/* -------------------------------------------------------- */}
 
                                     </div>
 
-                                    {/* --- BADGE SECTION (NOVA VERSÃO PRESERVADA) --- */}
                                     <div className="flex items-center relative group mt-2 md:mt-0">
                                         <div className="relative z-20 w-28 h-28 md:w-32 md:h-32 shrink-0 rounded-2xl overflow-hidden bg-gradient-to-r from-[#FFFFFF] to-[#868686] shadow-[0_8px_16px_rgba(0,0,0,0.5)] flex items-center justify-center">
                                             {gymData?.badgeImage ? (
@@ -548,15 +548,11 @@ function BattleGym() {
                                             </div>
                                         </div>
                                     </div>
-                                    {/* -------------------------------------------------------- */}
-
                                 </div>
                             </div>
 
                             {/* GRID */}
                             <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:h-[600px]">
-
-                                {/* RIGHT COL (Mobile First) */}
                                 <div className="flex flex-col gap-4 order-1 lg:order-2 lg:h-full">
                                     <div className="bg-[#202024] rounded-2xl p-6 h-auto lg:h-[48%] flex flex-col min-h-0 shrink-0">
                                         <h3 className="font-semibold text-lg mb-3 shrink-0">Gym Description</h3>
@@ -565,7 +561,6 @@ function BattleGym() {
                                         </div>
                                     </div>
 
-                                    {/* OPPONENT TEAM - FIXED PREVIEW */}
                                     <div className="bg-[#202024] rounded-2xl p-6 h-auto lg:flex-1 flex flex-col relative lg:overflow-visible">
                                         <h3 className="font-semibold text-lg mb-3 shrink-0">Opponent's Team</h3>
                                         <div className="w-full flex-1 flex items-center justify-center">
@@ -650,7 +645,6 @@ function BattleGym() {
                                     </div>
                                 </div>
 
-                                {/* LEFT COL (Battle Log) */}
                                 <div className="bg-[#202024] rounded-2xl overflow-hidden relative flex flex-col order-2 lg:order-1 lg:col-span-2 h-[600px] lg:h-full">
                                     <div className="absolute inset-0 z-0 opacity-40">
                                         <img src={gymData?.gymImage || '/placeholder-gym.png'} alt="BG" className="w-full h-full object-cover" />

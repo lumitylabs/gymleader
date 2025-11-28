@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+// 1. Adicionado 'Swords' à importação
+import { Search, MapPin, ChevronLeft, ChevronRight, Swords } from 'lucide-react';
 import { db } from "../firebase/config";
 import { ref, onValue } from "firebase/database";
 import Sidebar from "../components/ui/general/Sidebar";
@@ -160,13 +161,13 @@ function FilterBar({ activeCategory, onCategorySelect, categories }) {
 const GymCardSkeleton = () => (
   <div className="border border-[#26272B] rounded-3xl p-6 flex flex-col md:flex-row gap-6 animate-pulse min-h-[200px]">
 
-    {/* Bloco da Imagem: Usando #2A2A2E para combinar com o BadgeCardSkeleton */}
+    {/* Bloco da Imagem */}
     <div className="w-44 h-44 bg-[#2A2A2E] rounded-[32px] flex-shrink-0 mx-auto md:mx-0" />
 
     {/* Bloco de Conteúdo */}
     <div className="flex-1 flex flex-col justify-between py-1">
       <div className="space-y-3">
-        {/* Título: Usando #242427 para combinar com as linhas do BadgeCardSkeleton */}
+        {/* Título */}
         <div className="h-7 bg-[#242427] rounded w-1/3" />
 
         {/* Subtítulo */}
@@ -179,7 +180,7 @@ const GymCardSkeleton = () => (
         </div>
       </div>
 
-      {/* Time Pokémon: Mantendo o tom das linhas de texto */}
+      {/* Time Pokémon */}
       <div className="flex items-center justify-center md:justify-start gap-2 pt-4">
         {[...Array(3)].map((_, i) => (
           <div key={i} className="w-10 h-10 bg-[#242427] rounded-full" />
@@ -218,9 +219,8 @@ function Battle() {
     return () => unsubscribe();
   }, []);
 
-  // Função auxiliar para definir a prioridade de ordenação
   const getLocationPriority = (location) => {
-    if (!location) return 5; // Sem localização -> PvP (Último)
+    if (!location) return 5;
 
     const loc = location.toLowerCase().trim();
 
@@ -229,11 +229,9 @@ function Battle() {
     if (loc === 'victory road') return 2;
     if (loc === 'gym challenge') return 1;
 
-    // Qualquer outra região (Kanto, Johto, etc) vem primeiro
     return 1;
   };
 
-  // Gera as categorias dinamicamente baseadas nos dados existentes
   const dynamicCategories = useMemo(() => {
     const fixedCategories = ["Gym Challenge", "Victory Road", "Elite Four", "PvP"];
     const locations = new Set();
@@ -244,7 +242,6 @@ function Battle() {
       }
     });
 
-    // Retorna: All + Regiões (alfabético) + Fixos
     return ["All", ...Array.from(locations).sort(), ...fixedCategories];
   }, [gyms]);
 
@@ -259,19 +256,16 @@ function Battle() {
     "giovanni"
   ];
 
-  // Helper para normalizar o nome
   const normalizeName = (name) => name ? name.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
 
   const filteredGyms = gyms
     .filter(gym => {
-      // 1. Filtro de Busca
       const matchesSearch =
         gym.gymName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         gym.leaderName?.toLowerCase().includes(searchTerm.toLowerCase());
 
       if (!matchesSearch) return false;
 
-      // 2. Filtro por Aba (Location)
       if (activeTab === "All") return true;
 
       const gymLocation = gym.location || "";
@@ -283,7 +277,6 @@ function Battle() {
       return gymLocation === activeTab;
     })
     .sort((a, b) => {
-      // A. Prioridade de Localização
       const priorityA = getLocationPriority(a.location);
       const priorityB = getLocationPriority(b.location);
 
@@ -291,7 +284,6 @@ function Battle() {
         return priorityA - priorityB;
       }
 
-      // B. Prioridade Específica dos Líderes (Kanto Order)
       const nameA = normalizeName(a.leaderName);
       const nameB = normalizeName(b.leaderName);
 
@@ -305,7 +297,6 @@ function Battle() {
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
 
-      // C. Desempate padrão
       return (a.gymName || "").localeCompare(b.gymName || "");
     });
 
@@ -408,18 +399,22 @@ function Battle() {
                               ) : (
                                 <span className="text-[#A2A2AB]">{gym.leaderName || 'Unknown'}</span>
                               )}</span>
-                              {gym.location ? <div className="">
-                                <span className="w-1 h-1 bg-[#A2A2AB] rounded-full"></span>
-                                <div className="flex items-center gap-1">
+
+                              <span className="hidden md:inline text-gray-400">•</span>
+                              {/* 2. Ícone condicional para PvP (Swords) ou Localização (MapPin) */}
+                              <div className="flex items-center gap-1">
+                                {gym.location ? (
                                   <MapPin color="#FFADAD" size={12} strokeWidth={2} />
-                                  <span>
-                                    {gym.location
-                                      ? `${gym.location}${gym.region ? `, ${gym.region}` : ''}`
-                                      : 'PvP'
-                                    }
-                                  </span>
-                                </div>
-                              </div> : <></>}
+                                ) : (
+                                  <Swords color="#FFADAD" size={12} strokeWidth={2} />
+                                )}
+                                <span>
+                                  {gym.location
+                                    ? `${gym.location}${gym.region ? `, ${gym.region}` : ''}`
+                                    : 'PvP'
+                                  }
+                                </span>
+                              </div>
 
                             </div>
                           </div>
