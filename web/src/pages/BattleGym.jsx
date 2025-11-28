@@ -591,7 +591,7 @@ function BattleGym() {
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={startBattle}
-                                            className="bg-[#FACC15] hover:bg-[#EAB308] text-black font-black text-2xl py-4 px-12 rounded-xl shadow-lg flex items-center gap-3"
+                                            className="bg-[#FACC15] hover:bg-[#EAB308] text-[#131316] font-black text-2xl py-4 px-12 rounded-full shadow-lg flex items-center gap-3 cursor-pointer"
                                         >
                                             <Zap size={32} fill="currentColor" />
                                             FIGHT!
