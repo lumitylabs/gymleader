@@ -578,7 +578,8 @@ function BattleGym() {
                                                     return card ? (
                                                         <div
                                                             key={i}
-                                                            className={`group relative w-full aspect-[2.5/3.5] cursor-pointer isolate hover:z-50`}
+                                                            className="group relative w-full aspect-[2.5/3.5] cursor-pointer"
+                                                            style={{ perspective: "1000px" }}
                                                             onMouseEnter={() => !isHidden && setHoveredIndex(i)}
                                                             onMouseLeave={() => setHoveredIndex(null)}
                                                             onClick={() => {
@@ -588,12 +589,50 @@ function BattleGym() {
                                                                 }
                                                             }}
                                                         >
-                                                            <img
-                                                                src={isHidden ? BattleCardBack : (card.original ? `${card.original}/high.png` : card.image)}
-                                                                alt={card.name}
-                                                                className={`w-full h-full object-cover rounded-lg transition-transform duration-300 ${!isHidden ? 'group-hover:scale-105' : ''} shadow-lg relative z-10 will-change-transform`}
-                                                                onError={(e) => { e.target.onerror = null; if (!isHidden) e.target.src = card.image || `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`; }}
-                                                            />
+                                                            <motion.div
+                                                                initial={{ rotateY: 0 }}
+                                                                animate={{ rotateY: isHidden ? 0 : 180 }}
+                                                                transition={{
+                                                                    duration: 0.6,
+                                                                    delay: i * 0.2,
+                                                                    type: "spring",
+                                                                    stiffness: 260,
+                                                                    damping: 20
+                                                                }}
+                                                                className={`w-full h-full relative transition-transform duration-300 ${!isHidden ? 'group-hover:scale-105' : ''}`}
+                                                                style={{ transformStyle: "preserve-3d" }}
+                                                            >
+                                                                {/* FRENTE DA CARTA (Pokemon) - Começa "atrás" (180deg) */}
+                                                                <div
+                                                                    className="absolute inset-0 rounded-lg overflow-hidden shadow-lg"
+                                                                    style={{
+                                                                        backfaceVisibility: "hidden",
+                                                                        transform: "rotateY(180deg)"
+                                                                    }}
+                                                                >
+                                                                    <img
+                                                                        src={card.original ? `${card.original}/high.png` : card.image}
+                                                                        alt={card.name}
+                                                                        className="w-full h-full object-cover"
+                                                                        onError={(e) => {
+                                                                            e.target.onerror = null;
+                                                                            e.target.src = card.image || `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`;
+                                                                        }}
+                                                                    />
+                                                                </div>
+
+                                                                {/* VERSO DA CARTA (Capa) - Começa visível (0deg) */}
+                                                                <div
+                                                                    className="absolute inset-0 rounded-lg overflow-hidden shadow-lg"
+                                                                    style={{ backfaceVisibility: "hidden" }}
+                                                                >
+                                                                    <img
+                                                                        src={BattleCardBack}
+                                                                        alt="Hidden"
+                                                                        className="w-full h-full object-cover"
+                                                                    />
+                                                                </div>
+                                                            </motion.div>
 
                                                             <AnimatePresence>
                                                                 {isHovered && !isHidden && (
@@ -645,10 +684,8 @@ function BattleGym() {
                                     <div className="absolute inset-0 z-0 opacity-40">
                                         <img src={gymData?.gymImage || '/placeholder-gym.png'} alt="BG" className="w-full h-full object-cover" />
                                     </div>
-                                    {/* MUDANÇA AQUI: Removido p-6 do pai para que a scrollbar possa ir até a borda */}
                                     <div className="relative z-10 flex-1 flex flex-col">
 
-                                        {/* Header com padding aplicado individualmente */}
                                         <div className="px-6 pt-6 flex justify-between items-center shrink-0">
                                             <div className="flex items-center">
                                                 <img src={BattlePokeball} className="w-10 h-10" alt="Battle" />
@@ -658,9 +695,7 @@ function BattleGym() {
                                         </div>
 
                                         {battleStatus === 'idle' ? (
-                                            /* Adicionado p-6 aqui para compensar a remoção no pai */
                                             <div className="flex-1 flex items-center justify-center relative p-6 pt-0">
-                                                {/* Camada de Fundo (Vinheta) para destacar o botão do cenário */}
                                                 <div className="absolute pointer-events-none w-[400px] h-[200px] bg-black/40 blur-3xl rounded-full" />
 
                                                 <motion.button
@@ -669,42 +704,22 @@ function BattleGym() {
                                                     onClick={startBattle}
                                                     className="
                                                         relative group overflow-hidden
-                                                        /* Gradiente mais rico e dourado */
                                                         bg-gradient-to-b from-[#fbbf24] via-[#f59e0b] to-[#d97706]
-                                                        
-                                                        /* Texto */
                                                         text-[#451a03] font-black text-3xl tracking-widest italic
-                                                        
-                                                        /* Tamanho e Forma */
                                                         py-6 px-14 rounded-2xl
-                                                        
-                                                        /* Borda inferior para dar volume 3D (mais escura) */
                                                         border-b-[6px] border-[#92400e]
-                                                        
-                                                        /* Iluminação: 
-                                                            1. Sombra interna branca no topo (luz)
-                                                            2. Glow externo dourado
-                                                        */
                                                         shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_8px_20px_rgba(245,158,11,0.5)]
                                                         hover:shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_15px_30px_rgba(245,158,11,0.7)]
-                                                        
                                                         transition-all duration-300
                                                         flex items-center gap-4 z-10
                                                         cursor-pointer
                                                     "
                                                 >
-                                                    {/* Brilho Especular (reflexo de vidro no topo) - Ajustado para rounded-t-2xl */}
                                                     <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl pointer-events-none" />
-
-                                                    {/* Animação de Shimmer (Feixe de luz passando) */}
                                                     <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent z-0 w-full h-full skew-x-12" />
-
-                                                    {/* Ícone */}
                                                     <div className="relative z-10 drop-shadow-sm filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]">
                                                         <Zap fill="#451a03" strokeWidth={0} size={32} />
                                                     </div>
-
-                                                    {/* Texto */}
                                                     <span className="relative z-10 drop-shadow-[0_2px_0_rgba(255,255,255,0.2)]">
                                                         FIGHT!
                                                     </span>
@@ -718,7 +733,6 @@ function BattleGym() {
                                                     className="battle-scrollbar"
                                                     autoHide={false}
                                                 >
-                                                    {/* Padding aplicado aqui dentro para o conteúdo não colar na borda, mas a scrollbar sim */}
                                                     <div className="space-y-4 px-6 pb-6 pt-2">
                                                         {battleLog.map((log, index) => {
                                                             if (log.type === 'options') {
