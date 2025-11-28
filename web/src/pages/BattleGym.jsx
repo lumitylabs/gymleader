@@ -246,6 +246,7 @@ function BattleGym() {
     };
 
     const relevantPokemon = (() => {
+        return userTeam; //always return user team
         const lastNarrative = battleLog.slice().reverse().find(l => l.type === 'narrative' || l.type === 'referee');
         return getMentionedPokemon(lastNarrative?.message);
     })();
@@ -269,6 +270,10 @@ function BattleGym() {
             }
         }
         setShowMentions(false);
+    };
+
+    const handleScroll = (e) => {
+        if (backdropRef.current) backdropRef.current.scrollTop = e.target.scrollTop;
     };
 
     const addMention = (poke) => {
@@ -319,6 +324,17 @@ function BattleGym() {
         const finalName = isEnemy ? `Enemy_${rawName}` : rawName;
         setPlayerInput(prev => `${prev}${prev.length && !prev.endsWith(' ') ? ' ' : ''}@${finalName} `);
         if (textareaRef.current) textareaRef.current.focus();
+    };
+    const renderHighlightedText = () => {
+        if (!playerInput) return null;
+        const parts = playerInput.split(/(@[\w_']+|\s+)/g);
+        return parts.map((part, index) => {
+            if (part.startsWith('@')) {
+                if (part.startsWith('@Enemy_')) return <span key={index} className="text-red-400">{part}</span>;
+                return <span key={index} className="text-green-400">{part}</span>;
+            }
+            return <span key={index} className="text-white">{part}</span>;
+        });
     };
 
     const startBattle = async () => {
@@ -739,13 +755,25 @@ function BattleGym() {
                                                     className="battle-scrollbar"
                                                     autoHide={false}
                                                 >
+
                                                     <div className="space-y-4 px-6 pb-6 pt-2">
                                                         {battleLog.map((log, index) => {
                                                             if (log.type === 'options') {
+                                                                const style = log.type === 'player' ? 'bg-emerald-500/10 ml-auto max-w-[80%]' : log.type === 'referee' ? 'bg-yellow-500/5 text-amber-100' : 'bg-black/60';
                                                                 if (index === battleLog.length - 1 && !sendingTurn && battleStatus !== 'ended') {
                                                                     return (
-                                                                        <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-black/60 backdrop-blur-md rounded-xl p-6 mt-4">
-                                                                            <h3 className="font-bold mb-4">{relevantPokemon.length === 1 ? `Command ${relevantPokemon[0].name}` : "Command Team"}</h3>
+                                                                        <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`p-4 rounded-xl backdrop-blur-md ${style}`}>
+                                                                            <div className="flex items-center justify-between mb-4">
+                                                                                <h3 className="font-bold mb-4">{relevantPokemon.length === 1 ? `Command ${relevantPokemon[0].name}` : "Command your Team"}</h3>
+                                                                                <div className="flex gap-2">
+                                                                                    {relevantPokemon.map((poke, i) => (
+                                                                                        <div key={i} className="w-17 h-17 cursor-pointer" onClick={() => playPokemonSound(poke.pokedexId)}>
+                                                                                            <img src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`} onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-full h-full object-contain" alt={poke.name} />
+                                                                                        </div>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                            <p className="text-sm text-gray-400 mb-3">Select your action</p>
                                                                             <div className="space-y-2">
                                                                                 {log.options.map((opt) => (
                                                                                     <button key={opt.id} onClick={() => sendInstruction(opt.id)} className="w-full text-left bg-[#3E3D3E] hover:bg-[#4E4D4E] p-4 rounded-lg flex items-center gap-3 group">
@@ -759,12 +787,25 @@ function BattleGym() {
                                                                 }
                                                                 return null;
                                                             }
+
                                                             if (log.type === 'loading') return <LoadingLog key={index} messages={log.messages} />;
 
-                                                            const style = log.type === 'player' ? 'bg-emerald-500/10 ml-auto max-w-[80%]' : log.type === 'referee' ? 'bg-yellow-500/5 text-amber-100' : 'bg-black/60';
+                                                            let containerStyle = 'bg-gray-800/40';
+                                                            if (log.type === 'player') containerStyle = 'bg-emerald-500/10 ml-auto max-w-[80%]';
+                                                            else if (log.type === 'narrative') containerStyle = 'bg-black/60';
+                                                            else if (log.type === 'referee') containerStyle = 'bg-yellow-500/5 text-amber-100';
+
                                                             return (
-                                                                <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`p-4 rounded-xl backdrop-blur-md ${style}`}>
-                                                                    <MessageRenderer text={log.message} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} />
+                                                                <motion.div
+                                                                    key={index}
+                                                                    initial={{ opacity: 0, y: 20 }}
+                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                                                    className={`p-4 rounded-xl backdrop-blur-md ${containerStyle}`}
+                                                                >
+                                                                    <p className="text-sm md:text-base">
+                                                                        <MessageRenderer text={log.message} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} />
+                                                                    </p>
                                                                 </motion.div>
                                                             );
                                                         })}
@@ -772,38 +813,76 @@ function BattleGym() {
                                                         {waitingForInteraction && (
                                                             <div className="flex justify-center w-full py-2">
                                                                 <button onClick={handleContinue} className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-xs px-4 py-2 rounded-full flex items-center gap-2 animate-pulse">
-                                                                    <span>Continue</span> <ArrowLeft className="-rotate-90" size={12} />
+                                                                    <span>Continue</span>
+                                                                    <ArrowLeft className="-rotate-90" size={12} />
                                                                 </button>
                                                             </div>
                                                         )}
 
-                                                        {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && !messageQueue.length && !waitingForInteraction && (
+                                                        {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && !waitingForInteraction && (
                                                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-black/60 backdrop-blur-md rounded-xl p-6 mt-4 relative">
-                                                                <div className="flex justify-between items-center mb-4">
-                                                                    <h3 className="font-semibold">Command</h3>
+                                                                <div className="flex items-center justify-between mb-4">
+                                                                    <h3 className=" text-[#fafafa] font-semibold">
+                                                                        {
+                                                                            relevantPokemon.length === 1 ? `Emergency instruction for ${relevantPokemon[0].name}` : "Command your Team"}</h3>
                                                                     <div className="flex gap-2">
                                                                         {relevantPokemon.map((poke, i) => (
-                                                                            <img key={i} src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`} className="w-10 h-10 object-contain cursor-pointer" onClick={() => handleMentionClick(poke.name)} alt="" />
+                                                                            <div key={i} className="w-17 h-17 cursor-pointer hover:scale-110 transition-transform"
+                                                                                onClick={() => {
+                                                                                    playPokemonSound(poke.pokedexId);
+                                                                                    handleMentionClick(poke.name);
+                                                                                }}
+                                                                                title={`Click to mention @${poke.name}`}
+                                                                            >
+                                                                                <img src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`} onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-full h-full object-contain" title={poke.name} alt={poke.name} />
+                                                                            </div>
                                                                         ))}
                                                                     </div>
                                                                 </div>
-                                                                <div className="relative">
+                                                                <p className="text-sm text-gray-400 mb-3"></p>
+
+                                                                <div className="relative w-full">
                                                                     {showMentions && (
-                                                                        <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#27272A] rounded-lg shadow-xl z-50">
+                                                                        <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#27272A] rounded-lg shadow-xl overflow-hidden z-50">
                                                                             <SimpleBar style={{ maxHeight: '192px' }}>
-                                                                                {getMentionList().map((poke, idx) => (
-                                                                                    <button key={idx} onClick={() => addMention(poke)} className={`w-full text-left px-4 py-2 flex items-center gap-2 ${idx === mentionCursorIndex ? 'bg-[#3F3F46]' : 'hover:bg-[#3F3F46]'}`}>
-                                                                                        <span className="text-sm font-medium">{poke.name}</span>
-                                                                                    </button>
-                                                                                ))}
+                                                                                {getMentionList().length > 0 ? (
+                                                                                    getMentionList().map((poke, idx) => (
+                                                                                        <button
+                                                                                            key={idx}
+                                                                                            onClick={() => addMention(poke)}
+                                                                                            className={`w-full text-left px-4 py-2 flex items-center gap-2 transition-colors ${idx === mentionCursorIndex ? 'bg-[#3F3F46]' : 'hover:bg-[#3F3F46]'}`}
+                                                                                        >
+                                                                                            <img src={`http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-6 h-6 object-contain" alt="" />
+                                                                                            <span className={`text-sm font-medium ${poke.isEnemy ? 'text-red-400' : 'text-green-200'}`}>{poke.name.replace(/ /g, '_')}</span>
+                                                                                            {poke.isEnemy && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 rounded ml-auto">Enemy</span>}
+                                                                                        </button>
+                                                                                    ))
+                                                                                ) : <div className="px-4 py-2 text-sm text-gray-500">No Pokemon found</div>}
                                                                             </SimpleBar>
                                                                         </div>
                                                                     )}
+
                                                                     <div className="relative h-24 w-full bg-[#18181B]/80 rounded-lg overflow-hidden">
-                                                                        <textarea ref={textareaRef} value={playerInput} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Type instruction..." className="absolute inset-0 w-full h-full bg-transparent p-3 text-sm resize-none focus:outline-none text-white" />
+                                                                        <div ref={backdropRef} className="absolute inset-0 p-3 whitespace-pre-wrap break-words overflow-hidden text-sm font-sans pointer-events-none" aria-hidden="true">
+                                                                            {renderHighlightedText()}
+                                                                            <span className="opacity-0">.</span>
+                                                                        </div>
+                                                                        <textarea
+                                                                            ref={textareaRef}
+                                                                            value={playerInput}
+                                                                            onChange={handleInputChange}
+                                                                            onKeyDown={handleKeyDown}
+                                                                            onScroll={handleScroll}
+                                                                            placeholder={`Describe your instruction (Type @ to mention)`}
+                                                                            className="absolute inset-0 w-full h-full bg-transparent text-transparent caret-white p-3 text-sm font-sans resize-none focus:outline-none placeholder-gray-500"
+                                                                            style={{ color: 'transparent' }}
+                                                                        />
                                                                     </div>
                                                                 </div>
-                                                                <div className="flex justify-end mt-3"><button onClick={() => sendInstruction()} className="bg-white text-black px-6 py-2 rounded-full text-sm font-bold">Send</button></div>
+
+                                                                <div className="flex justify-end mt-3">
+                                                                    <button onClick={() => sendInstruction()} className="bg-white text-black px-6 py-2 rounded-full hover:bg-gray-200 transition-colors text-sm">Send</button>
+                                                                </div>
                                                             </motion.div>
                                                         )}
                                                     </div>
