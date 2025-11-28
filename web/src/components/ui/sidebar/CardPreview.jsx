@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { X } from "lucide-react";
 
 // --- IMPORTAÇÃO DE ASSETS (GRADERS) ---
 import PsaLogo from "../../../assets/graders/psa.png";
@@ -16,7 +17,7 @@ const GRADER_IMAGES = {
   psa: PsaLogo, cgc: CgcLogo, sgc: SgcLogo, tag: TagLogo
 };
 
-export function CardPreview({ card, topPos }) {
+export function CardPreview({ card, topPos, onClose }) {
   if (!card) return null;
 
   const PREVIEW_HEIGHT = 720;
@@ -69,48 +70,79 @@ export function CardPreview({ card, topPos }) {
     );
   }
 
+  // Mobile check (can be improved with a hook or context, but this works for inline styles)
+  const isMobile = window.innerWidth < 1024;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20, scale: 0.95 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: -10, scale: 0.95 }}
-      transition={{ duration: 0.15, ease: "easeOut" }}
-      style={{ top: finalTop }}
-      className="fixed left-[360px] z-50 w-[500px] pointer-events-none"
-    >
-      <div className="relative bg-[#18181B] p-2 rounded-2xl shadow-2xl border border-[#26272B]">
-        <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#131316]">
-          {card.image ? (
-            <img
-              src={card.image}
-              alt={card.name}
-              className="w-full h-full object-contain"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-500 text-xs">
-              No Scan Available
-            </div>
-          )}
-        </div>
+    <>
+      {isMobile && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+        />
+      )}
+      <motion.div
+        initial={{ opacity: 0, x: isMobile ? 0 : -20, scale: 0.95 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        exit={{ opacity: 0, x: isMobile ? 0 : -10, scale: 0.95 }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        style={{ top: isMobile ? '50%' : finalTop, transform: isMobile ? 'translate(-50%, -50%)' : undefined }}
+        className={`fixed z-50 pointer-events-auto ${isMobile ? 'left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[360px]' : 'left-[360px] w-[500px]'}`}
+      >
+        <div className="relative bg-[#18181B] p-2 rounded-2xl shadow-2xl border border-[#26272B]">
 
-        <div className="mt-3 px-1 pb-1 flex justify-between items-center">
-          <div>
-            <p className="text-white font-bold text-lg leading-tight">{card.name}</p>
-            <p className="text-gray-500 text-sm">{`#${card.cardId}`}</p>
-          </div>
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-[#131316]">
+            {/* Close Button for Mobile - Inside Image Container */}
+            {isMobile && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                className="absolute top-2 right-2 z-50 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition-colors cursor-pointer"
+              >
+                <X color="#FAFAFA" size={15} />
+              </button>
+            )}
 
-          {/* Container para Badge e Grader */}
-          <div className="flex items-center gap-2">
-            {PlatformBadge}
-
-            {GraderLogoSrc && (
-              <div className="bg-white/10 p-1.5 rounded-md flex items-center justify-center">
-                <img src={GraderLogoSrc} alt="Grader" className="h-5 w-auto" />
+            {card.image ? (
+              <img
+                src={card.image}
+                alt={card.name}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500 text-xs">
+                No Scan Available
               </div>
             )}
           </div>
+
+          <div className="mt-3 px-1 pb-1 flex justify-between items-center">
+            <div>
+              <p className="text-white font-bold text-lg leading-tight">{card.name}</p>
+              <p className="text-gray-500 text-sm">{`#${card.cardId}`}</p>
+            </div>
+
+            {/* Container para Badge e Grader */}
+            <div className="flex items-center gap-2">
+              {PlatformBadge}
+
+              {GraderLogoSrc && (
+                <div className="bg-white/10 p-1.5 rounded-md flex items-center justify-center">
+                  <img src={GraderLogoSrc} alt="Grader" className="h-5 w-auto" />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </>
   );
 };

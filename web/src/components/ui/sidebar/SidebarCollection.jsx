@@ -11,6 +11,7 @@ export function SidebarCollection({
     handleRefresh,
     handleCardHover,
     handleCardLeave,
+    handleCardClick,
     handleDragStart,
     handleDragEnd
 }) {
@@ -51,6 +52,7 @@ export function SidebarCollection({
                                     card={card}
                                     onHover={handleCardHover}
                                     onLeave={handleCardLeave}
+                                    onClick={handleCardClick}
                                     onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
                                 />
