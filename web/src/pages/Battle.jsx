@@ -155,17 +155,35 @@ function FilterBar({ activeCategory, onCategorySelect, categories }) {
 }
 
 /* =========================================================================
-   COMPONENTE: SKELETON
+   COMPONENTE: SKELETON (PADRONIZADO)
    ========================================================================= */
 const GymCardSkeleton = () => (
-  <div className="bg-[#18181B] border border-[#26272B] rounded-2xl p-6 flex flex-col md:flex-row gap-6 animate-pulse">
-    <div className="w-32 h-32 bg-[#26272B] rounded-[40px] flex-shrink-0" />
-    <div className="flex-1 space-y-4 py-2">
-      <div className="h-6 bg-[#26272B] rounded w-1/3" />
-      <div className="h-4 bg-[#26272B] rounded w-1/4" />
-      <div className="space-y-2 pt-2">
-        <div className="h-4 bg-[#26272B] rounded w-full" />
-        <div className="h-4 bg-[#26272B] rounded w-5/6" />
+  <div className="border border-[#26272B] rounded-3xl p-6 flex flex-col md:flex-row gap-6 animate-pulse min-h-[200px]">
+
+    {/* Bloco da Imagem: Usando #2A2A2E para combinar com o BadgeCardSkeleton */}
+    <div className="w-44 h-44 bg-[#2A2A2E] rounded-[32px] flex-shrink-0 mx-auto md:mx-0" />
+
+    {/* Bloco de Conteúdo */}
+    <div className="flex-1 flex flex-col justify-between py-1">
+      <div className="space-y-3">
+        {/* Título: Usando #242427 para combinar com as linhas do BadgeCardSkeleton */}
+        <div className="h-7 bg-[#242427] rounded w-1/3" />
+
+        {/* Subtítulo */}
+        <div className="h-4 bg-[#242427] rounded w-1/4" />
+
+        {/* Descrição */}
+        <div className="space-y-2 pt-2">
+          <div className="h-4 bg-[#242427] rounded w-full" />
+          <div className="h-4 bg-[#242427] rounded w-5/6" />
+        </div>
+      </div>
+
+      {/* Time Pokémon: Mantendo o tom das linhas de texto */}
+      <div className="flex items-center justify-center md:justify-start gap-2 pt-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="w-10 h-10 bg-[#242427] rounded-full" />
+        ))}
       </div>
     </div>
   </div>
@@ -362,7 +380,6 @@ function Battle() {
                       onClick={() => navigate(`/battle/${gym.userId}`)}
                       className="bg-[#202024] hover:bg-[#232326] rounded-3xl p-6 flex flex-col md:flex-row gap-6 transition-all duration-200 cursor-pointer group min-h-[200px] "
                     >
-                      {/* ALTERAÇÕES FEITAS AQUI NA CLASSE DA DIV ABAIXO */}
                       <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0 bg-gradient-to-r from-[#FFFFFF] to-[#868686] shadow-[0_0px_40px_1px_rgba(255,230,195,0)] group-hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] transition-all duration-500 ease-out group-hover:duration-200 rounded-[32px] overflow-hidden">
                         {gym.badgeImage ? (
                           <HoloBadge imageUrl={gym.badgeImage} holo={gym.holo || 1} />
