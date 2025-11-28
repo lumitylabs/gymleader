@@ -452,27 +452,25 @@ function BattleGym() {
 
             <button
                 onClick={() => setIsNavbarOpen(true)}
-                className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-black/40 transition-all ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+                className={`fixed top-5 left-2 z-20 p-2 rounded-full hover:bg-black/40 transition-all cursor-pointer ${isNavbarOpen && window.innerWidth < 1024 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
             >
                 <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
             </button>
 
             {/* --- CORREÇÃO DO LAYOUT SHIFT --- */}
-            {/* Elemento espaçador "fantasma" que empurra o conteúdo suavemente via Flexbox, igual ao Gym.js */}
             <div
                 className={`hidden lg:block flex-shrink-0 bg-transparent transition-[width] duration-300 ease-in-out h-full ${isNavbarOpen ? 'w-[260px]' : 'w-0'}`}
                 aria-hidden="true"
             />
 
-            {/* Container Principal com flex-1 e min-w-0 para evitar overflow */}
+            {/* Container Principal */}
             <div className="flex-1 min-w-0 h-full relative flex flex-col">
-                {/* AQUI ESTÁ A ALTERAÇÃO: Adicionado 'login-page-scrollbar' */}
                 <SimpleBar style={{ height: '100%' }} className="w-full login-page-scrollbar">
                     <main className="p-4 sm:p-8 flex flex-col items-center">
                         <div className="max-w-6xl w-full space-y-6">
 
                             {/* HEADER */}
-                            <div className="bg-[#202024] rounded-2xl p-6 relative overflow-hidden">
+                            <div className="bg-[#202024] rounded-2xl p-6 relative overflow-visible">
                                 <div className="flex flex-col md:flex-row items-center gap-6 z-10 relative">
                                     <div className="w-24 h-24 rounded-full border-2 border-[#26272B] overflow-hidden bg-black shrink-0">
                                         <img src={gymData?.leaderImage || '/placeholder-leader.png'} alt="Leader" className="w-full h-full object-cover" />
@@ -494,16 +492,64 @@ function BattleGym() {
                                                 <span className="text-red-400">{gymData?.stats?.losses || 0} Losses</span>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="bg-gradient-to-r from-purple-900/50 to-purple-600/50 rounded-xl p-4 flex items-center gap-4 shrink-0">
-                                        <div className="w-20 h-20 md:w-32 md:h-32">
-                                            {gymData?.badgeImage ? <HoloBadge imageUrl={gymData.badgeImage} holo={gymData.holo || 1} /> : <div className="text-xs text-center text-gray-500">No Badge</div>}
+
+                                        {/* --- POKEMON DO LÍDER NO HEADER (VERSÃO CLÁSSICA RESTAURADA) --- */}
+                                        {/* Sem bg rounded, com silhueta quando idle, revela quando ativo */}
+                                        <div className="flex items-center justify-center md:justify-start gap-2 mt-4">
+                                            {gymData?.team?.map((poke, i) => (
+                                                <div
+                                                    key={i}
+                                                    className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform"
+                                                    onClick={() => {
+                                                        playPokemonSound(poke.pokedexId);
+                                                        handleMentionClick(poke.name, true);
+                                                    }}
+                                                >
+                                                    <img
+                                                        src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}${battleStatus === 'idle' ? ".png" : ".gif"}`}
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`;
+                                                        }}
+                                                        alt={poke.name}
+                                                        className={`w-full h-full object-contain transition-all duration-1000 ${battleStatus === 'idle' ? 'brightness-0 opacity-70' : 'brightness-100 opacity-100'}`}
+                                                    />
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="hidden sm:block">
-                                            <h3 className="font-bold text-sm">Badge Reward</h3>
-                                            <p className="text-[10px] text-gray-400 max-w-[150px]">NFT sent to your wallet on victory.</p>
+                                        {/* -------------------------------------------------------- */}
+
+                                    </div>
+
+                                    {/* --- BADGE SECTION (NOVA VERSÃO PRESERVADA) --- */}
+                                    <div className="flex items-center relative group mt-2 md:mt-0">
+                                        <div className="relative z-20 w-28 h-28 md:w-32 md:h-32 shrink-0 rounded-2xl overflow-hidden bg-gradient-to-r from-[#FFFFFF] to-[#868686] shadow-[0_8px_16px_rgba(0,0,0,0.5)] flex items-center justify-center">
+                                            {gymData?.badgeImage ? (
+                                                <div className="w-full h-full relative">
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                                                    <HoloBadge imageUrl={gymData.badgeImage} holo={gymData.holo || 1} />
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-1">
+                                                    <Shield size={24} />
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider">No Badge</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="relative z-10 -ml-8 pl-10 pr-5 py-3 h-20 md:h-20 flex items-center bg-gradient-to-r from-[#2e1a47] to-[#4c1d95]/40 border-y border-r border-purple-500/30 rounded-r-2xl backdrop-blur-sm">
+                                            <div>
+                                                <h3 className="font-semibold text-purple-200 text-sm leading-none mb-1 flex items-center gap-2">
+                                                    Badge Reward
+                                                </h3>
+                                                <p className="text-[10px] text-purple-300/70 font-medium leading-tight max-w-[160px]">
+                                                    NFT sent to your wallet on victory.
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
+                                    {/* -------------------------------------------------------- */}
+
                                 </div>
                             </div>
 
@@ -566,7 +612,6 @@ function BattleGym() {
                                                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                                                         transition={{ duration: 0.15, ease: "easeOut" }}
-                                                                        // FIXED: Bottom-0 prevents shifting/scrollbar. Right-110% puts it over the log (safe).
                                                                         className="absolute bottom-0 right-[110%] z-[9999] pointer-events-none hidden lg:block origin-bottom-right"
                                                                         style={{ width: '360px' }}
                                                                     >
@@ -582,7 +627,7 @@ function BattleGym() {
                                                                                 <div className="flex items-center gap-2">
                                                                                     {PlatformBadge}
                                                                                     {GRADER_IMAGES[graderKey] && (
-                                                                                        <div className="bg-white/10 p-1 rounded-md h-6 w-6 flex items-center justify-center">
+                                                                                        <div className="bg-white/10 p-1 rounded-md h-7 w-14 flex items-center justify-center">
                                                                                             <img src={GRADER_IMAGES[graderKey]} alt="" className="w-full h-full object-contain" />
                                                                                         </div>
                                                                                     )}
@@ -614,15 +659,15 @@ function BattleGym() {
                                         <div className="flex justify-between items-center mb-4">
                                             <div className="flex items-center gap-2">
                                                 <img src={BattlePokeball} className="w-10 h-10" alt="Battle" />
-                                                <h2 className="font-bold text-xl">Battle Log</h2>
+                                                <h2 className="font-bold text-xl">Battle</h2>
                                             </div>
                                             {gameOverState && !isGameOverModalOpen && <button onClick={() => setIsGameOverModalOpen(true)} className="text-xs bg-white/10 px-3 py-1 rounded-full">Result</button>}
                                         </div>
 
                                         {battleStatus === 'idle' ? (
                                             <div className="flex-1 flex items-center justify-center">
-                                                <motion.button whileHover={{ scale: 1.05 }} onClick={startBattle} className="bg-[#FACC15] hover:bg-[#EAB308] text-[#131316] font-black text-2xl py-4 px-12 rounded-full shadow-lg flex items-center gap-3">
-                                                    <Zap size={32} /> FIGHT!
+                                                <motion.button whileHover={{ scale: 1.05 }} onClick={startBattle} className="bg-[#FACC15] hover:bg-[#EAB308] text-[#131316] font-black text-2xl py-4 px-12 rounded-full shadow-lg flex items-center gap-3 cursor-pointer">
+                                                    <Zap fill="black" size={32} /> FIGHT!
                                                 </motion.button>
                                             </div>
                                         ) : (

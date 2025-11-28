@@ -363,7 +363,7 @@ function Battle() {
                       className="bg-[#202024] hover:bg-[#232326] rounded-3xl p-6 flex flex-col md:flex-row gap-6 transition-all duration-200 cursor-pointer group min-h-[200px] "
                     >
                       {/* ALTERAÇÕES FEITAS AQUI NA CLASSE DA DIV ABAIXO */}
-                      <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0 bg-[#26272B] shadow-[0_0px_40px_1px_rgba(255,230,195,0)] group-hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] transition-all duration-500 ease-out group-hover:duration-200 rounded-[32px] overflow-hidden">
+                      <div className="w-44 h-44 flex-shrink-0 mx-auto md:mx-0 bg-gradient-to-r from-[#FFFFFF] to-[#868686] shadow-[0_0px_40px_1px_rgba(255,230,195,0)] group-hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] transition-all duration-500 ease-out group-hover:duration-200 rounded-[32px] overflow-hidden">
                         {gym.badgeImage ? (
                           <HoloBadge imageUrl={gym.badgeImage} holo={gym.holo || 1} />
                         ) : (
