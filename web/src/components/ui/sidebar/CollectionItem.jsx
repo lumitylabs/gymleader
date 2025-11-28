@@ -124,7 +124,9 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
       draggable="true"
       onDragStart={(e) => {
         if (onDragStart) onDragStart();
-        e.dataTransfer.setData("application/json", JSON.stringify(card));
+        const json = JSON.stringify(card);
+        e.dataTransfer.setData("text/plain", json);
+        e.dataTransfer.setData("application/json", json); // Keep for backward compatibility if needed, but prefer text
         e.dataTransfer.effectAllowed = "copy";
       }}
       onDragEnd={(e) => {

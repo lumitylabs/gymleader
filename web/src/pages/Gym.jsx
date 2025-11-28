@@ -356,7 +356,35 @@ function Gym() {
                 </div>
                 <div className="grid grid-cols-3 gap-4 mt-4">
                   {[0, 1, 2].map((index) => (
-                    <div key={index} onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }} onDrop={(e) => { e.preventDefault(); const cardData = e.dataTransfer.getData("application/json"); if (cardData) { try { const card = JSON.parse(cardData); const isDuplicate = formData.team.some(existingCard => existingCard && existingCard.token_address === card.token_address); if (isDuplicate) { toast.error("This Pokémon is already in your team."); return; } setFormData(prev => { const newTeam = [...prev.team]; newTeam[index] = card; return { ...prev, team: newTeam }; }); } catch (err) { console.error("Failed to parse dropped card", err); } } }} className="aspect-[3/4] border-1 md:border-1 border-dashed border-[#3F3F46] rounded-xl flex flex-col items-center justify-center transition-colors cursor-pointer group relative overflow-hidden">
+                    <div key={index}
+                      onDragEnter={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+                      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        let cardData = e.dataTransfer.getData("text/plain");
+                        if (!cardData) {
+                          cardData = e.dataTransfer.getData("application/json");
+                        }
+
+                        if (cardData) {
+                          try {
+                            const card = JSON.parse(cardData);
+                            const isDuplicate = formData.team.some(existingCard => existingCard && existingCard.token_address === card.token_address);
+                            if (isDuplicate) {
+                              toast.error("This Pokémon is already in your team.");
+                              return;
+                            }
+                            setFormData(prev => {
+                              const newTeam = [...prev.team];
+                              newTeam[index] = card;
+                              return { ...prev, team: newTeam };
+                            });
+                          } catch (err) {
+                            console.error("Failed to parse dropped card", err);
+                          }
+                        }
+                      }}
+                      className="aspect-[3/4] border-1 md:border-1 border-dashed border-[#3F3F46] rounded-xl flex flex-col items-center justify-center transition-colors cursor-pointer group relative overflow-hidden">
                       {formData.team[index] ? (<> <img src={formData.team[index].image} alt={formData.team[index].name} className="h-full w-auto max-w-none" /> <button onClick={(e) => { e.stopPropagation(); setFormData(prev => { const newTeam = [...prev.team]; newTeam[index] = null; return { ...prev, team: newTeam }; }); }} className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1.5 hover:bg-black/80 transition-colors cursor-pointer" > <X color="#FAFAFA" size={15} /> </button> </>) : (<div className="flex flex-col items-center justify-center"> <img src={empty_pokemon} alt="empty_pokemon" className="w-16 h-16 md:h-24 md:w-24 lg:h-40 lg:w-40" /> <span className="text-xs leading-3 md:text-sm text-[#585962] text-center px-2 md:leading-4">Choose a <b>Pokémon</b><br /> <b>drag</b> it here</span> </div>)}
                     </div>
                   ))}
