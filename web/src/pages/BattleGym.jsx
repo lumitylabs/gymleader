@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-// 1. ADICIONADO: MapPin e Swords nos imports
 import { ArrowLeft, Shield, Trophy, Zap, MapPin, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
@@ -15,7 +14,7 @@ import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 import BattleCardBack from "../assets/battle-cardback.png";
 import HoloBadge from "../components/HoloBadge";
 
-// ... (Logos e Assets) ...
+// Logos e Assets
 import PsaLogo from "../assets/graders/psa.png";
 import CgcLogo from "../assets/graders/cgc.png";
 import SgcLogo from "../assets/graders/sgc.png";
@@ -29,7 +28,6 @@ const GRADER_IMAGES = {
     psa: PsaLogo, cgc: CgcLogo, sgc: SgcLogo, tag: TagLogo
 };
 
-// ... (Funções auxiliares mantidas iguais) ...
 const getPokemonDataByName = (tagName, userTeam, gymTeam) => {
     if (!tagName) return null;
     let processedTag = tagName.endsWith("'s") ? tagName.slice(0, -2) : tagName;
@@ -143,7 +141,7 @@ function BattleGym() {
     const [gameOverState, setGameOverState] = useState(null);
     const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
-    // ... (Efeitos e lógica de áudio/queue mantidos) ...
+    // Efeitos e lógica de áudio/queue
     const playPokemonSound = (pokedexId) => {
         if (!pokedexId) return;
         let audio = audioCache.current[pokedexId];
@@ -448,7 +446,6 @@ function BattleGym() {
                                     <div className="flex-1 text-center md:text-left">
                                         <h1 className="text-xl font-semibold">{gymData?.gymName || 'Gym Name'}</h1>
 
-                                        {/* --- LÓGICA DE LOCALIZAÇÃO E TWITTER ATUALIZADA --- */}
                                         <div className="flex flex-wrap justify-center md:justify-start items-center gap-2 text-gray-400 text-sm mt-1">
                                             {/* USER/TWITTER */}
                                             <span>
@@ -484,7 +481,6 @@ function BattleGym() {
                                                 </span>
                                             </div>
                                         </div>
-                                        {/* -------------------------------------------------- */}
 
                                         <div className="flex justify-center md:justify-start gap-4 mt-3">
                                             <div className="flex items-center gap-1 text-yellow-500">
@@ -659,9 +655,55 @@ function BattleGym() {
                                         </div>
 
                                         {battleStatus === 'idle' ? (
-                                            <div className="flex-1 flex items-center justify-center">
-                                                <motion.button whileHover={{ scale: 1.05 }} onClick={startBattle} className="bg-[#FACC15] hover:bg-[#EAB308] text-[#131316] font-black text-2xl py-4 px-12 rounded-full shadow-lg flex items-center gap-3 cursor-pointer">
-                                                    <Zap fill="black" size={32} /> FIGHT!
+                                            <div className="flex-1 flex items-center justify-center relative">
+                                                {/* Camada de Fundo (Vinheta) para destacar o botão do cenário */}
+                                                <div className="absolute pointer-events-none w-[400px] h-[200px] bg-black/40 blur-3xl rounded-full" />
+
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05, filter: "brightness(1.1)" }}
+                                                    whileTap={{ scale: 0.95, translateY: 2 }}
+                                                    onClick={startBattle}
+                                                    className="
+                                                        relative group overflow-hidden
+                                                        /* Gradiente mais rico e dourado */
+                                                        bg-gradient-to-b from-[#fbbf24] via-[#f59e0b] to-[#d97706]
+                                                        
+                                                        /* Texto */
+                                                        text-[#451a03] font-black text-3xl tracking-widest italic
+                                                        
+                                                        /* Tamanho e Forma */
+                                                        py-6 px-20 rounded-2xl
+                                                        
+                                                        /* Borda inferior para dar volume 3D (mais escura) */
+                                                        border-b-[6px] border-[#92400e]
+                                                        
+                                                        /* Iluminação: 
+                                                            1. Sombra interna branca no topo (luz)
+                                                            2. Glow externo dourado
+                                                        */
+                                                        shadow-[inset_0_2px_4px_rgba(255,255,255,0.4),0_8px_20px_rgba(245,158,11,0.5)]
+                                                        hover:shadow-[inset_0_2px_4px_rgba(255,255,255,0.5),0_15px_30px_rgba(245,158,11,0.7)]
+                                                        
+                                                        transition-all duration-300
+                                                        flex items-center gap-4 z-10
+                                                        cursor-pointer
+                                                    "
+                                                >
+                                                    {/* Brilho Especular (reflexo de vidro no topo) - Ajustado para rounded-t-2xl */}
+                                                    <div className="absolute top-0 left-0 right-0 h-[40%] bg-gradient-to-b from-white/20 to-transparent rounded-t-2xl pointer-events-none" />
+
+                                                    {/* Animação de Shimmer (Feixe de luz passando) */}
+                                                    <div className="absolute inset-0 -translate-x-full group-hover:animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent z-0 w-full h-full skew-x-12" />
+
+                                                    {/* Ícone */}
+                                                    <div className="relative z-10 drop-shadow-sm filter drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]">
+                                                        <Zap fill="#451a03" strokeWidth={0} size={32} />
+                                                    </div>
+
+                                                    {/* Texto */}
+                                                    <span className="relative z-10 drop-shadow-[0_2px_0_rgba(255,255,255,0.2)]">
+                                                        FIGHT!
+                                                    </span>
                                                 </motion.button>
                                             </div>
                                         ) : (
