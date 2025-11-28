@@ -12,6 +12,9 @@ const handler = async (req, res) => {
     if (!gymId || !challengerId) {
         return res.status(400).json({ error: 'Missing gymId or challengerId' });
     }
+    if (gymId === challengerId) {
+        return res.status(400).json({ error: 'Gym and challenger must be different' });
+    }
 
     try {
         // 1. Fetch Data
