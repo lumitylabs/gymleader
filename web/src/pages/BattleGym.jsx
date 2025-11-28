@@ -547,9 +547,13 @@ function BattleGym() {
                                 </div>
                             </div>
 
-                            {/* GRID */}
-                            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:h-[600px]">
-                                <div className="flex flex-col gap-4 order-1 lg:order-2 lg:h-full">
+                            {/* GRID PRINCIPAL */}
+                            {/* Adicionado 'isolate' para criar novo stacking context */}
+                            <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:h-[600px] isolate">
+
+                                {/* COLUNA DA DIREITA (TEAM/INFO) */}
+                                {/* Adicionado 'relative z-30' para ficar acima do battle log */}
+                                <div className="flex flex-col gap-4 order-1 lg:order-2 lg:h-full relative z-30">
                                     <div className="bg-[#202024] rounded-2xl p-6 h-auto lg:h-[48%] flex flex-col min-h-0 shrink-0">
                                         <h3 className="font-semibold text-lg mb-3 shrink-0">Gym Description</h3>
                                         <div className="text-gray-400 text-sm leading-relaxed flex-1 lg:overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700">
@@ -578,7 +582,7 @@ function BattleGym() {
                                                     return card ? (
                                                         <div
                                                             key={i}
-                                                            className="group relative w-full aspect-[2.5/3.5] cursor-pointer"
+                                                            className="group relative w-full aspect-[2.5/3.5] cursor-pointer hover:z-50"
                                                             style={{ perspective: "1000px" }}
                                                             onMouseEnter={() => !isHidden && setHoveredIndex(i)}
                                                             onMouseLeave={() => setHoveredIndex(null)}
@@ -602,7 +606,7 @@ function BattleGym() {
                                                                 className={`w-full h-full relative transition-transform duration-300 ${!isHidden ? 'group-hover:scale-105' : ''}`}
                                                                 style={{ transformStyle: "preserve-3d" }}
                                                             >
-                                                                {/* FRENTE DA CARTA (Pokemon) - Começa "atrás" (180deg) */}
+                                                                {/* FRENTE DA CARTA (Pokemon) */}
                                                                 <div
                                                                     className="absolute inset-0 rounded-lg overflow-hidden shadow-lg"
                                                                     style={{
@@ -621,7 +625,7 @@ function BattleGym() {
                                                                     />
                                                                 </div>
 
-                                                                {/* VERSO DA CARTA (Capa) - Começa visível (0deg) */}
+                                                                {/* VERSO DA CARTA (Capa) */}
                                                                 <div
                                                                     className="absolute inset-0 rounded-lg overflow-hidden shadow-lg"
                                                                     style={{ backfaceVisibility: "hidden" }}
@@ -680,7 +684,9 @@ function BattleGym() {
                                     </div>
                                 </div>
 
-                                <div className="bg-[#202024] rounded-2xl overflow-hidden relative flex flex-col order-2 lg:order-1 lg:col-span-2 h-[600px] lg:h-full">
+                                {/* COLUNA DA ESQUERDA (BATTLE LOG) */}
+                                {/* Adicionado 'relative z-0' para ficar abaixo da coluna da direita */}
+                                <div className="bg-[#202024] rounded-2xl overflow-hidden relative flex flex-col order-2 lg:order-1 lg:col-span-2 h-[600px] lg:h-full z-0">
                                     <div className="absolute inset-0 z-0 opacity-40">
                                         <img src={gymData?.gymImage || '/placeholder-gym.png'} alt="BG" className="w-full h-full object-cover" />
                                     </div>
