@@ -12,8 +12,11 @@ import 'simplebar-react/dist/simplebar.min.css';
 import BattlePokeball from "../assets/battle-pokeball.png";
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 import BattleCardBack from "../assets/battle-cardback.png";
+import HoloBadge from "../components/HoloBadge";
 
-// --- HELPER: Get Pokemon Data for GIFs (NORMALIZED MATCHING) ---
+/* =========================================================================
+   HELPER: NORMALIZAÇÃO E BUSCA DE DADOS (GIFs e Nomes)
+   ========================================================================= */
 const getPokemonDataByName = (tagName, userTeam, gymTeam) => {
     if (!tagName) return null;
 
@@ -42,7 +45,9 @@ const getPokemonDataByName = (tagName, userTeam, gymTeam) => {
     return null;
 };
 
-// --- COMPONENT: Message Renderer (Text -> GIFs) ---
+/* =========================================================================
+   COMPONENTE: RENDERIZADOR DE MENSAGENS (Texto -> Ícones)
+   ========================================================================= */
 const MessageRenderer = ({ text, userTeam, gymTeam, onPlaySound }) => {
     if (!text) return null;
 
@@ -92,6 +97,9 @@ const MessageRenderer = ({ text, userTeam, gymTeam, onPlaySound }) => {
     );
 };
 
+/* =========================================================================
+   COMPONENTE: LOG DE CARREGAMENTO ANIMADO
+   ========================================================================= */
 const LoadingLog = ({ messages }) => {
     const [index, setIndex] = useState(0);
 
@@ -114,39 +122,54 @@ const LoadingLog = ({ messages }) => {
     );
 };
 
+/* =========================================================================
+   COMPONENTE PRINCIPAL: BATTLE GYM
+   ========================================================================= */
 function BattleGym() {
+    // --- Hooks e Params ---
     const { gymId } = useParams();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [isNavbarOpen, setIsNavbarOpen] = useState(window.innerWidth >= 1024);
 
+    // --- Estados de Dados ---
     const [gymData, setGymData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [userTeam, setUserTeam] = useState([]);
+    const [userGym, setUserGym] = useState(null);
+
+    // --- Estados da Batalha ---
     const [battleStatus, setBattleStatus] = useState('idle');
     const [battleLog, setBattleLog] = useState([]);
-    const [playerInput, setPlayerInput] = useState("");
-    const [sendingTurn, setSendingTurn] = useState(false);
     const [battleContext, setBattleContext] = useState(null);
+    const [sendingTurn, setSendingTurn] = useState(false);
+
+    // --- Estados de Interação (Input/Hover) ---
+    const [playerInput, setPlayerInput] = useState("");
     const [hoveredCard, setHoveredCard] = useState(null);
 
-    // Mention Logic States
+    // --- Estados de Menção (@) ---
     const [showMentions, setShowMentions] = useState(false);
     const [mentionFilter, setMentionFilter] = useState("");
     const [mentionCursorIndex, setMentionCursorIndex] = useState(0);
 
-    // Refs for Scroll Sync (Highlighter)
+    // --- Refs ---
     const textareaRef = useRef(null);
     const backdropRef = useRef(null);
-
     const messagesEndRef = useRef(null);
     const scrollRef = useRef(null);
-
-    const [userTeam, setUserTeam] = useState([]);
-    const [userGym, setUserGym] = useState(null);
-
-    // --- AUDIO LOGIC START ---
     const audioCache = useRef({});
 
+    // --- Estados de Fila de Mensagens ---
+    const [messageQueue, setMessageQueue] = useState([]);
+    const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+    const [waitingForInteraction, setWaitingForInteraction] = useState(false);
+    const [gameOverState, setGameOverState] = useState(null);
+    const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
+
+    /* =========================================================================
+       LÓGICA DE ÁUDIO
+       ========================================================================= */
     const playPokemonSound = (pokedexId) => {
         if (!pokedexId) return;
 
@@ -164,14 +187,8 @@ function BattleGym() {
 
     useEffect(() => {
         const preloadList = [];
-
-        if (userTeam && userTeam.length > 0) {
-            preloadList.push(...userTeam);
-        }
-
-        if (gymData && gymData.team) {
-            preloadList.push(...gymData.team);
-        }
+        if (userTeam && userTeam.length > 0) preloadList.push(...userTeam);
+        if (gymData && gymData.team) preloadList.push(...gymData.team);
 
         preloadList.forEach(poke => {
             if (poke && poke.pokedexId && !audioCache.current[poke.pokedexId]) {
@@ -182,8 +199,10 @@ function BattleGym() {
             }
         });
     }, [userTeam, gymData]);
-    // --- AUDIO LOGIC END ---
 
+    /* =========================================================================
+       HELPERS DE TEXTO E MENÇÃO
+       ========================================================================= */
     const getMentionedPokemon = (text) => {
         if (!text || !userTeam.length) return userTeam;
         const normalizedText = text.toLowerCase();
@@ -199,6 +218,17 @@ function BattleGym() {
         return getMentionedPokemon(lastNarrative?.message);
     })();
 
+    const getMentionList = () => {
+        const enemies = (gymData?.team || []).map(p => ({ ...p, isEnemy: true }));
+        const allies = (userTeam || []).map(p => ({ ...p, isEnemy: false }));
+        const all = [...enemies, ...allies];
+        if (!mentionFilter) return all;
+        return all.filter(p => p.name.toLowerCase().includes(mentionFilter));
+    };
+
+    /* =========================================================================
+       EFFECTS: CARREGAMENTO DE DADOS (FIREBASE)
+       ========================================================================= */
     useEffect(() => {
         const gymRef = ref(db, `gyms/${gymId}`);
         const unsubscribe = onValue(gymRef, (snapshot) => {
@@ -227,6 +257,9 @@ function BattleGym() {
         return () => unsubscribe();
     }, [currentUser]);
 
+    /* =========================================================================
+       EFFECTS: FILA DE MENSAGENS E SCROLL
+       ========================================================================= */
     useEffect(() => {
         if (messagesEndRef.current) {
             setTimeout(() => {
@@ -234,14 +267,6 @@ function BattleGym() {
             }, 100);
         }
     }, [battleLog, playerInput, sendingTurn, battleStatus]);
-
-    const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
-
-    const [messageQueue, setMessageQueue] = useState([]);
-    const [isProcessingQueue, setIsProcessingQueue] = useState(false);
-    const [waitingForInteraction, setWaitingForInteraction] = useState(false);
-    const [gameOverState, setGameOverState] = useState(null);
-    const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
     useEffect(() => {
         if (messageQueue.length > 0 && !isProcessingQueue && !waitingForInteraction) {
@@ -272,22 +297,17 @@ function BattleGym() {
         }
     }, [messageQueue, isProcessingQueue, waitingForInteraction]);
 
+    /* =========================================================================
+       HANDLERS: INPUT E BATALHA
+       ========================================================================= */
+    const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
     const handleContinue = () => setWaitingForInteraction(false);
     const queueMessages = (messages) => setMessageQueue(prev => [...prev, ...messages]);
-
-    const getMentionList = () => {
-        const enemies = (gymData?.team || []).map(p => ({ ...p, isEnemy: true }));
-        const allies = (userTeam || []).map(p => ({ ...p, isEnemy: false }));
-        const all = [...enemies, ...allies];
-        if (!mentionFilter) return all;
-        return all.filter(p => p.name.toLowerCase().includes(mentionFilter));
-    };
 
     const handleInputChange = (e) => {
         const value = e.target.value;
         const selectionStart = e.target.selectionStart;
         setPlayerInput(value);
-
         if (backdropRef.current) backdropRef.current.scrollTop = e.target.scrollTop;
 
         const textBeforeCursor = value.slice(0, selectionStart);
@@ -305,16 +325,12 @@ function BattleGym() {
         setShowMentions(false);
     };
 
-    const handleScroll = (e) => {
-        if (backdropRef.current) backdropRef.current.scrollTop = e.target.scrollTop;
-    };
+    const handleScroll = (e) => { if (backdropRef.current) backdropRef.current.scrollTop = e.target.scrollTop; };
 
     const addMention = (poke) => {
         if (!poke) return;
-
         const rawName = poke.name.replace(/ /g, '_');
         const finalName = poke.isEnemy ? `Enemy_${rawName}` : rawName;
-
         const selectionStart = textareaRef.current.selectionStart;
         const textBeforeCursor = playerInput.slice(0, selectionStart);
         const lastAtSymbol = textBeforeCursor.lastIndexOf('@');
@@ -322,11 +338,9 @@ function BattleGym() {
         if (lastAtSymbol !== -1) {
             const prefix = playerInput.slice(0, lastAtSymbol);
             const suffix = playerInput.slice(selectionStart);
-
             const newValue = `${prefix}@${finalName} ${suffix}`;
             setPlayerInput(newValue);
             setShowMentions(false);
-
             setTimeout(() => {
                 if (textareaRef.current) {
                     textareaRef.current.focus();
@@ -495,8 +509,12 @@ function BattleGym() {
 
     if (loading) return <div className="min-h-screen bg-[#18181B] flex items-center justify-center text-white">Loading...</div>;
 
+    /* =========================================================================
+       RENDER: COMPONENTE COMPLETO
+       ========================================================================= */
     return (
         <div className="bg-[#18181B] min-h-screen font-inter text-white flex">
+            {/* Sidebar & Mobile Nav */}
             <Sidebar isOpen={isNavbarOpen} setIsOpen={setIsNavbarOpen} handleMobileNavClick={handleMobileNavClick} />
             <button
                 onClick={() => setIsNavbarOpen(true)}
@@ -505,16 +523,21 @@ function BattleGym() {
             >
                 <img src={cardsmenu_icon} className="h-6.5 w-6.5" alt="Menu" />
             </button>
+
             <main className={`flex-1 transition-all duration-300 ease-in-out ${isNavbarOpen ? 'lg:ml-[340px]' : 'lg:ml-0'} p-4 sm:p-8 flex flex-col items-center`}>
                 <div className="max-w-6xl w-full space-y-6">
 
-                    {/* Header Card */}
+                    {/* =========================================================================
+                       INTERFACE: CABEÇALHO DO GINÁSIO
+                       ========================================================================= */}
                     <div className="bg-[#202024] rounded-2xl p-6 relative overflow-hidden">
-
                         <div className="flex flex-col md:flex-row items-center gap-6 z-10 relative">
+                            {/* Imagem do Líder */}
                             <div className="w-24 h-24 rounded-full border-2 border-[#26272B] overflow-hidden bg-black">
                                 <img src={gymData?.leaderImage || '/placeholder-leader.png'} alt={gymData?.leaderName} className="w-full h-full object-cover bg-[#202024]" />
                             </div>
+
+                            {/* Informações do Ginásio */}
                             <div className="flex-1 text-center md:text-left">
                                 <h1 className="text-xl font-semibold">{gymData?.gymName || 'Gym Name'}</h1>
                                 <div className="flex items-center justify-center md:justify-start gap-2 text-gray-400 text-sm mt-1">
@@ -532,6 +555,7 @@ function BattleGym() {
                                         <span className="text-red-400 font-md">{gymData?.stats?.losses || 0} Losses</span>
                                     </div>
                                 </div>
+                                {/* Miniatura do Time no Header */}
                                 <div className="flex items-center justify-center md:justify-start gap-2 mt-3">
                                     {gymData?.team?.map((poke, i) => poke && (
                                         <div
@@ -553,9 +577,17 @@ function BattleGym() {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Recompensa / Badge */}
                             <div className="bg-gradient-to-r from-purple-900/50 to-purple-600/50 rounded-xl p-4 flex items-center gap-4">
-                                <div className="w-16 h-16">
-                                    <img src={gymData?.badgeImage || '/placeholder-badge.png'} alt="Badge" className="w-full h-full object-contain drop-shadow-lg" />
+                                <div className="w-32 h-32">
+                                    {gymData?.badgeImage ? (
+                                        <HoloBadge imageUrl={gymData.badgeImage} holo={gymData.holo || 1} />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs font-medium">
+                                            No Badge
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-sm">Badge Reward</h3>
@@ -565,11 +597,104 @@ function BattleGym() {
                         </div>
                     </div>
 
-                    {/* Main Content Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+                    {/* =========================================================================
+                       GRID PRINCIPAL DO GINÁSIO
+                       Mobile: Flex-col (ordem alterada). Desktop: Grid (3 colunas).
+                       ========================================================================= */}
+                    <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:h-[600px]">
 
-                        {/* Left: Battle Interface */}
-                        <div className="lg:col-span-2 bg-[#202024] rounded-2xl overflow-hidden relative flex flex-col">
+                        {/* COLUNA DIREITA (Info & Time) - PRIMEIRO NO MOBILE */}
+                        <div className="flex flex-col gap-4 order-1 lg:order-2 lg:h-full">
+                            {/* 
+                                GYM DESCRIPTION 
+                                - Mobile: h-auto (cresce com o texto, sem scroll).
+                                - Desktop: h-[48%] (AUMENTADO DE 35% PARA 48% PARA EQUILIBRAR)
+                            */}
+                            <div className="bg-[#202024] rounded-2xl p-6 h-auto lg:h-[48%] flex flex-col min-h-0 shrink-0">
+                                <h3 className="font-semibold text-lg mb-3 shrink-0">Gym Description</h3>
+                                <div className="text-gray-400 text-sm leading-relaxed flex-1 lg:overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+                                    {gymData?.description || 'No description available.'}
+                                </div>
+                            </div>
+
+                            {/* 
+                                OPPONENT'S TEAM
+                                - Desktop: lg:flex-1 (Ocupa o restante do espaço, ~52%)
+                            */}
+                            <div className="bg-[#202024] rounded-2xl p-6 h-auto lg:flex-1 flex flex-col min-h-0 relative">
+                                <h3 className="font-semibold text-lg mb-3 shrink-0">Opponent's Team</h3>
+
+                                <div className="w-full flex-1 flex items-center justify-center">
+                                    <div className="w-full grid grid-cols-3 gap-2 sm:gap-3 content-start">
+                                        {gymData?.team?.map((card, i) => {
+                                            const isHidden = battleStatus === 'idle';
+                                            return card ? (
+                                                <div
+                                                    key={i}
+                                                    className="group relative w-full aspect-[2.5/3.5] cursor-pointer"
+                                                    onMouseEnter={() => !isHidden && setHoveredCard(card)}
+                                                    onMouseLeave={() => setHoveredCard(null)}
+                                                    onClick={() => {
+                                                        if (!isHidden) {
+                                                            playPokemonSound(card.pokedexId);
+                                                            handleMentionClick(card.name, true);
+                                                        }
+                                                    }}
+                                                    title={!isHidden ? `Click to mention @${card.name}` : ''}
+                                                >
+                                                    <img
+                                                        src={isHidden ? BattleCardBack : (card.original ? `${card.original}/high.png` : card.image)}
+                                                        alt={isHidden ? "Hidden Card" : card.name}
+                                                        className={`w-full h-full object-cover rounded-lg transition-transform ${!isHidden ? 'group-hover:scale-105' : ''} shadow-lg`}
+                                                        style={{ imageRendering: 'auto' }}
+                                                        onError={(e) => {
+                                                            if (!isHidden && e.target.src !== card.image) e.target.src = card.image;
+                                                            else if (!isHidden) e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`;
+                                                        }}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div key={i} className="w-full aspect-[2.5/3.5] bg-[#18181B] rounded-lg flex items-center justify-center border border-white/5">
+                                                    <img src={BattleCardBack} className="w-10 opacity-20" alt="Empty Slot" />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Tooltip Flutuante */}
+                                <AnimatePresence>
+                                    {hoveredCard && (
+                                        <motion.div
+                                            initial={{ opacity: 0, x: -10, scale: 0.95 }}
+                                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                                            exit={{ opacity: 0, x: -10, scale: 0.95 }}
+                                            className="absolute top-1/2 right-full mr-4 z-[100] pointer-events-none hidden lg:block origin-right"
+                                            style={{ width: '240px' }}
+                                        >
+                                            <div className="relative w-full rounded-xl shadow-2xl bg-[#18181B] p-3 border border-gray-800">
+                                                <div className="relative w-full overflow-hidden rounded-lg bg-[#131316]">
+                                                    <img
+                                                        src={hoveredCard.image}
+                                                        alt={hoveredCard.name}
+                                                        className="w-full h-full object-contain"
+                                                        onError={(e) => e.target.src = hoveredCard.original ? `${hoveredCard.original}/high.png` : `http://steady-gaufre-1267b2.netlify.app/${hoveredCard.pokedexId}.png`}
+                                                    />
+                                                </div>
+                                                <div className="mt-2 px-1 pb-1 text-center">
+                                                    <p className="text-white font-bold text-base leading-tight">{hoveredCard.name}</p>
+                                                    <p className="text-gray-500 text-xs mt-1">{hoveredCard.fullName?.split('#')[0] || hoveredCard.name}</p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        </div>
+
+                        {/* COLUNA ESQUERDA (Log de Batalha) - SEGUNDO NO MOBILE */}
+                        <div className="bg-[#202024] rounded-2xl overflow-hidden relative flex flex-col order-2 lg:order-1 lg:col-span-2 h-[600px] lg:h-full">
+                            {/* Background do Ginásio */}
                             <div className="absolute inset-0 z-0 opacity-40">
                                 <img src={gymData?.gymImage || '/placeholder-gym.png'} alt="Gym Background" className="w-full h-full object-cover" />
                             </div>
@@ -596,13 +721,14 @@ function BattleGym() {
                                             <Zap size={32} fill="currentColor" />
                                             FIGHT!
                                         </motion.button>
-
                                     </div>
                                 ) : (
                                     <div className="flex-1 relative min-h-0">
                                         <SimpleBar scrollableNodeProps={{ ref: scrollRef }} style={{ position: 'absolute', inset: 0 }} className="pr-4">
                                             <div className="space-y-4 pb-4">
+                                                {/* Renderização das Mensagens do Log */}
                                                 {battleLog.map((log, index) => {
+                                                    // Opções do Jogador
                                                     if (log.type === 'options') {
                                                         if (index === battleLog.length - 1 && !sendingTurn && battleStatus !== 'ended') {
                                                             return (
@@ -656,6 +782,7 @@ function BattleGym() {
                                                     );
                                                 })}
 
+                                                {/* Botão de Continuar (Narrativa) */}
                                                 {waitingForInteraction && (
                                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center w-full py-2">
                                                         <button onClick={handleContinue} className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-white text-xs px-4 py-2 rounded-full flex items-center gap-2 transition-all animate-pulse cursor-pointer">
@@ -665,6 +792,7 @@ function BattleGym() {
                                                     </motion.div>
                                                 )}
 
+                                                {/* Área de Input de Texto Livre */}
                                                 {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && !waitingForInteraction && (
                                                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-black/60 backdrop-blur-md rounded-xl p-6 mt-4 relative">
                                                         <div className="flex items-center justify-between mb-4">
@@ -683,9 +811,9 @@ function BattleGym() {
                                                                 ))}
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-gray-400 mb-3"></p>
 
                                                         <div className="relative w-full">
+                                                            {/* Menu de Sugestão de Menção */}
                                                             {showMentions && (
                                                                 <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#27272A] rounded-lg shadow-xl overflow-hidden z-50">
                                                                     <SimpleBar style={{ maxHeight: '192px' }}>
@@ -735,6 +863,7 @@ function BattleGym() {
                                     </div>
                                 )}
 
+                                {/* Modal de Fim de Jogo */}
                                 <AnimatePresence>
                                     {gameOverState && isGameOverModalOpen && (
                                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-6">
@@ -751,7 +880,14 @@ function BattleGym() {
                                                         {gameOverState.type === 'win' ? (
                                                             <>
                                                                 <div className="absolute inset-0 bg-yellow-500/30 blur-2xl rounded-full" />
-                                                                <motion.div className="w-32 h-32 relative z-10"><img src={gymData?.badgeImage || '/placeholder-badge.png'} alt="Badge" className="w-full h-full object-contain drop-shadow-2xl" /></motion.div>
+                                                                <motion.div className="w-32 h-32 relative z-10">
+                                                                    {gymData?.badgeImage ? (
+                                                                        <HoloBadge imageUrl={gymData.badgeImage} holo={gymData.holo || 1} />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs font-medium">
+                                                                            No Badge
+                                                                        </div>
+                                                                    )}</motion.div>
                                                             </>
                                                         ) : (
                                                             <>
@@ -774,46 +910,6 @@ function BattleGym() {
                             </div>
                         </div>
 
-                        {/* Right: Info & Opponent Team */}
-                        <div className="space-y-6 flex flex-col">
-                            <div className="bg-[#202024] rounded-2xl p-6 flex-1">
-                                <h3 className="font-bold text-lg mb-4">Gym Description</h3>
-                                <p className="text-gray-400 text-sm leading-relaxed">{gymData?.description || 'No description available.'}</p>
-                            </div>
-                            <div className="bg-[#202024] rounded-2xl p-6">
-                                <h3 className="font-bold text-lg mb-4">Opponent's Team</h3>
-                                <div className="flex gap-4 justify-center relative">
-                                    {gymData?.team?.map((card, i) => {
-                                        const isHidden = battleStatus === 'idle';
-                                        return card ? (
-                                            <div key={i} className="group relative w-20 cursor-pointer"
-                                                onMouseEnter={() => !isHidden && setHoveredCard(card)}
-                                                onMouseLeave={() => setHoveredCard(null)}
-                                                onClick={() => {
-                                                    if (!isHidden) {
-                                                        playPokemonSound(card.pokedexId);
-                                                        handleMentionClick(card.name, true);
-                                                    }
-                                                }}
-                                                title={!isHidden ? `Click to mention @${card.name}` : ''}
-                                            >
-                                                <img src={isHidden ? BattleCardBack : (card.original ? `${card.original}/high.png` : card.image)} alt={isHidden ? "Hidden Card" : card.name} className={`w-full h-full object-cover rounded-lg transition-transform ${!isHidden ? 'group-hover:scale-105' : ''}`} style={{ imageRendering: 'auto' }} onError={(e) => { if (!isHidden && e.target.src !== card.image) e.target.src = card.image; else if (!isHidden) e.target.src = `http://steady-gaufre-1267b2.netlify.app/${card.pokedexId}.png`; }} />
-                                            </div>
-                                        ) : <div key={i} className="w-20 bg-[#18181B] rounded-lg flex items-center justify-center"><img src={BattleCardBack} className="w-10 opacity-20" alt="Empty Slot" /></div>;
-                                    })}
-                                    <AnimatePresence>
-                                        {hoveredCard && (
-                                            <motion.div initial={{ opacity: 0, y: 10, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.9 }} className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-[100] pointer-events-none origin-bottom" style={{ width: '400px', maxWidth: '90vw' }}>
-                                                <div className="relative w-full rounded-2xl shadow-2xl bg-[#18181B] p-2">
-                                                    <div className="relative w-full overflow-hidden rounded-xl bg-[#131316]"><img src={hoveredCard.image} alt={hoveredCard.name} className="w-full h-full object-contain" onError={(e) => e.target.src = hoveredCard.original ? `${hoveredCard.original}/high.png` : `http://steady-gaufre-1267b2.netlify.app/${hoveredCard.pokedexId}.png`} /></div>
-                                                    <div className="mt-3 px-1 pb-1"><p className="text-white font-bold text-lg leading-tight">{hoveredCard.name}</p><p className="text-gray-500 text-sm">{hoveredCard.fullName?.split('#')[0] || hoveredCard.name}</p></div>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </main>
