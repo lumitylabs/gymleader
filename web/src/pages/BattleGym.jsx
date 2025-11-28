@@ -476,7 +476,7 @@ function BattleGym() {
                                                         @{gymData?.leaderName}
                                                     </a>
                                                 ) : (
-                                                    <span>@{gymData?.leaderName}</span>
+                                                    <span>{gymData?.leaderName}</span>
                                                 )}
                                             </span>
 
