@@ -226,7 +226,7 @@ function Gym() {
   const handleMobileNavClick = () => { if (window.innerWidth < 1024) setIsNavbarOpen(false); };
 
   const renderImageMenu = (type) => (
-    <div className="absolute bottom-3 left-full ml-2 z-30 bg-[#202024] rounded-xl p-1 flex flex-col gap-1 shadow-xl min-w-[200px]">
+    <div className="absolute bottom-3 left-full ml-2 z-30 bg-[#202024] rounded-xl p-1 flex flex-col gap-1 shadow-xl min-w-[190px]">
       <button
         onClick={() => handleGenerateImage(type)}
         disabled={generating[type]}
