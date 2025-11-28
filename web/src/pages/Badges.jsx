@@ -261,7 +261,7 @@ function Badges() {
                         {/* Overlay para melhorar o efeito metálico (similar ao BattleGym) */}
                         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
-                        <div className="w-full h-full relative z-10 p-2 sm:p-4 flex items-center justify-center">
+                        <div className="w-full h-full relative z-10">
                           <HoloBadge imageUrl={badge.badgeImage} holo={badge.holo || 1} />
                         </div>
 
