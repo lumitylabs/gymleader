@@ -645,9 +645,12 @@ function BattleGym() {
                                     <div className="absolute inset-0 z-0 opacity-40">
                                         <img src={gymData?.gymImage || '/placeholder-gym.png'} alt="BG" className="w-full h-full object-cover" />
                                     </div>
-                                    <div className="relative z-10 flex-1 flex flex-col p-6">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <div className="flex items-center gap-2">
+                                    {/* MUDANÇA AQUI: Removido p-6 do pai para que a scrollbar possa ir até a borda */}
+                                    <div className="relative z-10 flex-1 flex flex-col">
+
+                                        {/* Header com padding aplicado individualmente */}
+                                        <div className="px-6 pt-6 flex justify-between items-center shrink-0">
+                                            <div className="flex items-center">
                                                 <img src={BattlePokeball} className="w-10 h-10" alt="Battle" />
                                                 <h2 className="font-bold text-xl">Battle</h2>
                                             </div>
@@ -655,7 +658,8 @@ function BattleGym() {
                                         </div>
 
                                         {battleStatus === 'idle' ? (
-                                            <div className="flex-1 flex items-center justify-center relative">
+                                            /* Adicionado p-6 aqui para compensar a remoção no pai */
+                                            <div className="flex-1 flex items-center justify-center relative p-6 pt-0">
                                                 {/* Camada de Fundo (Vinheta) para destacar o botão do cenário */}
                                                 <div className="absolute pointer-events-none w-[400px] h-[200px] bg-black/40 blur-3xl rounded-full" />
 
@@ -672,7 +676,7 @@ function BattleGym() {
                                                         text-[#451a03] font-black text-3xl tracking-widest italic
                                                         
                                                         /* Tamanho e Forma */
-                                                        py-6 px-20 rounded-2xl
+                                                        py-6 px-14 rounded-2xl
                                                         
                                                         /* Borda inferior para dar volume 3D (mais escura) */
                                                         border-b-[6px] border-[#92400e]
@@ -708,8 +712,14 @@ function BattleGym() {
                                             </div>
                                         ) : (
                                             <div className="flex-1 relative min-h-0">
-                                                <SimpleBar scrollableNodeProps={{ ref: scrollRef }} style={{ position: 'absolute', inset: 0 }} className="pr-4">
-                                                    <div className="space-y-4 pb-4">
+                                                <SimpleBar
+                                                    scrollableNodeProps={{ ref: scrollRef }}
+                                                    style={{ position: 'absolute', inset: 0 }}
+                                                    className="battle-scrollbar"
+                                                    autoHide={false}
+                                                >
+                                                    {/* Padding aplicado aqui dentro para o conteúdo não colar na borda, mas a scrollbar sim */}
+                                                    <div className="space-y-4 px-6 pb-6 pt-2">
                                                         {battleLog.map((log, index) => {
                                                             if (log.type === 'options') {
                                                                 if (index === battleLog.length - 1 && !sendingTurn && battleStatus !== 'ended') {

@@ -147,7 +147,55 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Base reset para garantir altura total */
+/* ===== BATTLE SCROLLBAR (AJUSTADA) ===== */
+
+/* 1. O Trilho (Track) - Posicionamento e Limites */
+.battle-scrollbar .simplebar-track.simplebar-vertical {
+  width: 6px !important;
+  background-color: transparent !important;
+
+  /* Afasta um pouquinho da direita para não colar na curva lateral */
+  right: 2px !important;
+
+  /* Empurra para baixo para fugir da curva do topo */
+  top: 12px !important;
+
+  /* Diminui a altura total para fugir da curva de baixo */
+  /* Cálculo: 100% - (Espaço Topo + Espaço Fundo) */
+  height: calc(100% - 24px) !important;
+
+  z-index: 50;
+}
+
+/* 2. A Pílula de Rolagem (Thumb) - Visual Fixo e Estático */
+.battle-scrollbar .simplebar-scrollbar::before {
+  /* Cor fixa (Branco 40%) */
+  background-color: rgba(255, 255, 255, 0.4) !important;
+
+  border-radius: 4px;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100% !important;
+
+  /* Mantém sempre visível */
+  opacity: 1 !important;
+  transition: none !important;
+}
+
+/* 3. Neutraliza Hover */
+.battle-scrollbar .simplebar-track.simplebar-vertical:hover .simplebar-scrollbar::before,
+.battle-scrollbar .simplebar-scrollbar.simplebar-visible::before {
+  opacity: 1 !important;
+  background-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* 4. Conteúdo */
+.battle-scrollbar .simplebar-content {
+  height: 100%;
+}
+
 html,
 body,
 #root {
