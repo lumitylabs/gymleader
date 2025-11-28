@@ -2,6 +2,15 @@ import React, { StrictMode, useMemo } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+// --- Mobile Drag & Drop Polyfill ---
+import { polyfill } from "mobile-drag-drop";
+import { scrollBehaviourDragImageTranslateOverride } from "mobile-drag-drop/scroll-behaviour";
+import "mobile-drag-drop/default.css";
+
+polyfill({
+  dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride
+});
+
 // --- Provedores da Aplicação ---
 import { AuthProvider } from "./contexts/AuthContext";
 

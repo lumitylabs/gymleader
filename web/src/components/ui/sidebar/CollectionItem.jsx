@@ -69,7 +69,7 @@ const getTypeColor = (type) => {
   return gradients[type] || gradients.default;
 };
 
-export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd }) {
+export function CollectionItem({ card, onHover, onLeave, onClick, onDragStart, onDragEnd }) {
   const mainType = card.types && card.types.length > 0 ? card.types[0] : 'Unknown';
   const bgGradient = getTypeColor(mainType);
   const typeImageSrc = TYPE_IMAGES[mainType] || TYPE_IMAGES.default;
@@ -121,10 +121,13 @@ export function CollectionItem({ card, onHover, onLeave, onDragStart, onDragEnd 
 
   return (
     <div
+      onClick={() => onClick && onClick(card)}
       draggable="true"
       onDragStart={(e) => {
         if (onDragStart) onDragStart();
-        e.dataTransfer.setData("application/json", JSON.stringify(card));
+        const json = JSON.stringify(card);
+        e.dataTransfer.setData("text/plain", json);
+        e.dataTransfer.setData("application/json", json); // Keep for backward compatibility if needed, but prefer text
         e.dataTransfer.effectAllowed = "copy";
       }}
       onDragEnd={(e) => {

@@ -1,6 +1,3 @@
-
-
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -36,12 +33,13 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
 
   // Handlers
   const handleCardHover = (card, event) => {
-    if (isDragging) return;
+    if (isDragging || window.innerWidth < 1024) return;
     setPreviewCard(card);
     setMouseY(event.clientY);
   };
 
   const handleCardLeave = (cardLeft) => {
+    if (window.innerWidth < 1024) return;
     setPreviewCard((currentCard) => {
       if (currentCard === cardLeft) {
         return null;
@@ -69,6 +67,16 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
       setIsOpen(true);
       wasAutoClosedRef.current = false;
     }
+  };
+
+  const handleCardClick = (card) => {
+    if (window.innerWidth < 1024) {
+      setPreviewCard(card);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setPreviewCard(null);
   };
 
   // Firebase Listener
@@ -143,7 +151,14 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
         className="fixed top-0 left-0 w-[340px] h-screen bg-[#131316] border-r border-[#26272B] font-inter flex flex-col z-40 select-none"
       >
         <AnimatePresence>
-          {previewCard && !isDragging && <CardPreview key={previewCard.token_address + previewCard.cardId} card={previewCard} topPos={mouseY} />}
+          {previewCard && !isDragging && (
+            <CardPreview
+              key={previewCard.token_address + previewCard.cardId}
+              card={previewCard}
+              topPos={mouseY}
+              onClose={handleClosePreview}
+            />
+          )}
         </AnimatePresence>
 
         <SidebarHeader setIsOpen={setIsOpen} navigate={navigate} />
@@ -159,6 +174,7 @@ function Sidebar({ isOpen, setIsOpen, handleMobileNavClick }) {
           handleRefresh={handleRefresh}
           handleCardHover={handleCardHover}
           handleCardLeave={handleCardLeave}
+          handleCardClick={handleCardClick}
           handleDragStart={handleDragStart}
           handleDragEnd={handleDragEnd}
         />
