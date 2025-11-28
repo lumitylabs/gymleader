@@ -247,32 +247,29 @@ function Badges() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.4 }}
-                      // 1. Removemos overflow-hidden do pai para a sombra vazar
-                      // 2. Adicionamos rounded-[20px] e relative
-                      // 3. Adicionamos z-index no hover para sobrepor os vizinhos
                       className="bg-black rounded-[20px] group cursor-pointer shadow-sm relative hover:z-20 flex flex-col h-full"
                     >
                       {/* 
-                          PARTE SUPERIOR (IMAGEM) 
-                          - rounded-t-[20px] e overflow-hidden: Mantém o aspecto arredondado e corta a imagem interna.
-                          - shadow e transition: Adicionados aqui. Como box-shadow é renderizado fora da borda, o overflow-hidden não o corta.
+                          --- MUDANÇA PRINCIPAL AQUI ---
+                          1. bg-[#202024] alterado para bg-gradient-to-r from-[#FFFFFF] to-[#868686] (Prateado)
+                          2. Adicionado um overlay sutil (white/5) para dar profundidade, igual ao BattleGym
                       */}
-                      <div className="aspect-square bg-[#202024] rounded-t-[20px] overflow-hidden relative flex items-center justify-center 
+                      <div className="aspect-square bg-gradient-to-r from-[#FFFFFF] to-[#868686] rounded-t-[20px] overflow-hidden relative flex items-center justify-center 
                                       shadow-[0_0px_40px_1px_rgba(255,230,195,0)] group-hover:shadow-[0_0px_40px_1px_rgba(255,230,195,0.5)] 
                                       transition-all duration-500 ease-out group-hover:duration-200">
 
-                        <div className="w-full h-full relative z-10 ">
+                        {/* Overlay para melhorar o efeito metálico (similar ao BattleGym) */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
+                        <div className="w-full h-full relative z-10 p-2 sm:p-4 flex items-center justify-center">
                           <HoloBadge imageUrl={badge.badgeImage} holo={badge.holo || 1} />
                         </div>
 
-                        {/* Glow estático interno */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
+                        {/* Glow estático interno - mantém contraste nas bordas */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30 pointer-events-none" />
                       </div>
 
-                      {/* 
-                          PARTE INFERIOR (TEXTO) 
-                          - rounded-b-[20px]: Garante que o fundo do card também seja arredondado
-                      */}
+                      {/* PARTE INFERIOR (TEXTO) */}
                       <div className="p-5 bg-black flex-1 rounded-b-[20px]">
                         <h3 className="font-semibold text-[#FAFAFA] text-base leading-tight truncate mb-1">
                           {badge.gymName}
