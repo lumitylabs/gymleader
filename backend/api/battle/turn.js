@@ -113,13 +113,12 @@ const handler = async (req, res) => {
             console.log(`[Battle ${battleId}] Player Win | Score: ${currentScore}`);
             const endPrompt = `
                 Battle Ended. Challenger Wins! 
-                Final Score: ${currentScore}.
+                Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION).
                 Last Action: ${playerNarrative}.
-                ${formattingRules}
                 
-                Task: Narrate the conclusion of the battle.
-                - Summarize the Challenger's victory.
-                - USE @ TAGS for Pokemon names (with underscores).
+                Task: Narrate the conclusion of the battle, the final state of the pokémons and the battlefield.
+                - Summarize the Challenger's victory and team dominance.
+                - Do NOT focus only on the last move. Describe the overall triumph.
                 - Max 2 sentences.
                 
                 Return JSON: { "narrative": "string" }
@@ -232,13 +231,12 @@ const handler = async (req, res) => {
             console.log(`[Battle ${battleId}] Leader Win | Score: ${currentScore}`);
             const endPrompt = `
                 Battle Ended. Leader Wins! 
-                Final Score: ${currentScore}.
+                Final Score: ${currentScore} (INTERNAL ONLY - DO NOT MENTION).
                 Last Action: ${turnResult.leaderNarrative}.
-                ${formattingRules}
                 
-                Task: Narrate the conclusion of the battle.
-                - Summarize the Leader's victory.
-                - USE @ TAGS WITH UNDERSCORES.
+                Task: Narrate the conclusion of the battle, the final state of the pokémons and the battlefield.
+                - Summarize the Leader's victory and team dominance.
+                - Do NOT focus only on the last move. Describe the overall triumph.
                 - Max 2 sentences.
                 
                 Return JSON: { "narrative": "string" }
