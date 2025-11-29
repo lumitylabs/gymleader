@@ -41,16 +41,33 @@ const handler = async (req, res) => {
         const gymDesc = gym.description || '';
         const leaderName = gym.leaderName || 'Leader';
 
+        const parseTeam = (teamData, isLeader) => {
+            if (!teamData) return 'Unknown Pokemon';
+
+            const teamArray = Array.isArray(teamData) ? teamData : Object.values(teamData);
+
+            return teamArray
+                .map(p => {
+                    const name = p.name || `Pokemon #${p.pokedexId}`;
+                    return isLeader ? `@Enemy_${name.replace(/\s+/g, '_')}` : name.replace(/\s+/g, '_'); // troca espaços por underline
+                })
+                .join(', ');
+        };
+
+        const leaderTeam = parseTeam(gym.team, true);
+
+        // Fetch user's gym team specifically
+        const userGymTeamSnapshot = await db.ref(`users/${playerId}/gym/team`).once('value');
+        const userGymTeam = userGymTeamSnapshot.val();
+        const challengerTeam = parseTeam(userGymTeam, false);
+
         // --- FORMATTING RULES (UPDATED) ---
         const formattingRules = `
             IMPORTANT FORMATTING RULES FOR POKEMON NAMES:
-            1. When mentioning a Pokemon from the LEADER'S team (${battle.leaderTeam}), YOU MUST use the format: @Enemy_PokemonName.
-            2. When mentioning a Pokemon from the CHALLENGER'S team (${battle.challengerTeam}), YOU MUST use the format: @PokemonName.
-            3. CRITICAL: REPLACE ALL SPACES WITH UNDERSCORES inside the tag.
-               - Example: "Tapu Koko" -> "@Tapu_Koko" (or "@Enemy_Tapu_Koko").
-               - Example: "Mr. Mime" -> "@Mr_Mime" (Remove dots, use underscores).
-            4. Do NOT use bold or markdown for names, just the @ tag.
-            5. Even if the user input uses "enemy Charizard", you must convert it to @Enemy_Charizard in your narrative.
+            1. When mentioning a Pokemon from the LEADER'S team (${leaderTeam}), YOU MUST use the format: @Enemy_PokemonName.
+            2. When mentioning a Pokemon from the CHALLENGER'S team (${challengerTeam}), YOU MUST use the format: @PokemonName.
+            3. Do NOT use bold or markdown for names, just the @ tag.
+            4. Even if the user input uses "@Enemy_Charizard_PSA_GOLD", you must use @Enemy_Charizard_PSA_GOLD in your narrative.
             Use the pokemon FULL NAME, with UNDERSCORES if included. DO NOT shorten, modify, translate, or simplify the name. Output the tag EXACTLY as given, character-for-character.
         `;
 
@@ -72,8 +89,8 @@ const handler = async (req, res) => {
             const playerMovePrompt = `
                 You are the Judge.
                 Gym: ${gymDesc}
-                Challenger Team: ${battle.challengerTeam || 'Unknown'}
-                Leader Team: ${battle.leaderTeam || 'Unknown'}
+                Challenger Team: ${challengerTeam}
+                Leader Team: ${leaderTeam}
                 Challenger general strategy: ${battle.challengerStrategy || 'Unknown'}
                 Leader general strategy: ${battle.leaderStrategy || 'Unknown'}
                 Player Action: "${action}"
@@ -156,6 +173,9 @@ const handler = async (req, res) => {
         }
 
         // --- PHASE 2: LEADER TURN (Combined AI Call) ---
+        console.log(`[Battle ${battleId}] Leader Turn Start | Score: ${battle.score}`);
+        //teams
+
 
         const historyText = battle.history ? battle.history.slice(-4).map(h => `${h.role}: ${h.text}`).join('\n') : "No history";
 
@@ -163,8 +183,8 @@ const handler = async (req, res) => {
             You are the Game Engine for a Pokemon Battle.
             Gym: ${gymDesc}
             Leader: ${leaderName} (Strategy: ${gym.strategy || 'Win'})
-            Leader Team: ${battle.leaderTeam || 'Unknown'}
-            Challenger Team: ${battle.challengerTeam || 'Unknown'}
+            Leader Team: ${leaderTeam}
+            Challenger Team: ${challengerTeam}
             Current Score: ${currentScore} (Positive=Leader Advantage, Negative=Challenger Advantage)
             
             ${formattingRules}
@@ -185,17 +205,17 @@ const handler = async (req, res) => {
             4. Explain the reasoning for the score (1 sentence).
             5. Generate 3 strategic options for the Challenger (Player) to respond.
                - STYLE: TRAINER COMMANDS.
-               - USE @ TAGS for player's own Pokemon (e.g., "@Charizard, dodge!").
+               - USE @ TAGS for player's own Pokemon (e.g., "@Charizard_PSA, dodge!").
                - "text": The concise Trainer Command (Max 15 words).
                - "reasoning": Brief explanation.
                - "score": The score value (-3 to +3).
                - "id": 1, 2, or 3.
                - STYLE: TRAINER COMMANDS. Write them as if the Trainer is shouting orders to their Pokemon.
-               - USE IMPERATIVE MOOD: "@Enemy_Charizard, fly up and melt the rocks!", "Team, combine your power to push them back!"
+               - USE IMPERATIVE MOOD: "@Enemy_Charizard_PSA, fly up and melt the rocks!", "Team, combine your power to push them back!"
                - AVOID MOVE NAMES: Do not say "Use Flamethrower". Say "Unleash a stream of fire". Do not say "Use Psychic". Say "Grip them with your mind".
                - FOCUS ON ACTION & INTENT: Describe WHAT they should do and WHY (briefly).
                - KEEP IT CONCISE: Max 20 words per option.
-               - Examples: "@Enemy_Charizard, melt the gym floor to trap them! @Enemy_Mewtwo, levitate above the lava!", "@Enemy_Pikachu, use your speed to confuse them, then strike their blind spot!"
+               - Examples: "@Enemy_Charizard, melt the gym floor to trap them! @Enemy_Mewtwo_EX, levitate above the lava!", "@Enemy_Pikachu_X_ED1, use your speed to confuse them, then strike their blind spot!"
 
                - OPTION 1 (GOOD): A creative, effective strategy. Score: -3 to -2 (Negative favors Player).
                - OPTION 2 (NEUTRAL/RISKY): Standard or risky. Score: -1 to 1.
