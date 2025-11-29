@@ -51,6 +51,7 @@ const handler = async (req, res) => {
                - Example: "Mr. Mime" -> "@Mr_Mime" (Remove dots, use underscores).
             4. Do NOT use bold or markdown for names, just the @ tag.
             5. Even if the user input uses "enemy Charizard", you must convert it to @Enemy_Charizard in your narrative.
+            Use the pokemon FULL NAME, with UNDERSCORES if included. DO NOT shorten, modify, translate, or simplify the name. Output the tag EXACTLY as given, character-for-character.
         `;
 
         // --- PHASE 1: PLAYER TURN ---
@@ -179,6 +180,7 @@ const handler = async (req, res) => {
                - Example: "@Enemy_Blastoise creates a rain dance while @Enemy_Raichu prepares thunder".
                - Do not treat this as 1v1. Use the whole team to counter the player.
             2. Narrate the Leader's move (VERY CONCISE, max 1 sentence). USE @ TAGS WITH UNDERSCORES.
+            You MUST use @ TAGS EXACTLY as provided.
             3. Calculate the score impact of this move (-2 to +2, Positive helps Leader).
             4. Explain the reasoning for the score (1 sentence).
             5. Generate 3 strategic options for the Challenger (Player) to respond.
