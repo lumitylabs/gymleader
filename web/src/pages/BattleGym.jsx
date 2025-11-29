@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Trophy, Zap, MapPin, Swords } from 'lucide-react';
+import { ArrowLeft, Shield, Trophy, X, Zap, MapPin, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { db } from "../firebase/config";
@@ -106,7 +106,7 @@ const LoadingLog = ({ messages }) => {
             className="p-4 rounded-xl backdrop-blur-md bg-yellow-500/5 flex items-center gap-3"
         >
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-200/50"></div>
-            <p className="text-sm md:text-base text-amber-100 font-medium">{messages[index]}</p>
+            <p className="text-sm md:text-base text-amber-100">{messages[index]}</p>
         </motion.div>
     );
 };
@@ -762,23 +762,26 @@ function BattleGym() {
                                                                 const style = log.type === 'player' ? 'bg-emerald-500/10 ml-auto max-w-[80%]' : log.type === 'referee' ? 'bg-yellow-500/5 text-amber-100' : 'bg-black/60';
                                                                 if (index === battleLog.length - 1 && !sendingTurn && battleStatus !== 'ended') {
                                                                     return (
-                                                                        <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`p-4 rounded-xl backdrop-blur-md ${style}`}>
+                                                                        <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`px-12 py-8 rounded-xl backdrop-blur-md ${style}`}>
                                                                             <div className="flex items-center justify-between mb-4">
                                                                                 <h3 className="font-bold mb-4">{relevantPokemon.length === 1 ? `Command ${relevantPokemon[0].name}` : "Command your Team"}</h3>
-                                                                                <div className="flex gap-2">
+                                                                                <div className="flex gap-3">
                                                                                     {relevantPokemon.map((poke, i) => (
-                                                                                        <div key={i} className="w-17 h-17 cursor-pointer" onClick={() => playPokemonSound(poke.pokedexId)}>
+                                                                                        <div key={i} className="w-17 h-17 mb-3 cursor-pointer" onClick={() => playPokemonSound(poke.pokedexId)}>
                                                                                             <img src={`https://sweet-cendol-f4d090.netlify.app/${poke.pokedexId}.gif`} onError={(e) => e.target.src = `http://steady-gaufre-1267b2.netlify.app/${poke.pokedexId}.png`} className="w-full h-full object-contain" alt={poke.name} />
                                                                                         </div>
                                                                                     ))}
                                                                                 </div>
                                                                             </div>
-                                                                            <p className="text-sm text-gray-400 mb-3">Select your action</p>
                                                                             <div className="space-y-2">
                                                                                 {log.options.map((opt) => (
-                                                                                    <button key={opt.id} onClick={() => sendInstruction(opt.id)} className="w-full text-left bg-[#3E3D3E] hover:bg-[#4E4D4E] p-4 rounded-lg flex items-center gap-3 group">
-                                                                                        <div className="w-6 h-6 rounded-full border border-gray-500 flex items-center justify-center text-xs group-hover:border-white">{opt.id}</div>
-                                                                                        <span className="text-sm"><MessageRenderer text={opt.text} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} /></span>
+                                                                                    <button key={opt.id} onClick={() => sendInstruction(opt.id)} className="w-full text-left bg-[#202024] hover:bg-[#303136] p-4 rounded-lg flex items-center border border-[#303136] hover:border-[#FAFAFA] gap-3 group cursor-pointer">
+                                                                                        <div className="w-6 h-6 shrink-0 rounded-full text-gray-500 border border-text-gray-500 flex items-center justify-center text-xs group-hover:border-white group-hover:text-[#FAFAFA]">
+                                                                                            {opt.id}
+                                                                                        </div>
+                                                                                        <span className="text-sm text-[#FAFAFA]">
+                                                                                            <MessageRenderer text={opt.text} userTeam={userTeam} gymTeam={gymData?.team} onPlaySound={playPokemonSound} />
+                                                                                        </span>
                                                                                     </button>
                                                                                 ))}
                                                                             </div>
@@ -812,7 +815,7 @@ function BattleGym() {
 
                                                         {waitingForInteraction && (
                                                             <div className="flex justify-center w-full py-2">
-                                                                <button onClick={handleContinue} className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-xs px-4 py-2 rounded-full flex items-center gap-2 animate-pulse">
+                                                                <button onClick={handleContinue} className="bg-white/10 hover:bg-white/20 backdrop-blur-md text-xs px-4 py-2 rounded-full flex items-center gap-2 animate-pulse cursor-pointer">
                                                                     <span>Continue</span>
                                                                     <ArrowLeft className="-rotate-90" size={12} />
                                                                 </button>
@@ -862,26 +865,33 @@ function BattleGym() {
                                                                         </div>
                                                                     )}
 
-                                                                    <div className="relative h-24 w-full bg-[#18181B]/80 rounded-lg overflow-hidden">
-                                                                        <div ref={backdropRef} className="absolute inset-0 p-3 whitespace-pre-wrap break-words overflow-hidden text-sm font-sans pointer-events-none" aria-hidden="true">
+                                                                    <div className="relative h-27 w-full bg-[#18181B]/80 rounded-lg overflow-hidden border border-[#303136] focus-within:border-[#FAFAFA] duration-200 transition-colors ">
+
+                                                                        <div
+                                                                            ref={backdropRef}
+                                                                            className="absolute inset-0 p-3 whitespace-pre-wrap break-words overflow-hidden text-sm font-sans pointer-events-none"
+                                                                            aria-hidden="true"
+                                                                        >
                                                                             {renderHighlightedText()}
                                                                             <span className="opacity-0">.</span>
                                                                         </div>
+
                                                                         <textarea
                                                                             ref={textareaRef}
                                                                             value={playerInput}
                                                                             onChange={handleInputChange}
                                                                             onKeyDown={handleKeyDown}
                                                                             onScroll={handleScroll}
+                                                                            maxLength={300}
                                                                             placeholder={`Describe your instruction (Type @ to mention)`}
-                                                                            className="absolute inset-0 w-full h-full bg-transparent text-transparent caret-white p-3 text-sm font-sans resize-none focus:outline-none placeholder-gray-500"
-                                                                            style={{ color: 'transparent' }}
+                                                                            /* Removi o 'border border-[#FAFAFA]' daqui e removi o bg, veja a dica abaixo */
+                                                                            className="absolute inset-0 w-full h-full bg-transparent text-[#FAFAFA] p-3 text-sm font-sans resize-none focus:outline-none placeholder-gray-500"
                                                                         />
                                                                     </div>
                                                                 </div>
 
                                                                 <div className="flex justify-end mt-3">
-                                                                    <button onClick={() => sendInstruction()} className="bg-white text-black px-6 py-2 rounded-full hover:bg-gray-200 transition-colors text-sm">Send</button>
+                                                                    <button onClick={() => sendInstruction()} className="bg-[#FAFAFA] text-[#151518] px-8 py-2 rounded-full hover:bg-[#E3E3E4] transition-colors text-sm cursor-pointer">Send</button>
                                                                 </div>
                                                             </motion.div>
                                                         )}
@@ -895,11 +905,18 @@ function BattleGym() {
                                             {gameOverState && isGameOverModalOpen && (
                                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
                                                     <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-[#18181B] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative">
-                                                        <button onClick={() => setIsGameOverModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+                                                        <button
+                                                            onClick={() => setIsGameOverModalOpen(false)}
+                                                            className="absolute top-6 right-4 md:top-6 md:right-6 z-50 backdrop-blur-sm transition-colors text-gray-400 hover:text-white cursor-pointer"
+                                                        >
+                                                            <X size={18} />
+                                                        </button>
+
+
                                                         <h2 className={`text-4xl font-black mb-3 ${gameOverState.type === 'win' ? 'text-yellow-500' : 'text-red-500'}`}>{gameOverState.type === 'win' ? 'VICTORY!' : 'DEFEAT'}</h2>
                                                         <div className="flex flex-col gap-3 mt-8">
-                                                            <button onClick={() => window.location.reload()} className="w-full py-3 bg-white text-black rounded-xl font-bold">Rematch</button>
-                                                            <button onClick={() => navigate('/battle')} className="w-full py-3 bg-[#27272A] text-white rounded-xl">Back</button>
+                                                            <button onClick={() => window.location.reload()} className="w-full py-3 bg-white text-black rounded-xl cursor-pointer hover:bg-[#E3E3E4] transition-colors duration-200">Rematch</button>
+                                                            <button onClick={() => navigate('/battle')} className="w-full py-3 border border-[#2D2E33] text-white rounded-xl cursor-pointer transition-colors duration-200 hover:bg-[#212124] ">Exit</button>
                                                         </div>
                                                     </motion.div>
                                                 </motion.div>
