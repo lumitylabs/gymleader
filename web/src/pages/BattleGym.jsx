@@ -147,7 +147,7 @@ function BattleGym() {
         let audio = audioCache.current[pokedexId];
         if (!audio) {
             audio = new Audio(`https://mellifluous-gecko-cbaceb.netlify.app/${pokedexId}.ogg`);
-            audio.volume = 0.3;
+            audio.volume = 0.2;
             audioCache.current[pokedexId] = audio;
         }
         audio.currentTime = 0;
@@ -159,7 +159,7 @@ function BattleGym() {
         preloadList.forEach(poke => {
             if (poke?.pokedexId && !audioCache.current[poke.pokedexId]) {
                 const audio = new Audio(`https://mellifluous-gecko-cbaceb.netlify.app/${poke.pokedexId}.ogg`);
-                audio.volume = 0.3;
+                audio.volume = 0.2;
                 audio.preload = 'auto';
                 audioCache.current[poke.pokedexId] = audio;
             }
@@ -251,6 +251,13 @@ function BattleGym() {
         return getMentionedPokemon(lastNarrative?.message);
     })();
 
+    const isInputVisible = !battleLog.some(l => l.type === 'options') &&
+        !sendingTurn &&
+        battleStatus === 'active' &&
+        messageQueue.length === 0 &&
+        !isProcessingQueue &&
+        !waitingForInteraction;
+
     const handleInputChange = (e) => {
         const value = e.target.value;
         const selectionStart = e.target.selectionStart;
@@ -319,19 +326,26 @@ function BattleGym() {
     };
 
     const handleMentionClick = (name, isEnemy = false) => {
+        // ADICIONE ISTO: Se o input não estiver visível, não faz nada
+        if (!isInputVisible) return;
+
         if (!name) return;
         const rawName = name.replace(/ /g, '_');
         const finalName = isEnemy ? `Enemy_${rawName}` : rawName;
         setPlayerInput(prev => `${prev}${prev.length && !prev.endsWith(' ') ? ' ' : ''}@${finalName} `);
-        if (textareaRef.current) textareaRef.current.focus();
+
+        // Verifica se a referência existe antes de focar (pois ela pode não estar renderizada ainda em casos de race condition)
+        if (textareaRef.current) {
+            textareaRef.current.focus();
+        }
     };
     const renderHighlightedText = () => {
         if (!playerInput) return null;
         const parts = playerInput.split(/(@[\w_']+|\s+)/g);
         return parts.map((part, index) => {
             if (part.startsWith('@')) {
-                if (part.startsWith('@Enemy_')) return <span key={index} className="text-red-400">{part}</span>;
-                return <span key={index} className="text-green-400">{part}</span>;
+                if (part.startsWith('@Enemy_')) return <span key={index} className="text-red-500">{part}</span>;
+                return <span key={index} className="text-green-500">{part}</span>;
             }
             return <span key={index} className="text-white">{part}</span>;
         });
@@ -822,7 +836,7 @@ function BattleGym() {
                                                             </div>
                                                         )}
 
-                                                        {!battleLog.some(l => l.type === 'options') && !sendingTurn && battleStatus === 'active' && messageQueue.length === 0 && !isProcessingQueue && !waitingForInteraction && (
+                                                        {isInputVisible && (
                                                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-black/60 backdrop-blur-md rounded-xl p-6 mt-4 relative">
                                                                 <div className="flex items-center justify-between mb-4">
                                                                     <h3 className=" text-[#fafafa] font-semibold">
@@ -885,7 +899,7 @@ function BattleGym() {
                                                                             maxLength={300}
                                                                             placeholder={`Describe your instruction (Type @ to mention)`}
                                                                             /* Removi o 'border border-[#FAFAFA]' daqui e removi o bg, veja a dica abaixo */
-                                                                            className="absolute inset-0 w-full h-full bg-transparent text-[#FAFAFA] p-3 text-sm font-sans resize-none focus:outline-none placeholder-gray-500"
+                                                                            className="absolute inset-0 w-full h-full bg-transparent  text-[#FAFAFA]/70 p-3 text-sm font-sans resize-none focus:outline-none placeholder-gray-500"
                                                                         />
                                                                     </div>
                                                                 </div>
