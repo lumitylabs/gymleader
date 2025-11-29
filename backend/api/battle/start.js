@@ -32,28 +32,35 @@ const handler = async (req, res) => {
         const gymDesc = gym.description || 'A standard battle arena.';
 
         // Helper to parse team data
-        const parseTeam = (teamData) => {
+        const parseTeam = (teamData, isLeader) => {
             if (!teamData) return 'Unknown Pokemon';
+
             const teamArray = Array.isArray(teamData) ? teamData : Object.values(teamData);
-            return teamArray.map(p => p.name || `Pokemon #${p.pokedexId}`).join(', ');
+
+            return teamArray
+                .map(p => {
+                    const name = p.name || `Pokemon #${p.pokedexId}`;
+                    return isLeader ? `@Enemy_${name.replace(/\s+/g, '_')}` : name.replace(/\s+/g, '_'); // troca espaços por underline
+                })
+                .join(', ');
         };
 
-        const leaderTeam = parseTeam(gym.team);
+
+        const leaderTeam = parseTeam(gym.team, true);
 
         // Fetch user's gym team specifically
         const userGymTeamSnapshot = await db.ref(`users/${challengerId}/gym/team`).once('value');
         const userGymTeam = userGymTeamSnapshot.val();
-        const challengerTeam = parseTeam(userGymTeam);
+        const challengerTeam = parseTeam(userGymTeam, false);
 
         // --- FORMATTING RULES (UPDATED) ---
         const formattingRules = `
             IMPORTANT FORMATTING RULES FOR POKEMON NAMES:
             1. When mentioning a Pokemon from the LEADER'S team (${leaderTeam}), YOU MUST use the format: @Enemy_PokemonName.
             2. When mentioning a Pokemon from the CHALLENGER'S team (${challengerTeam}), YOU MUST use the format: @PokemonName.
-            3. CRITICAL: REPLACE ALL SPACES WITH UNDERSCORES inside the tag.
-               - Example: "Tapu Koko" -> "@Tapu_Koko" (or "@Enemy_Tapu_Koko").
-               - Example: "Mr. Mime" -> "@Mr_Mime" (Remove dots, use underscores).
-            4. Do NOT use bold or markdown for names, just the @ tag.
+            3. Do NOT use bold or markdown for names, just the @ tag.
+            4. Even if the user input uses "@Enemy_Charizard_PSA_GOLD", you must use @Enemy_Charizard_PSA_GOLD in your narrative.
+            Use the pokemon FULL NAME, with UNDERSCORES if included. DO NOT shorten, modify, translate, or simplify the name. Output the tag EXACTLY as given, character-for-character.
         `;
 
         // --- PARALLEL EXECUTION START ---
@@ -119,6 +126,9 @@ const handler = async (req, res) => {
 
         // 7. Save Battle State
         const battleId = db.ref('battles').push().key;
+        // team
+        console.log(`[Battle Start] Leader Team: ${leaderTeam}`);
+        console.log(`[Battle Start] Challenger Team: ${challengerTeam}`);
         console.log(`[Battle Start] ID: ${battleId} | Gym: ${gymName} | Leader: ${leaderName} | Challenger: ${challengerId}`);
         console.log(`[Battle Start] Leader Score: ${logicData.leaderMoveScore} | Reasoning: ${logicData.leaderMoveReasoning}`);
 
