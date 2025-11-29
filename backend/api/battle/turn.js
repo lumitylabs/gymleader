@@ -49,7 +49,7 @@ const handler = async (req, res) => {
             return teamArray
                 .map(p => {
                     const name = p.name || `Pokemon #${p.pokedexId}`;
-                    return isLeader ? `@Enemy_${name.replace(/\s+/g, '_')}` : name.replace(/\s+/g, '_'); // troca espaços por underline
+                    return isLeader ? `@Enemy_${name.replace(/\s+/g, '_')}` : `@${name.replace(/\s+/g, '_')}`; // troca espaços por underline
                 })
                 .join(', ');
         };
@@ -124,7 +124,10 @@ const handler = async (req, res) => {
         }
 
         // Update Score after Player Move
+        console.log(`[Battle ${battleId}] Player Turn | Score Change: ${scoreChange}`);
+        console.log(`[Battle ${battleId}] Player Turn | Current Score: ${battle.score}`);
         let currentScore = battle.score + scoreChange;
+        console.log(`[Battle ${battleId}] Player Turn | New Score: ${currentScore}`);
 
         // Check Win Conditions (Player Win)
         if (currentScore <= -7 || (battle.turn >= 5 && currentScore < 0)) {
@@ -173,7 +176,7 @@ const handler = async (req, res) => {
         }
 
         // --- PHASE 2: LEADER TURN (Combined AI Call) ---
-        console.log(`[Battle ${battleId}] Leader Turn Start | Score: ${battle.score}`);
+        console.log(`[Battle ${battleId}] Leader Turn Start | Score: ${currentScore}`);
         //teams
 
 
@@ -247,6 +250,7 @@ const handler = async (req, res) => {
         }
         // Update Score after Leader Move
         currentScore += turnResult.leaderScoreChange;
+        console.log(`[Battle ${battleId}] Leader Turn | New Score: ${currentScore}`);
 
         // Check Win Conditions (Leader Win)
         if (currentScore >= 7 || (battle.turn >= 5 && currentScore >= 0)) {
