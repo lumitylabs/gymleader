@@ -8,7 +8,7 @@
 - [🔎 Why?](#-why)
 - [🎥 Demo](#-demo)
 - [🧢 Become a Gym Leader](#-become-a-gym-leader)
-- [🚀 Vision & Economy](#vision--economy)
+- [🚀 Vision & Economy](#-vision--economy)
 - [🤖 Pokémon Judge Agent](#-pokémon-judge-agent)
 - [💡 How does it Work?](#-how-does-it-work)
 - [🔧 Technologies](#-technologies)
@@ -233,4 +233,5 @@ If you have any questions or suggestions,  please feel free to contact us. : )
 <p align="center">
   <i>Powered by </i><b><a href="https://www.lumitylabs.com">Lumity</a>💫</b>
 </p>
+
 
