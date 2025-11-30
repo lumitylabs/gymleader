@@ -141,6 +141,8 @@ function BattleGym() {
     const [gameOverState, setGameOverState] = useState(null);
     const [isGameOverModalOpen, setIsGameOverModalOpen] = useState(false);
 
+
+
     // Efeitos e lógica de áudio/queue
     const playPokemonSound = (pokedexId) => {
         if (!pokedexId) return;

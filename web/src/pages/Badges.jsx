@@ -50,6 +50,9 @@ function FilterBar({ activeCategory, onCategorySelect, categories }) {
     }
   };
 
+
+
+
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -179,6 +182,46 @@ function Badges() {
     return matchesSearch;
   });
 
+  const kantoOrder = [
+    "brock",
+    "misty",
+    "ltsurge",
+    "erika",
+    "koga",
+    "sabrina",
+    "blaine",
+    "giovanni"
+  ];
+
+  const normalizeName = (name) => {
+    if (!name) return "";
+    return name.toLowerCase().replace(/[\.\s]/g, "");
+  };
+
+  // 3. Ordenação
+  const sortedBadges = [...filteredBadges].sort((a, b) => {
+    const leaderA = normalizeName(a.leaderName);
+    const leaderB = normalizeName(b.leaderName);
+
+    const indexA = kantoOrder.indexOf(leaderA);
+    const indexB = kantoOrder.indexOf(leaderB);
+
+    // Se ambos estiverem na lista, ordena pela posição na lista
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+
+    // Se apenas A estiver na lista, ele vem primeiro
+    if (indexA !== -1) return -1;
+
+    // Se apenas B estiver na lista, ele vem primeiro
+    if (indexB !== -1) return 1;
+
+    // Se nenhum estiver na lista, mantém a ordem original (ou alfabética se preferir)
+    return 0;
+  });
+
+
   return (
     <div className="bg-[#18181B] h-screen w-full font-inter text-white flex overflow-hidden">
 
@@ -240,8 +283,8 @@ function Badges() {
                   Array.from({ length: 8 }).map((_, index) => (
                     <BadgeCardSkeleton key={index} />
                   ))
-                ) : filteredBadges.length > 0 ? (
-                  filteredBadges.map((badge) => (
+                ) : sortedBadges.length > 0 ? (  // <--- MUDOU DE filteredBadges PARA sortedBadges AQUI
+                  sortedBadges.map((badge) => (  // <--- E AQUI
                     <motion.div
                       key={badge.gymId}
                       initial={{ opacity: 0 }}
