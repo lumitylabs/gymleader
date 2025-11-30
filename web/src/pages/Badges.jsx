@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from "../contexts/AuthContext";
 import Sidebar from '../components/ui/general/Sidebar';
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, Swords } from 'lucide-react';
 import { motion, animate } from 'framer-motion';
 import cardsmenu_icon from "../assets/cardsmenu_icon.svg";
 
@@ -272,7 +272,7 @@ function Badges() {
                   <FilterBar
                     activeCategory={filter}
                     onCategorySelect={setFilter}
-                    categories={["Gym Challenge", "Victory Road", "Elite Four", "PvP"]}
+                    categories={["All", "Gym Challenge", "Victory Road", "Elite Four", "PvP"]}
                   />
                 </div>
               </div>
@@ -337,11 +337,16 @@ function Badges() {
                             )}
                           </p>
 
-                          {badge.location ? <div className="flex items-center gap-1 text-[#A1A1AA] text-xs"><MapPin color="#FFADAD" size={12} strokeWidth={2} />
+                          <div className="flex items-center gap-1 text-[#A1A1AA] text-xs">
+                            {badge.location ? (
+                              <MapPin color="#FFADAD" size={12} strokeWidth={2} />
+                            ) : (
+                              <Swords color="#FFADAD" size={12} strokeWidth={2} />
+                            )}
                             <span>{badge.location
                               ? `${badge.location}${badge.region ? `, ${badge.region}` : ''}`
                               : 'PvP'
-                            }</span></div> : <> </>}
+                            }</span></div>
                         </div>
                       </div>
                     </motion.div>

@@ -161,8 +161,8 @@ const handler = async (req, res) => {
                 badgeImage: gym.badgeImage || '',
                 leaderName: gym.leaderName || 'Unknown Leader',
                 twitter: gym.twitter || '',
-                location: gym.location || 'Kanto',
-                region: gym.region || 'Kanto',
+                location: gym.location || '',
+                region: gym.region || '',
                 holo: gym.holo || 1,
             });
 
