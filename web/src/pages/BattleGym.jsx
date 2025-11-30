@@ -904,6 +904,11 @@ function BattleGym() {
                                                                             className="absolute inset-0 w-full h-full bg-transparent  text-[#FAFAFA]/70 p-3 text-sm font-sans resize-none focus:outline-none placeholder-gray-500"
                                                                         />
                                                                     </div>
+                                                                    <div className="w-full flex justify-end mt-1">
+                                                                        <div className="text-xs text-[#767786] select-none">
+                                                                            {playerInput.length}/300
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
 
                                                                 <div className="flex justify-end mt-3">
