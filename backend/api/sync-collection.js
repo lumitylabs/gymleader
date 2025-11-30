@@ -16,7 +16,7 @@ const handler = async (req, res) => {
     // ============================================================
     // 🔴 MODO DEMO PARA VÍDEO (Hackathon)
     // Mude para FALSE quando terminar de gravar
-    const DEMO_MODE = true; 
+    const DEMO_MODE = false;
 
     // Endereços "Ricos" para o vídeo
     const DEMO_FLOW = "0xad050BF165033DD1b86D23a75504e079B2053F2C";
@@ -29,7 +29,7 @@ const handler = async (req, res) => {
         const updates = {};
         if (flow_address) updates[`users/${userId}/wallets/flow`] = flow_address;
         if (solana_address) updates[`users/${userId}/wallets/solana`] = solana_address;
-        
+
         if (Object.keys(updates).length > 0) {
             await db.ref().update(updates);
         }
@@ -56,11 +56,11 @@ const handler = async (req, res) => {
         // ------------------------------
 
         // 3. Buscar e Enriquecer Cartas (Usando targetFlow/targetSolana)
-        const aggregatedCards = await aggregateCards({ 
-            flow_address: targetFlow, 
-            solana_address: targetSolana 
+        const aggregatedCards = await aggregateCards({
+            flow_address: targetFlow,
+            solana_address: targetSolana
         });
-        
+
         const enrichedCards = await enrichAllCards(aggregatedCards);
 
         const collectionData = {};
@@ -69,7 +69,7 @@ const handler = async (req, res) => {
 
         enrichedCards.forEach(card => {
             const pokedexId = findPokemonId(card.nome);
-            if (!pokedexId) return; 
+            if (!pokedexId) return;
 
             const uniqueKey = `${card.chain}_${card.token_address}_${card.numeracao}`.replace(/[.#$/[\]]/g, '_');
 
