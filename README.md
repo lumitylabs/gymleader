@@ -97,19 +97,19 @@ To ensure the battle remains grounded in Pokémon rules, the Agent runs a strict
 </p>
 
 #### 1.  From Vault to Arena
-> We scan your connected wallet (**Beezie** or **CollectorCrypt**) to verify ownership, card grading, and stats.
+- We scan your connected wallet (**Beezie** or **CollectorCrypt**) to verify ownership, card grading, and stats.
 
 #### 2.  Metadata Reading
-> After retrieving the player's card addresses, we gather additional data via the TCGdex API to enrich the information fed into the AI.
+- After retrieving the player's card addresses, we gather additional data via the TCGdex API to enrich the information fed into the AI.
 
 #### 3. Gym Generation
-> Players create their own Gym by combining their Pokémon cards with their unique creativity. The AI Agent processes this information to generate the visuals and atmosphere of the Gym.
+- Players create their own Gym by combining their Pokémon cards with their unique creativity. The AI Agent processes this information to generate the visuals and atmosphere of the Gym.
 
 #### 4. Battle (Agent Judge)
-> When a player initiates a battle, the AI Agent acts as the Judge, Gym Leader, and Narrator, creating a seamless and immersive combat experience.
+- When a player initiates a battle, the AI Agent acts as the Judge, Gym Leader, and Narrator, creating a seamless and immersive combat experience.
 
 #### 5. Rewards
-> Upon winning a battle, the player is rewarded with a unique badge, immortalizing their victory.
+- Upon winning a battle, the player is rewarded with a unique badge, immortalizing their victory.
 
 ## 🔧 Technologies
 <p align="left">
@@ -233,3 +233,4 @@ If you have any questions or suggestions,  please feel free to contact us. : )
 <p align="center">
   <i>Powered by </i><b><a href="https://www.lumitylabs.com">Lumity</a>💫</b>
 </p>
+
