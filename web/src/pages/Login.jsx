@@ -150,7 +150,7 @@ function Footer() {
     <footer className="w-full py-8 flex flex-col items-center justify-center gap-4 bg-[#18181B] select-none">
       <div className="flex text-[#818182] gap-5 text-sm">
         <a
-          href="https://discord.com/channels/1174034150462861324/1433186185253093517"
+          href="https://discord.com/channels/1174034150462861324/1444561443377909802"
           className="hover:text-white transition-colors"
           target="_blank"
           rel="noopener noreferrer"
@@ -165,6 +165,15 @@ function Footer() {
         >
           GitHub
         </a>
+        <a
+          href="https://www.youtube.com/watch?v=AwelMLjpMAk"
+          className="hover:text-white transition-colors"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          YouTube
+        </a>
+
       </div>
       <a
         href="https://lumitylabs.com/"

@@ -17,7 +17,7 @@ function Navbar() {
           Botão "Discord" (Secundário)
         */}
         <a
-          href="https://discord.com/channels/1174034150462861324/1433186185253093517"
+          href="https://discord.com/channels/1174034150462861324/1444561443377909802"
           target="_blank"
           rel="noopener noreferrer"
           className="flex w-25 py-2 px-5 border-[#303136] border rounded-full text-white text-[0.92em] justify-center items-center cursor-pointer transition-all duration-200 active:scale-95 hover:bg-[#1F1F23] select-none"
