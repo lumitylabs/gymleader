@@ -31,12 +31,12 @@ function Navbar() {
             exatamente ao botão "Continue with MetaMask".
         */}
         <a
-          href="https://github.com/lumitylabs/gymleader"
+          href="https://gymleaderdocs.lumitylabs.com"
           target="_blank"
           rel="noopener noreferrer"
           className="flex w-30 py-2 px-5 bg-white text-[#131316] text-[0.92em] rounded-full justify-center items-center gap-2 cursor-pointer  transition-all active:scale-95 duration-200 hover:bg-[#E3E3E4] select-none"
         >
-          GitHub
+          Docs
         </a>
       </div>
     </div>
