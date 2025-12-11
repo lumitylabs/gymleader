@@ -61,10 +61,14 @@ We solve the main challenges of collecting by transforming them into new experie
 We are building more than a game; we are creating a new experiences for collectors. Our roadmap focuses on increasing the value of Real World Assets (RWA).
 
 #### 💸 1. The Agent Economy (via CreatorBid)
-> Our "Pokémon Judge Agent" was designed to be released on **CreatorBid**. 
+> Our "Pokémon Judge Agent" was designed to be released on **CreatorBid**:
+ 
+| Document | Description |
+| :--- | :--- |
+| 📜 [**Docs**](https://gymleaderdocs.lumitylabs.com) | If you have any questions, please consult our documentation. |
 
 #### 📅 2. Project Status
-> Want to see what's next? Check our live docs:
+> Want to see what's next? Check our roadmap:
 
 | Document | Description |
 | :--- | :--- |
@@ -233,5 +237,6 @@ If you have any questions or suggestions,  please feel free to contact us. : )
 <p align="center">
   <i>Powered by </i><b><a href="https://www.lumitylabs.com">Lumity</a>💫</b>
 </p>
+
 
 
